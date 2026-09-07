@@ -1,0 +1,379 @@
+{
+  "schemaVersion": 1,
+  "slug": "castle-of-five-keys",
+  "version": 1,
+  "title": "The Castle of Five Keys",
+  "series": "The Everafter Rooms",
+  "caseNumber": 5,
+  "description": "Welcome to the Everafter Rooms, a magical castle attraction built for curious adventurers. Its theatrical doors close, and a cheerful host announces five rooms between you and the Royal Vault.",
+  "difficulty": "Medium/Hard",
+  "minutes": [
+    30,
+    30
+  ],
+  "cover": {
+    "motif": "castle",
+    "subtitle": "Five rooms. One family. A wonderfully impossible door."
+  },
+  "introduction": "Welcome to the Everafter Rooms, a magical castle attraction built for curious adventurers. Its theatrical doors close, and a cheerful host announces five rooms between you and the Royal Vault.\nThis is a playful escape room, never a real trap. A clearly marked exit is always available if you want to stop. Your owl messenger has booked the family a private visit. “Talk together,” says the host, “because this castle has never trusted a lone guess when it could enjoy three good ideas.”",
+  "start": "portrait-gallery",
+  "scenes": [
+    {
+      "id": "portrait-gallery",
+      "title": "Princess Portrait Gallery",
+      "shared": [
+        {
+          "kind": "image",
+          "title": "Three royal portraits",
+          "text": "The painted princesses hold still just long enough for a puzzle. One jewel opens the first room.",
+          "art": {
+            "theme": "castle",
+            "caption": "The Princess Portrait Gallery: portraits wear different jewels.",
+            "objects": [
+              {
+                "id": "rose",
+                "label": "Princess Rosabel — rose",
+                "glyph": "❀",
+                "x": 20,
+                "y": 40
+              },
+              {
+                "id": "pearl",
+                "label": "Princess Nerine — pearl",
+                "glyph": "○",
+                "x": 50,
+                "y": 40
+              },
+              {
+                "id": "star",
+                "label": "Princess Solenne — star",
+                "glyph": "✦",
+                "x": 80,
+                "y": 40
+              }
+            ]
+          }
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The correct princess wears a ROUND jewel. Both the pearl and the rose might look round from far away, so wait for the other clues."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The jewel is not a flower. Princess Rosabel’s rose is excluded. Ask Dad what the family tree adds."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The chosen portrait belongs to the Sea Court, whose emblem is a pearl. Princess Nerine is its descendant. The star belongs to the Sky Court."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "hotspot",
+        "instruction": "Touch the portrait that matches all three royal records.",
+        "solution": "pearl",
+        "hints": [
+          "Ask Headquarters: compare jewel shape, flower rule, and court emblem.",
+          "The Sea Court’s pearl fits both other rules.",
+          "Select Princess Nerine — pearl."
+        ],
+        "resolution": "Nerine’s portrait bows. “You listened before choosing. Keep this word: OPEN.” A panel leads into the Enchanted Library.",
+        "art": {
+          "theme": "castle",
+          "caption": "The Princess Portrait Gallery: portraits wear different jewels.",
+          "objects": [
+            {
+              "id": "rose",
+              "label": "Princess Rosabel — rose",
+              "glyph": "❀",
+              "x": 20,
+              "y": 40
+            },
+            {
+              "id": "pearl",
+              "label": "Princess Nerine — pearl",
+              "glyph": "○",
+              "x": 50,
+              "y": 40
+            },
+            {
+              "id": "star",
+              "label": "Princess Solenne — star",
+              "glyph": "✦",
+              "x": 80,
+              "y": 40
+            }
+          ]
+        }
+      },
+      "next": "enchanted-library",
+      "finale": false
+    },
+    {
+      "id": "enchanted-library",
+      "title": "Enchanted Library",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "Enchanted Library",
+          "text": "Four talking books must go onto a shelf in the correct order. Each agent has a different rule. The books have agreed to stop chatting only while you arrange them."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The Moon book is first. The Rose book is somewhere AFTER the Moon book but BEFORE the Key book."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The Key book is immediately BEFORE the Tower book. Those two must stay next to each other, in that order."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The Tower book is last. Use that with Mom’s adjacency rule, then fit Mia’s Rose book into the remaining place."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "ordering",
+        "instruction": "Shelve the books from left to right.",
+        "solution": [
+          "moon",
+          "rose",
+          "key",
+          "tower"
+        ],
+        "hints": [
+          "Ask Headquarters: place the two fixed ends first.",
+          "Moon is first, Tower is last. Key sits immediately before Tower.",
+          "Order: Moon, Rose, Key, Tower."
+        ],
+        "resolution": "The books whisper a second word: WITH. Beyond the shelf, the Ballroom waits in a shower of paper stars.",
+        "options": [
+          {
+            "id": "key",
+            "label": "Key book"
+          },
+          {
+            "id": "moon",
+            "label": "Moon book"
+          },
+          {
+            "id": "tower",
+            "label": "Tower book"
+          },
+          {
+            "id": "rose",
+            "label": "Rose book"
+          }
+        ]
+      },
+      "next": "ballroom",
+      "finale": false
+    },
+    {
+      "id": "ballroom",
+      "title": "Ballroom",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "Ballroom",
+          "text": "Three enchanted dancers need their correct masks before the ballroom door will open. Their titles, costumes, and clues are split among your invitation cards."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The Lantern Duchess wears the SUN mask. Her invitation says “I carry daylight into the dance.” She does not wear the moon or leaf."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The Garden Prince wears the LEAF mask. The dance program mentions ivy, not starlight. Save the remaining mask for the third dancer."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The Midnight Knight wears the MOON mask. Match the titles exactly: Duchess, Prince, Knight. Your recovered word will complete the library’s phrase."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "matching",
+        "instruction": "Match the dancers to their masks.",
+        "solution": [
+          "sun",
+          "leaf",
+          "moon"
+        ],
+        "hints": [
+          "Ask Headquarters: share the three invitation cards.",
+          "The Duchess has Sun and the Prince has Leaf.",
+          "Lantern Duchess → Sun; Garden Prince → Leaf; Midnight Knight → Moon."
+        ],
+        "resolution": "The dancers applaud and offer the third word: THREE. A waltzing staircase lifts you to the Clockwork Tower.",
+        "left": [
+          {
+            "id": "duchess",
+            "label": "Lantern Duchess"
+          },
+          {
+            "id": "prince",
+            "label": "Garden Prince"
+          },
+          {
+            "id": "knight",
+            "label": "Midnight Knight"
+          }
+        ],
+        "right": [
+          {
+            "id": "moon",
+            "label": "Moon mask"
+          },
+          {
+            "id": "sun",
+            "label": "Sun mask"
+          },
+          {
+            "id": "leaf",
+            "label": "Leaf mask"
+          }
+        ]
+      },
+      "next": "clockwork-tower",
+      "finale": false
+    },
+    {
+      "id": "clockwork-tower",
+      "title": "Clockwork Tower",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "Clockwork Tower",
+          "text": "The tower has stopped at a pretend midnight. Three gear windows show clues, each visible from only one agent’s side. The labeled lock asks for teeth, missing teeth, and chimes."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your gear has 12 positions, with one tooth missing. The first field asks how many teeth REMAIN: 12 minus 1. Do not enter 12."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your gear has 10 positions, but only 7 teeth remain. The second field asks how many are MISSING: 10 minus 7."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The tower rings four chimes and then repeats. The third field asks for chimes in ONE cycle, not the total you hear while thinking. Your number is 4."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "combination",
+        "instruction": "Use the three different counting rules to restart the tower.",
+        "solution": [
+          "11",
+          "3",
+          "4"
+        ],
+        "hints": [
+          "Ask Headquarters: the first two fields ask different questions.",
+          "Remaining teeth: 11. Missing teeth: 3. Ask for one cycle of chimes.",
+          "Enter 11, 3, 4."
+        ],
+        "resolution": "The clockwork host twirls its moustache. “Excellent arithmetic. Your final word is HEARTS.” A brass lift descends into the Royal Vault.",
+        "fields": [
+          "Teeth remaining",
+          "Teeth missing",
+          "Chimes per cycle"
+        ]
+      },
+      "next": "royal-vault",
+      "finale": false
+    },
+    {
+      "id": "royal-vault",
+      "title": "Royal Vault",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "Royal Vault",
+          "text": "Four words have been collected through the castle: OPEN, WITH, THREE, HEARTS. The final door asks for the message in the correct order. It also asks what truly opened the castle: a lucky solo guess, or your combined clues?"
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Use the first two room words in room order: OPEN, then WITH. Tell your family that the portrait and library were the beginning, not the ending."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The Ballroom’s word THREE follows WITH. The Clockwork Tower’s word HEARTS belongs at the end. There should be four words, separated by spaces."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The vault inscription says the castle opens through teamwork. Enter the four-word message the family recovered. Then tell each other one clue you could not have known alone."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "code",
+        "instruction": "Speak the castle’s four-word message into the final lock.",
+        "solution": "OPEN WITH THREE HEARTS",
+        "hints": [
+          "Ask Headquarters: follow the order of the rooms you visited.",
+          "The message begins OPEN WITH and ends THREE HEARTS.",
+          "Enter OPEN WITH THREE HEARTS."
+        ],
+        "resolution": "The Royal Vault opens into a lantern garden. The host reveals the final deduction: each room was designed to need three different kinds of attention. Your family supplied all three.",
+        "format": "phrase",
+        "normalization": "whitespace"
+      },
+      "next": null,
+      "finale": true
+    }
+  ],
+  "ending": "The doors swing open to warm lantern light. “True adventurers,” declares the host, “are not the ones who know everything. They are the ones who ask each other.” Three little paper crowns drift down, each different and each equally grand. Your owl messenger stamps the family’s invitation: WELCOME BACK ANYTIME. The castle was built to open for you, together.",
+  "achievement": "Keepers of the Five Keys"
+}

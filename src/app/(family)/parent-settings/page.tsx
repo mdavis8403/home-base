@@ -24,10 +24,17 @@ export default async function ParentSettings() {
         </Link>
       </section>
       <section className="settings-panel">
+        <h2>Mystery Club</h2>
+        <p>Import, preview, publish, and manage case files.</p>
+        <Link className="secondary-button" href="/mystery-club">
+          Open Mystery Club → Parent case desk
+        </Link>
+      </section>
+      <section className="settings-panel">
         <h2>More settings, in a later chapter</h2>
         <p>
-          Family details, content imports, data exports, and media settings will
-          be added with their features.
+          Family details, data exports, and media settings will be added with
+          their features.
         </p>
         <p className="muted">
           Mia has a child profile. Mom and Dad start as parent administrators.

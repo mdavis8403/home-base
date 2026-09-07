@@ -1,0 +1,645 @@
+{
+  "schemaVersion": 1,
+  "slug": "midnight-transmission",
+  "version": 1,
+  "title": "The Midnight Transmission",
+  "series": "The Jonesboro Files",
+  "caseNumber": 1,
+  "description": "Home Base has intercepted a transmission meant for exactly three people. Somewhere in its crackle is the first test for your new detective club.",
+  "difficulty": "Easy",
+  "minutes": [
+    20,
+    25
+  ],
+  "cover": {
+    "motif": "owl",
+    "subtitle": "Three agents. Three clues. One key."
+  },
+  "introduction": "Home Base has intercepted a transmission meant for exactly three people. Somewhere in its crackle is the first test for your new detective club.\nTHREE AGENTS. THREE CLUES. ONE KEY. FIND IT BEFORE MIDNIGHT. AND WHATEVER YOU DO… DO NOT TRUST THE OWL.\nThis is a pretend midnight, so there is no countdown. Gather your three screens and read your own clues aloud. Max has declared himself Senior Intelligence Officer. Dixie is already inspecting the snack drawer.",
+  "start": "three-pieces",
+  "scenes": [
+    {
+      "id": "three-pieces",
+      "title": "Three Pieces",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "A torn transmission",
+          "text": "Your screens hold different damaged strips. Reconstruct the instruction together. The stars are safe to tap; Mia will make the final selection."
+        },
+        {
+          "kind": "image",
+          "title": "The star field",
+          "text": "Count from the left.",
+          "art": {
+            "theme": "stars",
+            "caption": "Five bright stars above Home Base, numbered from left to right.",
+            "objects": [
+              {
+                "id": "star-1",
+                "label": "Star 1",
+                "glyph": "✦",
+                "x": 24,
+                "y": 53
+              },
+              {
+                "id": "star-2",
+                "label": "Star 2",
+                "glyph": "✦",
+                "x": 38,
+                "y": 35
+              },
+              {
+                "id": "star-3",
+                "label": "Star 3",
+                "glyph": "✦",
+                "x": 52,
+                "y": 53
+              },
+              {
+                "id": "star-4",
+                "label": "Star 4",
+                "glyph": "✦",
+                "x": 66,
+                "y": 35
+              },
+              {
+                "id": "star-5",
+                "label": "Star 5",
+                "glyph": "✦",
+                "x": 80,
+                "y": 53
+              }
+            ]
+          }
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your strip says TH__D. The missing letters are I and R. Below it are three star symbols, the picture-word for STAR. Your strip supplies THIRD STAR. You are the star-field operator."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your strip says L__K. A margin note says ★ = O. Two star-shaped holes repair the word to LOOK. Tell the family the action word. The original filing order is MOM → MIA → DAD."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your strip says _T THE. Repair its first letter to A. Your words are AT THE: the little hinge between the action and what Mia found. File order is not sentence order; fit the action, hinge, and target together."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "hotspot",
+        "instruction": "Mia: touch the star named by your repaired instruction.",
+        "solution": "star-3",
+        "hints": [
+          "Ask Headquarters: each strip has a different job—action, hinge, target.",
+          "Mom has LOOK, Dad has AT THE. Mia has the target.",
+          "Mia, select Star 3. The complete instruction is LOOK AT THE THIRD STAR."
+        ],
+        "resolution": "The third star glows and prints an 8. Keep it: the first lock field will need this number.",
+        "art": {
+          "theme": "stars",
+          "caption": "Five bright stars above Home Base, numbered from left to right.",
+          "objects": [
+            {
+              "id": "star-1",
+              "label": "Star 1",
+              "glyph": "✦",
+              "x": 24,
+              "y": 53
+            },
+            {
+              "id": "star-2",
+              "label": "Star 2",
+              "glyph": "✦",
+              "x": 38,
+              "y": 35
+            },
+            {
+              "id": "star-3",
+              "label": "Star 3",
+              "glyph": "✦",
+              "x": 52,
+              "y": 53
+            },
+            {
+              "id": "star-4",
+              "label": "Star 4",
+              "glyph": "✦",
+              "x": 66,
+              "y": 35
+            },
+            {
+              "id": "star-5",
+              "label": "Star 5",
+              "glyph": "✦",
+              "x": 80,
+              "y": 53
+            }
+          ]
+        },
+        "actor": "mia"
+      },
+      "next": "security-log",
+      "finale": false
+    },
+    {
+      "id": "security-log",
+      "title": "The Security Log",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "The Security Log",
+          "text": "A three-field vault lock blinks beside a security log. These are three whole numbers, not three single digits. Bring the 8 from the star field."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your log records: 7:42 PM — package enters Home Base. 8:14 PM — lights flicker. Read your two times aloud so the others can build the full timeline."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your log records: 8:03 PM — an owl symbol appears. 8:27 PM — the package disappears. The owl event is the turning point."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The lock manual says: first use the star number. Then count minutes from the owl to the flicker, and from the flicker to the disappearance. Do not use clock times as the code."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "combination",
+        "instruction": "Combine the star clue with both gaps in the log.",
+        "solution": [
+          "8",
+          "11",
+          "13"
+        ],
+        "hints": [
+          "Ask Headquarters: put all four times in order.",
+          "8:03 to 8:14 is 11 minutes. Now find the following gap.",
+          "Enter 8 in Star number, 11 in First gap, and 13 in Second gap."
+        ],
+        "resolution": "The vault opens. A brass key inside is engraved DIXIE. Max insists he was just about to notice that.",
+        "fields": [
+          "Star number",
+          "First gap (minutes)",
+          "Second gap (minutes)"
+        ]
+      },
+      "next": "dogs-know",
+      "finale": false
+    },
+    {
+      "id": "dogs-know",
+      "title": "The Dogs Know Something",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "Classified personnel",
+          "text": "MAX: Senior Intelligence Officer. Strength: hearing. Weakness: snacks. Clearance: questionable. DIXIE: Field Investigator. Strength: persistence. Weakness: also snacks. Clearance: slightly less questionable."
+        },
+        {
+          "kind": "evidence",
+          "title": "Intelligence room",
+          "text": "The DIXIE key unlocks this room. Mia has the room picture; the other agents have the search rules."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "image",
+            "title": "Your room view",
+            "text": "Describe the objects and their positions to Mom and Dad. Select the correct object after hearing both rules.",
+            "art": {
+              "theme": "room",
+              "caption": "The intelligence room. Two raised portraits and three objects on the floor.",
+              "objects": [
+                {
+                  "id": "dixie-portrait",
+                  "label": "Dixie portrait, left wall",
+                  "glyph": "▧",
+                  "x": 22,
+                  "y": 28
+                },
+                {
+                  "id": "max-portrait",
+                  "label": "Max portrait, right wall",
+                  "glyph": "▧",
+                  "x": 77,
+                  "y": 28
+                },
+                {
+                  "id": "dog-bowl",
+                  "label": "Bowl, left floor",
+                  "glyph": "◡",
+                  "x": 20,
+                  "y": 80
+                },
+                {
+                  "id": "basket",
+                  "label": "Basket, center floor",
+                  "glyph": "▤",
+                  "x": 50,
+                  "y": 80
+                },
+                {
+                  "id": "boots",
+                  "label": "Boots, right floor",
+                  "glyph": "♟",
+                  "x": 82,
+                  "y": 80
+                }
+              ]
+            }
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The investigator always looks LEFT first. Tell Mia which side to search, but ask Dad for the second rule before choosing."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Ignore anything touching the floor. The correct object must satisfy this rule and Mom’s rule together."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "hotspot",
+        "instruction": "Mia: select the object that matches both search rules.",
+        "solution": "dixie-portrait",
+        "hints": [
+          "Ask Headquarters: start with the side Mom named.",
+          "The bowl is left, but it touches the floor. What is above it?",
+          "Select the Dixie portrait on the left wall."
+        ],
+        "resolution": "Behind Dixie’s portrait are four symbols: moon, star, key, owl. The owl’s eyes point toward a folded sheet.",
+        "art": {
+          "theme": "room",
+          "caption": "The intelligence room. Two raised portraits and three objects on the floor.",
+          "objects": [
+            {
+              "id": "dixie-portrait",
+              "label": "Dixie portrait, left wall",
+              "glyph": "▧",
+              "x": 22,
+              "y": 28
+            },
+            {
+              "id": "max-portrait",
+              "label": "Max portrait, right wall",
+              "glyph": "▧",
+              "x": 77,
+              "y": 28
+            },
+            {
+              "id": "dog-bowl",
+              "label": "Bowl, left floor",
+              "glyph": "◡",
+              "x": 20,
+              "y": 80
+            },
+            {
+              "id": "basket",
+              "label": "Basket, center floor",
+              "glyph": "▤",
+              "x": 50,
+              "y": 80
+            },
+            {
+              "id": "boots",
+              "label": "Boots, right floor",
+              "glyph": "♟",
+              "x": 82,
+              "y": 80
+            }
+          ]
+        },
+        "actor": "mia"
+      },
+      "next": "owl-cipher",
+      "finale": false
+    },
+    {
+      "id": "owl-cipher",
+      "title": "The Owl Cipher",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "The Owl Cipher",
+          "text": "The symbols read 🌙 ★ ⚿ 🦉. Three of them are letters. One is an instruction about where to look next."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your decoder gives ⚿ = P. Nothing on your sheet explains the owl. Ask the other agents before adding an extra letter."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your decoder gives 🌙 = M and ★ = A. Read those letters in the same order as the symbols."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your note says: the owl is NOT a letter. It points to the object named by the other three symbols. Open that object; do not try to decode a fourth letter."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "cipher",
+        "instruction": "Name the object the owl is pointing you toward.",
+        "solution": "MAP",
+        "hints": [
+          "Ask Headquarters: share the three letter translations.",
+          "M, A, and P form a familiar explorer’s object.",
+          "Enter MAP. The owl means look at the map."
+        ],
+        "resolution": "A folded map slides out. Five locations are marked, but only one can hold the next key.",
+        "method": "substitution",
+        "encoded": "🌙 ★ ⚿ 🦉"
+      },
+      "next": "map",
+      "finale": false
+    },
+    {
+      "id": "map",
+      "title": "The Map",
+      "shared": [
+        {
+          "kind": "map",
+          "title": "Five possible hiding places",
+          "text": "North is up and west is left. The pond and dock are near water. Forest Hut is inside the forest. Share all three elimination clues before choosing.",
+          "art": {
+            "theme": "map",
+            "caption": "West is left. A river runs beside the east bank; the forest lies in the southeast.",
+            "objects": [
+              {
+                "id": "observatory",
+                "label": "Old Observatory",
+                "glyph": "⌂",
+                "x": 23,
+                "y": 25
+              },
+              {
+                "id": "tower",
+                "label": "Tower",
+                "glyph": "♜",
+                "x": 62,
+                "y": 30
+              },
+              {
+                "id": "dock",
+                "label": "River Dock",
+                "glyph": "≈",
+                "x": 85,
+                "y": 56
+              },
+              {
+                "id": "forest",
+                "label": "Forest Hut",
+                "glyph": "♠",
+                "x": 67,
+                "y": 78
+              },
+              {
+                "id": "pond",
+                "label": "West Pond",
+                "glyph": "≈",
+                "x": 22,
+                "y": 77
+              }
+            ]
+          }
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The key is not near water. Cross out both the West Pond and River Dock."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The key is WEST of the tower, not at the tower. Look to the left of the tower marker."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The key is not inside the forest. Forest Hut cannot be the answer, even if it sounds cozy."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "choice",
+        "instruction": "Which location fits all three clues?",
+        "solution": "observatory",
+        "hints": [
+          "Ask Headquarters: eliminate places one clue at a time.",
+          "The water clue removes two places. West of the tower removes the tower itself and the forest.",
+          "Choose Old Observatory."
+        ],
+        "resolution": "At the Old Observatory, a cabinet shows four pieces of an owl crest. A note says: repair the messenger, then decide what it was really doing.",
+        "options": [
+          {
+            "id": "dock",
+            "label": "River Dock"
+          },
+          {
+            "id": "forest",
+            "label": "Forest Hut"
+          },
+          {
+            "id": "observatory",
+            "label": "Old Observatory"
+          },
+          {
+            "id": "tower",
+            "label": "Tower"
+          },
+          {
+            "id": "pond",
+            "label": "West Pond"
+          }
+        ]
+      },
+      "next": "observatory",
+      "finale": false
+    },
+    {
+      "id": "observatory",
+      "title": "The Observatory",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "The Observatory",
+          "text": "The cabinet has four shuffled picture fragments. Arrange them in reading order: top left, top right, bottom left, bottom right. You may drag them or use the Move buttons."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The owl’s pointed ears belong at the top. Both eye loops must meet across the center seam. Inspect the actual shapes, not the fragment numbers."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The broad curved belly belongs at the bottom. The curved outlines should form one closed shield when the two lower pieces meet."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The small diagonal beak lines point inward at the middle. The top-left fragment has an ear rising on its LEFT edge. Use that to distinguish the two upper pieces."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "tiles",
+        "instruction": "Rebuild the owl crest from its four picture fragments.",
+        "solution": [
+          "northwest",
+          "northeast",
+          "southwest",
+          "southeast"
+        ],
+        "hints": [
+          "Ask Headquarters: find the two pieces with eye loops.",
+          "Put the eye pieces above the curved belly pieces. Match the outside edges.",
+          "Arrange Fragment 2, Fragment 4, Fragment 3, Fragment 1."
+        ],
+        "resolution": "The cabinet opens. A letter says: “Congratulations. Home Base is operational. Your first test is complete.” No stolen treasure—just an invitation to become agents.",
+        "options": [
+          {
+            "id": "southeast",
+            "label": "Fragment 1",
+            "path": "M 10 10 L 10 90 Q 85 80 85 10 M 10 40 L 35 15 M 40 60 L 65 35 M 45 80 L 65 60"
+          },
+          {
+            "id": "northwest",
+            "label": "Fragment 2",
+            "path": "M 15 90 L 15 15 L 90 45 L 90 90 M 35 65 Q 60 40 85 65 Q 60 90 35 65"
+          },
+          {
+            "id": "southwest",
+            "label": "Fragment 3",
+            "path": "M 15 10 Q 15 80 90 90 L 90 10 M 65 15 L 90 40 M 35 35 L 60 60 M 35 60 L 55 80"
+          },
+          {
+            "id": "northeast",
+            "label": "Fragment 4",
+            "path": "M 10 90 L 10 45 L 85 15 L 85 90 M 15 65 Q 40 40 65 65 Q 40 90 15 65"
+          }
+        ],
+        "columns": 2
+      },
+      "next": "final-deduction",
+      "finale": false
+    },
+    {
+      "id": "final-deduction",
+      "title": "Who Was the Owl?",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "Who Was the Owl?",
+          "text": "One last question remains. The message warned you about the owl, but the evidence tells a different story. Compare the final scraps in your envelopes."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The cabinet letter addresses all three of you by name: Agents Mia, Mom, and Dad. Nobody has lost anything. It was a test built for your team."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The owl seal also appears on a stack of unopened CASE DELIVERY envelopes. Each is addressed to Home Base, not away from it."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "A tiny line beneath the seal reads: “The owl delivers the cases.” The dramatic warning was part of the introductory puzzle, not a real danger."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "choice",
+        "instruction": "What is the owl’s real job?",
+        "solution": "messenger",
+        "hints": [
+          "Ask Headquarters: who was the cabinet letter written for?",
+          "The envelopes say CASE DELIVERY. What does a delivery owl do?",
+          "Choose The Mystery Club messenger."
+        ],
+        "resolution": "Max files the result under “Solved, largely thanks to snacks.” Dixie stamps it twice, just to be certain.",
+        "options": [
+          {
+            "id": "thief",
+            "label": "A treasure thief"
+          },
+          {
+            "id": "messenger",
+            "label": "The Mystery Club messenger"
+          },
+          {
+            "id": "guard",
+            "label": "A lost observatory guard"
+          }
+        ]
+      },
+      "next": null,
+      "finale": true
+    }
+  ],
+  "ending": "AGENTS MIA, MOM, AND DAD: Congratulations. If you are reading this, Home Base is operational. The owl was never your enemy. The owl delivers the cases. Your first test is complete. More transmissions will follow.\nA small owl stamps the file CASE SOLVED. Max and Dixie award themselves a biscuit. THE JONESBORO FILES WILL CONTINUE.",
+  "achievement": "Home Base Agent"
+}

@@ -12,7 +12,7 @@ export const destinations = [
     label: "Mystery Club",
     symbol: "⌕",
     description: "Three minds. One mystery.",
-    detail: "Your family’s next case will begin here.",
+    detail: "Five curious cases. Different clues for each of us.",
     color: "gold",
   },
   {

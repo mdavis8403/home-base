@@ -2,9 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 const origin = "http://localhost:3101";
 async function signIn(page: Page, name: "Mia" | "Mom" | "Dad", code: string) {
   await page.goto(`${origin}/enter`);
-  await page
-    .getByLabel("Your family’s access phrase")
-    .fill("testonly");
+  await page.getByLabel("Your family’s access phrase").fill("testonly");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("radio", { name }).check();
   await page.getByLabel("Your passcode", { exact: true }).fill(code);
@@ -32,7 +30,7 @@ test("Mia can navigate placeholders and is protected from parent settings", asyn
   expect(await page.evaluate(() => document.cookie)).not.toContain(
     "hb-session",
   );
-  for (const label of ["Mystery Club", "Our Story"]) {
+  for (const label of ["Our Story"]) {
     await page
       .getByRole("navigation")
       .getByRole("link", { name: label, exact: true })

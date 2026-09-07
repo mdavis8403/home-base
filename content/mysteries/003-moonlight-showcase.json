@@ -1,0 +1,487 @@
+{
+  "schemaVersion": 1,
+  "slug": "moonlight-showcase",
+  "version": 1,
+  "title": "The Missing Moonlight Showcase",
+  "series": "Crescendo Cove",
+  "caseNumber": 3,
+  "description": "The headline performance has vanished from Crescendo Cove’s camp archive. Stage lights are flashing, and cryptic little messages are appearing between the cabins. Tonight is the Moonlight Showcase.",
+  "difficulty": "Medium",
+  "minutes": [
+    20,
+    30
+  ],
+  "cover": {
+    "motif": "music",
+    "subtitle": "Follow the rhythm. Find the friendship."
+  },
+  "introduction": "The headline performance has vanished from Crescendo Cove’s camp archive. Stage lights are flashing, and cryptic little messages are appearing between the cabins. Tonight is the Moonlight Showcase.\nThe Firefly Fizz band blames the Marshmallow Meteors. Pip, a small water sprite who plays an enormous tuba, blames a sandwich. Your owl messenger delivers three backstage passes. The camp needs listening ears as much as clever clues.",
+  "start": "stage-lights",
+  "scenes": [
+    {
+      "id": "stage-lights",
+      "title": "The Stage That Blinked",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "The Stage That Blinked",
+          "text": "The stage lamps flash a repeating phrase: gold, blue, gold, green. One color will come next. The stage manager insists it is a message, not a broken lamp."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your lighting chart groups the flashes into blocks of FOUR. The photographed block is gold → blue → gold → green."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your note from the light operator says: repeat the entire block from its beginning. Do not mirror it or add a new color."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your time marker says the green flash you just saw was the FOURTH and final flash of a block. Predict the first flash of the next block."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "choice",
+        "instruction": "Which color comes immediately after that green flash?",
+        "solution": "gold",
+        "hints": [
+          "Ask Headquarters: count a complete four-flash block.",
+          "The next flash starts the same block again.",
+          "Choose Gold."
+        ],
+        "resolution": "The gold lamp spells REED DOCK. Beneath it, a tiny speaker plays a three-note invitation.",
+        "options": [
+          {
+            "id": "blue",
+            "label": "Blue"
+          },
+          {
+            "id": "green",
+            "label": "Green"
+          },
+          {
+            "id": "gold",
+            "label": "Gold"
+          },
+          {
+            "id": "pink",
+            "label": "Pink"
+          }
+        ]
+      },
+      "next": "dock-melody",
+      "finale": false
+    },
+    {
+      "id": "dock-melody",
+      "title": "The Reed Dock Melody",
+      "shared": [
+        {
+          "kind": "audio",
+          "title": "An original camp signal",
+          "text": "Press Play if you want to hear it. The written notes are C4, E4, G4, with equal beats. You can solve this without sound.",
+          "tones": [
+            "C4",
+            "E4",
+            "G4"
+          ]
+        },
+        {
+          "kind": "evidence",
+          "title": "A friendly competition",
+          "text": "Firefly Fizz uses a flute, Marshmallow Meteors use drums, and the Moonmoth Trio sings. Match what you hear with the clues, not your favorite band."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Firefly Fizz’s pass uses three rising notes with equal beats. Marshmallow Meteors use one note repeated three times."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Moonmoth Trio’s pass descends: G4, E4, C4. Notes rise in pitch from C4 to E4 to G4, like climbing three steps."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The dock recording has equal beats, not a long-short pattern. Its written transcript is complete and reliable. Which band’s signal matches BOTH direction and beat?"
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "choice",
+        "instruction": "Whose backstage signal is on the recording?",
+        "solution": "firefly",
+        "hints": [
+          "Ask Headquarters: the transcript counts as hearing the clue.",
+          "C4 → E4 → G4 rises. All three beats are equal.",
+          "Choose Firefly Fizz."
+        ],
+        "resolution": "Firefly Fizz’s singer Juniper says, “We hid a surprise, but not the performance!” She gives you a stack of passes to sort.",
+        "options": [
+          {
+            "id": "moonmoth",
+            "label": "Moonmoth Trio"
+          },
+          {
+            "id": "firefly",
+            "label": "Firefly Fizz"
+          },
+          {
+            "id": "meteors",
+            "label": "Marshmallow Meteors"
+          }
+        ]
+      },
+      "next": "backstage-passes",
+      "finale": false
+    },
+    {
+      "id": "backstage-passes",
+      "title": "Backstage Passes",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "Backstage Passes",
+          "text": "The passes have lost their cabin labels. Match the performers to their rehearsal homes to find the archive courier."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Juniper from Firefly Fizz rehearses at Otter Cabin. She wears a silver boot on her LEFT foot because the right one is growing a sunflower."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Pip the tuba sprite rehearses at Reed Dock. He needs room for the tuba, three reeds, and his very important sandwich."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Lumi of Moonmoth Trio rehearses at Moth Cabin. The lamps dim politely when her wings are tired."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "matching",
+        "instruction": "Match each performer to their rehearsal place.",
+        "solution": [
+          "otter",
+          "dock",
+          "moth"
+        ],
+        "hints": [
+          "Ask Headquarters: each agent knows one performer’s home.",
+          "Juniper goes with Otter Cabin. Ask about Pip and Lumi.",
+          "Juniper → Otter Cabin; Pip → Reed Dock; Lumi → Moth Cabin."
+        ],
+        "resolution": "The sorted passes reveal a courier stamp from Pip. He carried a copy of the performance—not the original—to the Archive Hut.",
+        "left": [
+          {
+            "id": "juniper",
+            "label": "Juniper"
+          },
+          {
+            "id": "pip",
+            "label": "Pip"
+          },
+          {
+            "id": "lumi",
+            "label": "Lumi"
+          }
+        ],
+        "right": [
+          {
+            "id": "moth",
+            "label": "Moth Cabin"
+          },
+          {
+            "id": "otter",
+            "label": "Otter Cabin"
+          },
+          {
+            "id": "dock",
+            "label": "Reed Dock"
+          }
+        ]
+      },
+      "next": "archive-route",
+      "finale": false
+    },
+    {
+      "id": "archive-route",
+      "title": "The Archive Route",
+      "shared": [
+        {
+          "kind": "map",
+          "title": "Camp map",
+          "text": "Use the clues to identify the courier’s destination.",
+          "art": {
+            "theme": "camp",
+            "caption": "Crescendo Cove: cabins around a moonlit stage.",
+            "objects": [
+              {
+                "id": "otter",
+                "label": "Otter Cabin",
+                "glyph": "≈",
+                "x": 20,
+                "y": 28
+              },
+              {
+                "id": "moth",
+                "label": "Moth Cabin",
+                "glyph": "✧",
+                "x": 75,
+                "y": 28
+              },
+              {
+                "id": "stage",
+                "label": "Moon Stage",
+                "glyph": "♫",
+                "x": 48,
+                "y": 52
+              },
+              {
+                "id": "archive",
+                "label": "Archive Hut",
+                "glyph": "▤",
+                "x": 26,
+                "y": 80
+              },
+              {
+                "id": "dock",
+                "label": "Reed Dock",
+                "glyph": "≋",
+                "x": 78,
+                "y": 80
+              }
+            ]
+          }
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The destination is SOUTH of Otter Cabin. North is up on the map. It is a building, not an outdoor stage."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The destination is WEST of the Moon Stage. Compare marker positions, not the direction the labels face."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "It is not a cabin and not beside the reeds at the dock. The courier needs a place where copies can be stored."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "hotspot",
+        "instruction": "Select the building reached by the courier.",
+        "solution": "archive",
+        "hints": [
+          "Ask Headquarters: first find the places below Otter Cabin.",
+          "West of the stage and not a cabin leaves the archive building.",
+          "Select Archive Hut."
+        ],
+        "resolution": "Inside the hut, four time-stamped notes explain exactly when the music disappeared from the public program.",
+        "art": {
+          "theme": "camp",
+          "caption": "Crescendo Cove: cabins around a moonlit stage.",
+          "objects": [
+            {
+              "id": "otter",
+              "label": "Otter Cabin",
+              "glyph": "≈",
+              "x": 20,
+              "y": 28
+            },
+            {
+              "id": "moth",
+              "label": "Moth Cabin",
+              "glyph": "✧",
+              "x": 75,
+              "y": 28
+            },
+            {
+              "id": "stage",
+              "label": "Moon Stage",
+              "glyph": "♫",
+              "x": 48,
+              "y": 52
+            },
+            {
+              "id": "archive",
+              "label": "Archive Hut",
+              "glyph": "▤",
+              "x": 26,
+              "y": 80
+            },
+            {
+              "id": "dock",
+              "label": "Reed Dock",
+              "glyph": "≋",
+              "x": 78,
+              "y": 80
+            }
+          ]
+        }
+      },
+      "next": "program-timeline",
+      "finale": false
+    },
+    {
+      "id": "program-timeline",
+      "title": "A Program Out of Order",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "A Program Out of Order",
+          "text": "Sort the archive events. Somewhere between copying the song and checking the program, a harmless mistake changed what everyone could see."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "At 7:05, Juniper recorded the finale. At 7:12, Pip made a safety copy. The safety copy is still intact."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "At 7:18, the enchanted archive marked the original PRIVATE REHEARSAL. The setting hides a file from the public showcase list; it does not erase it."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "At 7:25, Lumi checked the public program and reported the performance missing. The lights began flashing after she asked the stage to summon the team."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "ordering",
+        "instruction": "Put the four events in their true order.",
+        "solution": [
+          "record",
+          "copy",
+          "private",
+          "report"
+        ],
+        "hints": [
+          "Ask Headquarters: read the four times from earliest to latest.",
+          "The file was hidden after the copy and before the report.",
+          "Order: recording, safety copy, private rehearsal setting, missing report."
+        ],
+        "resolution": "A tiny archive sprite confesses it followed the words “keep the surprise private” too literally. The original performance is safe behind one final name lock.",
+        "options": [
+          {
+            "id": "report",
+            "label": "Missing report"
+          },
+          {
+            "id": "private",
+            "label": "Private rehearsal setting"
+          },
+          {
+            "id": "record",
+            "label": "Recording"
+          },
+          {
+            "id": "copy",
+            "label": "Safety copy"
+          }
+        ]
+      },
+      "next": "name-lock",
+      "finale": false
+    },
+    {
+      "id": "name-lock",
+      "title": "The Name Lock",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "The Name Lock",
+          "text": "The archive offers a name lock. Three sealed envelopes each hold a different piece. Read your own piece aloud and assemble the backstage password together."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your place piece is COVE. The performance was created so all the camp bands could share one stage."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your rehearsal number is 17. The archive sprite hid the original after someone said to keep the surprise private. It never deleted the music."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your band piece is FIZZ. The lock order is PLACE, REHEARSAL NUMBER, BAND PIECE, with no spaces. Ask your teammates for the first two pieces."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "code",
+        "instruction": "Unlock the original performance, then explain what happened.",
+        "solution": "COVE17FIZZ",
+        "hints": [
+          "Ask Headquarters: everyone has one piece. Who has the order?",
+          "Put the place before the rehearsal number, then the band piece. Use no spaces.",
+          "Enter COVE17FIZZ. The sprite hid the performance to preserve a surprise; it did not delete it."
+        ],
+        "resolution": "The program returns. The “missing” performance was safely hidden by the archive sprite after misunderstanding a surprise request. The light pattern was a call for help, not sabotage.",
+        "format": "alphanumeric",
+        "normalization": "case-insensitive"
+      },
+      "next": null,
+      "finale": true
+    }
+  ],
+  "ending": "The Moonlight Showcase becomes a joint performance by all three bands. Pip’s tuba plays a proud original melody; his sandwich receives no credit. Juniper teaches the archive sprite the difference between a surprise and a secret forever. Your family takes a bow beneath gold, blue, gold, green lights. Friendship gets the final encore.",
+  "achievement": "Moonlight Backstage Crew"
+}

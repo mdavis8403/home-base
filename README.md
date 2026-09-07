@@ -1,13 +1,13 @@
 # Home Base
 
-A private place for Mia, Mom, and Dad. **Foundation + Phase 1 Messages.**
+A private place for Mia, Mom, and Dad. **Foundation + Messages, Family Board, and Mystery Club.**
 
 `HOMEBASE_SPEC.md` is the authoritative specification. Read it in full before working on this project, followed by `AGENTS.md` and [the architecture guide](docs/architecture.md).
 
 ## What is ready
 
 - Next.js App Router, React, strict TypeScript, Tailwind and custom design tokens.
-- Responsive entrance, family navigation, home shell, Messages, Family Board and two clearly labeled placeholder sections, and parent settings foundation.
+- Responsive entrance, family navigation, home shell, Messages, Family Board, Mystery Club and an Our Story placeholder, and parent settings foundation.
 - PostgreSQL migration with family/profile/session tables and reserved future-feature tables.
 - Family phrase → profile → passcode authentication; secure remembered devices; session expiry; logout; parent reauthentication and revocation of other devices.
 - Mia as child; Mom and Dad as administrators. No public signup or default real-family credentials.
@@ -15,7 +15,7 @@ A private place for Mia, Mom, and Dad. **Foundation + Phase 1 Messages.**
 - Installable PWA metadata, icons and generic offline shell. No private pages, APIs, or media in the service-worker cache.
 - Unit/database integration tests and production-browser tests for phone, iPad and laptop.
 
-Messages includes personal notes, photo/voice/video/drawing attachments, recipient selection, scheduling, unread state, private favorites, hearts, and archive filters. Family Board includes daily questions, private photo/drawing responses, automatic reveal, Past Boards, and parent prompts/preferences. Mystery Club gameplay and Our Story generation are **not implemented**. No global presence, online status, last-seen, location/GPS, analytics, or activity monitoring is implemented.
+Messages includes personal notes, photo/voice/video/drawing attachments, recipient selection, scheduling, unread state, private favorites, hearts, and archive filters. Family Board includes daily questions, private photo/drawing responses, automatic reveal, Past Boards, and parent prompts/preferences. Mystery Club includes five original cases, three-player lobbies, private clues, eight reusable puzzle types, hints, saved progress, and parent case import. Our Story generation is **not implemented**. No global presence, online status, last-seen, location/GPS, analytics, or activity monitoring is implemented.
 
 ## For the family
 
@@ -53,6 +53,8 @@ npm run build
 npx playwright install chromium webkit
 npm run test:e2e
 ```
+
+Mystery Club instructions are in [docs/MYSTERY_CLUB.md](docs/MYSTERY_CLUB.md); case files and the author walkthrough are in [content/mysteries](content/mysteries/README.md).
 
 Or run `npm run check` after installing browser engines. Unit/integration tests run the real SQL migration against the PostgreSQL-based PGlite engine. Browser tests start the **production build** on ports 3100/3101 and a disposable loopback-only PGlite PostgreSQL socket on 54329. They run the migration twice (idempotency), the actual seed script, and real HTTP authentication. Test credentials are isolated fixtures, never production defaults. Browser tests use Chromium for laptop and WebKit with iPad/phone emulation. Two offline emulation checks are intentionally skipped in WebKit; offline caching is exercised in Chromium. Physical iPad installation still needs a final check on the hosted HTTPS app.
 

@@ -1,6 +1,6 @@
 # Foundation contracts
 
-Authority: `HOMEBASE_SPEC.md`. Scope: Foundation contracts and the Phase 1 Messages and Family Board extensions below. One shared foundation; no parallel systems.
+Authority: `HOMEBASE_SPEC.md`. Scope: Foundation contracts and the Phase 1 Messages, Family Board and Mystery Club extensions below. One shared foundation; no parallel systems.
 
 ## Boundaries
 
@@ -32,13 +32,13 @@ Permissions:
 | Family/content management, deletion | No    | Yes    | Yes   | Yes            |
 | Authentication/provider management  | No    | No     | Yes   | Yes            |
 
-Only settings viewing, reauthentication, logout and device revocation are implemented. Other grants are shared contracts for future server services. Always reload the session for each request; do not trust a session object supplied by a browser. Use `AuthService.require` plus entity/family-specific checks.
+Foundation implements settings viewing, reauthentication, logout and device revocation. The feature extensions below also use these shared grants for content management. Always reload the session for each request; do not trust a session object supplied by a browser. Use `AuthService.require` plus entity/family-specific checks.
 
 ## Data access
 
 One private PostgreSQL database, accessed through `database()` and parameterized SQL. No browser database client, no exposed REST database, no implicit client-side authorization, no public signup. Family-scoped composite foreign keys prevent cross-family relations in reserved tables. Database credentials must be server-only; a hosted provider's public data API must remain disabled/inaccessible. This foundation uses server authorization rather than pretending an unconfigured RLS policy secures a publicly exposed database.
 
-All conceptual entities in specification section 15 are reserved; `story_participants` additionally represents membership/turn order explicitly. Reserved JSON fields are opaque until their feature validators exist. There are no feature data APIs or populated feature rows. Indexes cover initial session and expected inbox lookups; features add their own migrations and indexes when behavior is known. Polymorphic media entity references will require server validation against the actual related row.
+All conceptual entities in specification section 15 are reserved; `story_participants` additionally represents membership/turn order explicitly. Reserved JSON fields are opaque until their feature validators exist. Foundation initially had no feature data APIs or populated feature rows; implemented feature APIs are described below. Indexes cover initial session and expected inbox lookups; features add their own migrations and indexes when behavior is known. Polymorphic media entity references will require server validation against the actual related row.
 
 ## Private media
 
@@ -58,11 +58,11 @@ Manifest includes 192/512 PNG icons, a maskable icon, standalone display and lau
 
 Vitest runs security/business rules plus actual migration queries using PGlite's PostgreSQL engine. Playwright starts two production servers (unconfigured and configured) and tests real authentication using an isolated PostgreSQL socket and the actual migration/seed scripts. Chromium laptop and WebKit iPad/phone projects cover the public shell, private redirects, profile identity, placeholders, child denial, parent verification and revocation. Chromium checks the offline cache. CI additionally exercises setup on PostgreSQL 17. Hosted TLS/storage configuration and installation on physical family devices remain deployment acceptance work.
 
-Next feature work must build on these contracts. Phase 1 implements Messages, Family Board, Mystery Engine, mystery content and Our Story only when requested. Mystery validators, puzzles, reveal/scheduled visibility, story turns and all related feature tests are deferred alongside their features. Session-specific game `joined_at`/`ready` fields are reserved only; there is no realtime or global presence service. Do not implement global online status, last-seen, location, GPS or activity monitoring in any future phase.
+Next feature work must build on these contracts. Phase 1 implements Messages, Family Board, Mystery Engine, mystery content and Our Story only when requested. Messages visibility, Board reveal, and Mystery validation/puzzles now have implementations and tests below. Story turns remain deferred. Session-specific game `joined_at`/`ready` fields are used only by Mystery Club; there is no global presence service. Do not implement global online status, last-seen, location, GPS or activity monitoring in any future phase.
 
 ## Phase 1: Messages (implemented)
 
-Messages is the first authorized feature. Family Board is implemented in the extension below; Mystery Club and Our Story remain placeholders.
+Messages is the first authorized feature. Family Board and Mystery Club are implemented in the extensions below; Our Story remains a placeholder.
 The existing authenticated route group now has a concrete `/messages` page.
 `MessagesService` uses the Foundation database, session permissions, reserved tables,
 private storage adapter and media-signing service. Migration 002 adds only recipient
@@ -98,3 +98,19 @@ Family Board is the second authorized feature. Mystery Club, Our Story, the open
 - Drawing Challenge directly reuses the Messages `Doodle` component and its tools. A drawing-file picker provides a keyboard-accessible alternative to freehand canvas input. The optional 60-second timer begins on Start timer, may be disabled, and never submits, discards, or locks a drawing. Its end is a gentle cue; the family can keep drawing.
 
 Validation includes actual PostgreSQL-engine migrations and service tests for cross-family/expired-session denial, parent reauthentication, pre-reveal DTO and media privacy, all-three/timed reveal, concurrent and duplicate responses, archived boards, prompt rotation, timezone and daylight-saving conversion, real image inspection, and upload/database failure cleanup. Production browser tests exercise real authentication and three clients on Chromium and WebKit iPad/phone, including automatic reveal, archive navigation, parent settings, photo preview, the shared canvas, and optional timer. Live S3 round trips and physical-device acceptance remain hosting work; no application fake storage or test routes were introduced.
+
+## Phase 1: Mystery Club (implemented)
+
+Mystery Club uses the existing `Database`, session guards, permissions, HTTP/CSRF envelope, navigation, and design tokens. Migration 004 extends the reserved mystery tables with package slugs, immutable per-session content snapshots, revision counters, and a serialized event function. No global participation/presence fields or services were added. Our Story and the opening-door/home integration phase remain deferred.
+
+- Five original server-only JSON packages live in `content/mysteries`. `validateMystery` combines strict Zod structure with semantic graph/answer validation; `mystery.schema.json` is its exportable structural schema. Published packages cannot contain unreachable scenes, cycles, missing answers, broken references, duplicate IDs, or incomplete permutations/matches. Clue fairness and estimated time still need human playtesting; an author walkthrough documents every launch solution.
+- `POST /api/mystery/install` idempotently installs the built-in collection for the authenticated family, without overwriting edits or republishing hidden cases. GET `/api/mystery` returns safe case metadata and own-family active/completed references, never raw case packages. GET `?session=id` returns a filtered view. There are no public case-file routes.
+- `POST /api/mystery/new` creates at most one unfinished session per case/family using a partial unique index and captures the full published package. New Case does not join a profile automatically. Each member deliberately joins and chooses Ready; all three must be ready to begin. Library-wide online state, last-seen fields, global activity records and websocket presence are absent.
+- `POST /api/mystery/event` accepts a UUID for idempotency, session ID, expected revision, event type, and bounded input. Authenticated identity comes only from the secure session. A server reducer checks actor, membership, current scene, solution and progression. A PostgreSQL row lock and revision check serialize writes and the event record atomically. Only meaningful deliberate game actions are recorded; wrong attempts and periodic reads do not create activity logs. Repeated requests cannot skip scenes. A conflict refreshes the client's view and asks for a retry.
+- Scenes and hints come from the frozen session package. Solutions, unopened scenes, other players' clues and not-yet-requested hints never enter the normal browser DTO. Actor-only puzzles are omitted from other players' DTOs, including their illustrations. Normal parent sessions have the same clue privacy as the child. After a solve, the shared resolution is available, then a separate advance action turns the page. The personal notebook retains only shared evidence and that player's earlier private clues.
+- Visible game screens poll read-only state every two seconds and on focus; the library refreshes less often. There is no background readiness reset, last-active update, global heartbeat, or assumption that Ready means online. Temporary network loss preserves server progress. Reopening the session URL or Continue Case resumes the saved scene.
+- Eight generic puzzle renderers handle codes, choices, ordering, matching, hotspots, picture fragments, ciphers and multi-field combinations. Ordering/tiles have drag, button and select-to-swap alternatives. Clue images/maps use bounded declarative SVG data and escaped text, not arbitrary markup or URLs. Audio clues synthesize original named notes only after Play and include a written alternative. No parallel media store or public family-media path is introduced.
+- Parent preview/publish/publication endpoints require fresh `content:manage` permission via existing reauthentication. The preview operates on the parent's supplied file and explicitly allows each player's author view. Publishing revalidates server-side, uses a 1 MB streamed body cap, and requires increasing versions for changed packages. Unpublishing prevents new games; active sessions and completed memories use their snapshots. No player-facing API returns the author's full package.
+- Completion records an ending and case-specific achievement with puzzle/hint totals. These are game-only summaries; there are no communication points, family rankings, or engagement metrics. A replay creates a new game after completion, preserving previous sessions.
+
+Tests cover all launch packages and complete database-backed playthroughs with three identities, concurrent events, retries, actor-only image privacy, expired/cross-family denial, parent import permissions, version isolation, readiness, hints, and resume. Browser tests additionally play all five cases through the actual interfaces with three separate authenticated browser contexts on laptop, iPad and phone. Production PostgreSQL migrations are exercised by CI; live deployment and real-device acceptance remain separate from these isolated tests.

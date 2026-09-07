@@ -1,6 +1,6 @@
 # Getting your family's Home Base ready
 
-The foundation, Messages, and Family Board are built. Live use still depends on connecting hosting, the private database, and media storage. Mystery Club and Our Story are still placeholders. See [the Family Board guide](FAMILY_BOARD.md) for private responses, reveal times, parent prompts, and the new database update.
+The foundation, Messages, Family Board, and Mystery Club are built. Live use still depends on connecting hosting, the private database, and media storage. Our Story remains a placeholder. See [the Mystery Club guide](MYSTERY_CLUB.md) for the five cases and the saved-game database update. See [the Family Board guide](FAMILY_BOARD.md) for private responses, reveal times, parent prompts, and the new database update.
 
 You do not need to run commands or edit code. When you are ready to put it online, ask Codex to help you **connect hosting and a private database for Home Base**. Hosting is the service that keeps the website running; the database is the private place where profiles and future family content are saved. No service accounts or paid plans were created during Foundation work.
 

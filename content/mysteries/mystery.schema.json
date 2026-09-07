@@ -1,0 +1,1504 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+    },
+    "version": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 1000
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 150
+    },
+    "series": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "caseNumber": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 999
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 3000
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "Easy",
+        "Easy/Medium",
+        "Medium",
+        "Medium/Hard"
+      ]
+    },
+    "minutes": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 120
+        },
+        {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 120
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "cover": {
+      "type": "object",
+      "properties": {
+        "motif": {
+          "type": "string",
+          "enum": [
+            "owl",
+            "crown",
+            "music",
+            "mountain",
+            "castle"
+          ]
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        }
+      },
+      "required": [
+        "motif",
+        "subtitle"
+      ],
+      "additionalProperties": false
+    },
+    "introduction": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 3000
+    },
+    "start": {
+      "type": "string",
+      "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+    },
+    "scenes": {
+      "minItems": 2,
+      "maxItems": 30,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          },
+          "shared": {
+            "minItems": 1,
+            "maxItems": 8,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "note",
+                    "evidence",
+                    "suspect",
+                    "timeline",
+                    "image",
+                    "map",
+                    "audio"
+                  ]
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 3000
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 3000
+                },
+                "art": {
+                  "type": "object",
+                  "properties": {
+                    "theme": {
+                      "type": "string",
+                      "enum": [
+                        "stars",
+                        "academy",
+                        "camp",
+                        "park",
+                        "castle",
+                        "room",
+                        "map",
+                        "crest"
+                      ]
+                    },
+                    "caption": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 3000
+                    },
+                    "objects": {
+                      "maxItems": 16,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                          },
+                          "label": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 100
+                          },
+                          "glyph": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 12
+                          },
+                          "x": {
+                            "type": "number",
+                            "minimum": 8,
+                            "maximum": 92
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 12,
+                            "maximum": 88
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "label",
+                          "glyph",
+                          "x",
+                          "y"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "theme",
+                    "caption",
+                    "objects"
+                  ],
+                  "additionalProperties": false
+                },
+                "tones": {
+                  "minItems": 1,
+                  "maxItems": 24,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "C4",
+                      "D4",
+                      "E4",
+                      "F4",
+                      "G4",
+                      "A4",
+                      "B4",
+                      "C5",
+                      "rest"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "kind",
+                "title",
+                "text"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "private": {
+            "type": "object",
+            "properties": {
+              "mia": {
+                "minItems": 1,
+                "maxItems": 6,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "note",
+                        "evidence",
+                        "suspect",
+                        "timeline",
+                        "image",
+                        "map",
+                        "audio"
+                      ]
+                    },
+                    "title": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 3000
+                    },
+                    "text": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 3000
+                    },
+                    "art": {
+                      "type": "object",
+                      "properties": {
+                        "theme": {
+                          "type": "string",
+                          "enum": [
+                            "stars",
+                            "academy",
+                            "camp",
+                            "park",
+                            "castle",
+                            "room",
+                            "map",
+                            "crest"
+                          ]
+                        },
+                        "caption": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 3000
+                        },
+                        "objects": {
+                          "maxItems": 16,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                              },
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 100
+                              },
+                              "glyph": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 12
+                              },
+                              "x": {
+                                "type": "number",
+                                "minimum": 8,
+                                "maximum": 92
+                              },
+                              "y": {
+                                "type": "number",
+                                "minimum": 12,
+                                "maximum": 88
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "label",
+                              "glyph",
+                              "x",
+                              "y"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "theme",
+                        "caption",
+                        "objects"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "tones": {
+                      "minItems": 1,
+                      "maxItems": 24,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "C4",
+                          "D4",
+                          "E4",
+                          "F4",
+                          "G4",
+                          "A4",
+                          "B4",
+                          "C5",
+                          "rest"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "title",
+                    "text"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "mom": {
+                "minItems": 1,
+                "maxItems": 6,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "note",
+                        "evidence",
+                        "suspect",
+                        "timeline",
+                        "image",
+                        "map",
+                        "audio"
+                      ]
+                    },
+                    "title": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 3000
+                    },
+                    "text": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 3000
+                    },
+                    "art": {
+                      "type": "object",
+                      "properties": {
+                        "theme": {
+                          "type": "string",
+                          "enum": [
+                            "stars",
+                            "academy",
+                            "camp",
+                            "park",
+                            "castle",
+                            "room",
+                            "map",
+                            "crest"
+                          ]
+                        },
+                        "caption": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 3000
+                        },
+                        "objects": {
+                          "maxItems": 16,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                              },
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 100
+                              },
+                              "glyph": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 12
+                              },
+                              "x": {
+                                "type": "number",
+                                "minimum": 8,
+                                "maximum": 92
+                              },
+                              "y": {
+                                "type": "number",
+                                "minimum": 12,
+                                "maximum": 88
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "label",
+                              "glyph",
+                              "x",
+                              "y"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "theme",
+                        "caption",
+                        "objects"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "tones": {
+                      "minItems": 1,
+                      "maxItems": 24,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "C4",
+                          "D4",
+                          "E4",
+                          "F4",
+                          "G4",
+                          "A4",
+                          "B4",
+                          "C5",
+                          "rest"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "title",
+                    "text"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "dad": {
+                "minItems": 1,
+                "maxItems": 6,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "note",
+                        "evidence",
+                        "suspect",
+                        "timeline",
+                        "image",
+                        "map",
+                        "audio"
+                      ]
+                    },
+                    "title": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 3000
+                    },
+                    "text": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 3000
+                    },
+                    "art": {
+                      "type": "object",
+                      "properties": {
+                        "theme": {
+                          "type": "string",
+                          "enum": [
+                            "stars",
+                            "academy",
+                            "camp",
+                            "park",
+                            "castle",
+                            "room",
+                            "map",
+                            "crest"
+                          ]
+                        },
+                        "caption": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 3000
+                        },
+                        "objects": {
+                          "maxItems": 16,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                              },
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 100
+                              },
+                              "glyph": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 12
+                              },
+                              "x": {
+                                "type": "number",
+                                "minimum": 8,
+                                "maximum": 92
+                              },
+                              "y": {
+                                "type": "number",
+                                "minimum": 12,
+                                "maximum": 88
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "label",
+                              "glyph",
+                              "x",
+                              "y"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "theme",
+                        "caption",
+                        "objects"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "tones": {
+                      "minItems": 1,
+                      "maxItems": 24,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "C4",
+                          "D4",
+                          "E4",
+                          "F4",
+                          "G4",
+                          "A4",
+                          "B4",
+                          "C5",
+                          "rest"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "title",
+                    "text"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "mia",
+              "mom",
+              "dad"
+            ],
+            "additionalProperties": false
+          },
+          "puzzle": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "instruction": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "actor": {
+                    "type": "string",
+                    "enum": [
+                      "mia",
+                      "mom",
+                      "dad"
+                    ]
+                  },
+                  "hints": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "code"
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "numeric",
+                      "alphanumeric",
+                      "phrase"
+                    ]
+                  },
+                  "normalization": {
+                    "type": "string",
+                    "enum": [
+                      "exact",
+                      "case-insensitive",
+                      "whitespace"
+                    ]
+                  },
+                  "solution": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  }
+                },
+                "required": [
+                  "instruction",
+                  "hints",
+                  "resolution",
+                  "type",
+                  "format",
+                  "normalization",
+                  "solution"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "instruction": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "actor": {
+                    "type": "string",
+                    "enum": [
+                      "mia",
+                      "mom",
+                      "dad"
+                    ]
+                  },
+                  "hints": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "choice"
+                  },
+                  "options": {
+                    "minItems": 2,
+                    "maxItems": 8,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                        },
+                        "label": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 3000
+                        },
+                        "glyph": {
+                          "type": "string",
+                          "maxLength": 12
+                        },
+                        "path": {
+                          "type": "string",
+                          "maxLength": 1500,
+                          "pattern": "^[MmLlHhVvCcSsQqTtAaZz0-9.,\\s-]+$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "label"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "solution": {
+                    "type": "string",
+                    "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                  }
+                },
+                "required": [
+                  "instruction",
+                  "hints",
+                  "resolution",
+                  "type",
+                  "options",
+                  "solution"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "instruction": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "actor": {
+                    "type": "string",
+                    "enum": [
+                      "mia",
+                      "mom",
+                      "dad"
+                    ]
+                  },
+                  "hints": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "ordering"
+                  },
+                  "options": {
+                    "minItems": 3,
+                    "maxItems": 8,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                        },
+                        "label": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 3000
+                        },
+                        "glyph": {
+                          "type": "string",
+                          "maxLength": 12
+                        },
+                        "path": {
+                          "type": "string",
+                          "maxLength": 1500,
+                          "pattern": "^[MmLlHhVvCcSsQqTtAaZz0-9.,\\s-]+$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "label"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "solution": {
+                    "minItems": 3,
+                    "maxItems": 8,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                    }
+                  }
+                },
+                "required": [
+                  "instruction",
+                  "hints",
+                  "resolution",
+                  "type",
+                  "options",
+                  "solution"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "instruction": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "actor": {
+                    "type": "string",
+                    "enum": [
+                      "mia",
+                      "mom",
+                      "dad"
+                    ]
+                  },
+                  "hints": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "matching"
+                  },
+                  "left": {
+                    "minItems": 2,
+                    "maxItems": 8,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                        },
+                        "label": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 3000
+                        },
+                        "glyph": {
+                          "type": "string",
+                          "maxLength": 12
+                        },
+                        "path": {
+                          "type": "string",
+                          "maxLength": 1500,
+                          "pattern": "^[MmLlHhVvCcSsQqTtAaZz0-9.,\\s-]+$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "label"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "right": {
+                    "minItems": 2,
+                    "maxItems": 8,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                        },
+                        "label": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 3000
+                        },
+                        "glyph": {
+                          "type": "string",
+                          "maxLength": 12
+                        },
+                        "path": {
+                          "type": "string",
+                          "maxLength": 1500,
+                          "pattern": "^[MmLlHhVvCcSsQqTtAaZz0-9.,\\s-]+$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "label"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "solution": {
+                    "minItems": 2,
+                    "maxItems": 8,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                    }
+                  }
+                },
+                "required": [
+                  "instruction",
+                  "hints",
+                  "resolution",
+                  "type",
+                  "left",
+                  "right",
+                  "solution"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "instruction": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "actor": {
+                    "type": "string",
+                    "enum": [
+                      "mia",
+                      "mom",
+                      "dad"
+                    ]
+                  },
+                  "hints": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "hotspot"
+                  },
+                  "art": {
+                    "type": "object",
+                    "properties": {
+                      "theme": {
+                        "type": "string",
+                        "enum": [
+                          "stars",
+                          "academy",
+                          "camp",
+                          "park",
+                          "castle",
+                          "room",
+                          "map",
+                          "crest"
+                        ]
+                      },
+                      "caption": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      "objects": {
+                        "maxItems": 16,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                            },
+                            "label": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 100
+                            },
+                            "glyph": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 12
+                            },
+                            "x": {
+                              "type": "number",
+                              "minimum": 8,
+                              "maximum": 92
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 12,
+                              "maximum": 88
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "label",
+                            "glyph",
+                            "x",
+                            "y"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "theme",
+                      "caption",
+                      "objects"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "solution": {
+                    "type": "string",
+                    "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                  }
+                },
+                "required": [
+                  "instruction",
+                  "hints",
+                  "resolution",
+                  "type",
+                  "art",
+                  "solution"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "instruction": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "actor": {
+                    "type": "string",
+                    "enum": [
+                      "mia",
+                      "mom",
+                      "dad"
+                    ]
+                  },
+                  "hints": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "tiles"
+                  },
+                  "options": {
+                    "minItems": 4,
+                    "maxItems": 9,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                        },
+                        "label": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 3000
+                        },
+                        "glyph": {
+                          "type": "string",
+                          "maxLength": 12
+                        },
+                        "path": {
+                          "type": "string",
+                          "maxLength": 1500,
+                          "pattern": "^[MmLlHhVvCcSsQqTtAaZz0-9.,\\s-]+$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "label"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "columns": {
+                    "type": "integer",
+                    "minimum": 2,
+                    "maximum": 3
+                  },
+                  "solution": {
+                    "minItems": 4,
+                    "maxItems": 9,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+                    }
+                  }
+                },
+                "required": [
+                  "instruction",
+                  "hints",
+                  "resolution",
+                  "type",
+                  "options",
+                  "columns",
+                  "solution"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "instruction": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "actor": {
+                    "type": "string",
+                    "enum": [
+                      "mia",
+                      "mom",
+                      "dad"
+                    ]
+                  },
+                  "hints": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "cipher"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "caesar",
+                      "substitution",
+                      "letter-number"
+                    ]
+                  },
+                  "encoded": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "solution": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  }
+                },
+                "required": [
+                  "instruction",
+                  "hints",
+                  "resolution",
+                  "type",
+                  "method",
+                  "encoded",
+                  "solution"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "instruction": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "actor": {
+                    "type": "string",
+                    "enum": [
+                      "mia",
+                      "mom",
+                      "dad"
+                    ]
+                  },
+                  "hints": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 3000
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "combination"
+                  },
+                  "fields": {
+                    "minItems": 2,
+                    "maxItems": 6,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 80
+                    }
+                  },
+                  "solution": {
+                    "minItems": 2,
+                    "maxItems": 6,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 3000
+                    }
+                  }
+                },
+                "required": [
+                  "instruction",
+                  "hints",
+                  "resolution",
+                  "type",
+                  "fields",
+                  "solution"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "next": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!constructor$|prototype$)[a-z][a-z0-9-]{0,59}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "finale": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "shared",
+          "private",
+          "puzzle",
+          "next",
+          "finale"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "ending": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 3000
+    },
+    "achievement": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "slug",
+    "version",
+    "title",
+    "series",
+    "caseNumber",
+    "description",
+    "difficulty",
+    "minutes",
+    "cover",
+    "introduction",
+    "start",
+    "scenes",
+    "ending",
+    "achievement"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,438 @@
+{
+  "schemaVersion": 1,
+  "slug": "unity-crown",
+  "version": 1,
+  "title": "The Vanishing Unity Crown",
+  "series": "Asterveil Academy",
+  "caseNumber": 2,
+  "description": "At Asterveil Academy, descendants of queens, witches, knights, and legendary troublemakers are dressing for the Royal Lantern Ball. Then the ancient Unity Crown disappears.",
+  "difficulty": "Easy/Medium",
+  "minutes": [
+    20,
+    30
+  ],
+  "cover": {
+    "motif": "crown",
+    "subtitle": "An academy secret beneath a thousand lanterns."
+  },
+  "introduction": "At Asterveil Academy, descendants of queens, witches, knights, and legendary troublemakers are dressing for the Royal Lantern Ball. Then the ancient Unity Crown disappears.\nPrincess Elara’s lantern shoes keep changing color. Bram, heir to a famously dramatic witch, has purple ink on his gloves. Knight-in-training Tavi has lost a key. And groundskeeper Nella’s vines have politely taken over the dessert table. An owl in a velvet collar asks your family to investigate before the first dance.",
+  "start": "mirror-hall",
+  "scenes": [
+    {
+      "id": "mirror-hall",
+      "title": "The Mirror Hall",
+      "shared": [
+        {
+          "kind": "map",
+          "title": "No broken glass",
+          "text": "The crown display is empty, but its glass is unbroken. The enchanted mirrors show places instead of reflections tonight.",
+          "art": {
+            "theme": "academy",
+            "caption": "Asterveil Academy on the night of the Royal Lantern Ball.",
+            "objects": [
+              {
+                "id": "mirrors",
+                "label": "Mirror Hall",
+                "glyph": "◇",
+                "x": 22,
+                "y": 35
+              },
+              {
+                "id": "library",
+                "label": "Spell Library",
+                "glyph": "▤",
+                "x": 50,
+                "y": 25
+              },
+              {
+                "id": "ballroom",
+                "label": "Ballroom",
+                "glyph": "♕",
+                "x": 78,
+                "y": 40
+              },
+              {
+                "id": "greenhouse",
+                "label": "Greenhouse",
+                "glyph": "♧",
+                "x": 62,
+                "y": 78
+              }
+            ]
+          }
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your mirror shows a green leaf crest beside a door. The mirror attendant says this crest belongs to one school room, not one student."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The room directory pairs the leaf crest with the Greenhouse, the diamond with Mirror Hall, the book with Spell Library, and the crown with Ballroom."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "A safety label says: when the display moves an object through magic, its destination appears in the mirror. It cannot show a person. Find a place, not a suspect."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "choice",
+        "instruction": "Which room received the crown’s first magical trace?",
+        "solution": "greenhouse",
+        "hints": [
+          "Ask Headquarters: Mia has a symbol; Mom has the directory.",
+          "Dad’s clue means you are looking for a room with a leaf crest.",
+          "Choose Greenhouse."
+        ],
+        "resolution": "A leaf-shaped ticket waits in the Greenhouse. It is stamped “Locker desk: retrieve the three study kits.”",
+        "options": [
+          {
+            "id": "library",
+            "label": "Spell Library"
+          },
+          {
+            "id": "ballroom",
+            "label": "Ballroom"
+          },
+          {
+            "id": "greenhouse",
+            "label": "Greenhouse"
+          },
+          {
+            "id": "mirrors",
+            "label": "Mirror Hall"
+          }
+        ]
+      },
+      "next": "study-kits",
+      "finale": false
+    },
+    {
+      "id": "study-kits",
+      "title": "The Mislabelled Study Kits",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "The Mislabelled Study Kits",
+          "text": "Three study kits have lost their name tags. Match Elara, Bram, and Tavi to their kits so the locker keeper will release the mirror ticket."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Elara’s kit contains the silver ribbon. She uses it to tie up her lantern shoes before dance practice. It is not a sign that she took the crown."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Bram’s kit is the one with purple ink. The ink changes his homework into rhymes, sometimes against his wishes."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Tavi carries the brass compass. He is learning to navigate the academy because the stairs prefer scenic routes."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "matching",
+        "instruction": "Match each student to the correct study kit.",
+        "solution": [
+          "ribbon",
+          "ink",
+          "compass"
+        ],
+        "hints": [
+          "Ask Headquarters: each agent has one confirmed match.",
+          "Elara goes with silver ribbon. Ask the others for the remaining two.",
+          "Match Elara → silver ribbon, Bram → purple ink, Tavi → brass compass."
+        ],
+        "resolution": "Inside the kits is a shared timetable. All three students visited the crown hall, but at different times.",
+        "left": [
+          {
+            "id": "elara",
+            "label": "Princess Elara"
+          },
+          {
+            "id": "bram",
+            "label": "Bram"
+          },
+          {
+            "id": "tavi",
+            "label": "Tavi"
+          }
+        ],
+        "right": [
+          {
+            "id": "compass",
+            "label": "Brass compass"
+          },
+          {
+            "id": "ribbon",
+            "label": "Silver ribbon"
+          },
+          {
+            "id": "ink",
+            "label": "Purple ink"
+          }
+        ]
+      },
+      "next": "ball-timeline",
+      "finale": false
+    },
+    {
+      "id": "ball-timeline",
+      "title": "Before the First Waltz",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "Before the First Waltz",
+          "text": "The crown vanished at 6:20. Put these four events in time order. The times are divided between your screens."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "suspect",
+            "title": "Elara’s rehearsal",
+            "text": "Elara left her silver ribbon at the display at 6:05, then went straight to dance rehearsal. The rehearsal mirror shows her there from 6:10 to 6:30."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "suspect",
+            "title": "Bram’s errand",
+            "text": "Bram delivered purple invitation ink at 6:12. He returned to the library at 6:15, where a book sneezed ink all over his gloves."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "timeline",
+            "title": "Tavi and the bells",
+            "text": "Tavi tested the hall key at 6:18. At 6:20, the Unity chime sounded and the display emptied itself. Nella was outside pruning vines throughout."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "ordering",
+        "instruction": "Rebuild the order before blaming anyone.",
+        "solution": [
+          "ribbon",
+          "ink",
+          "key",
+          "chime"
+        ],
+        "hints": [
+          "Ask Headquarters: read every time aloud.",
+          "The ribbon is first, and the chime is last.",
+          "Order: silver ribbon, invitation ink, key test, Unity chime."
+        ],
+        "resolution": "Nobody forced the display. The crown moved at the exact moment the Unity chime rang. The missing key was still in the lock.",
+        "options": [
+          {
+            "id": "chime",
+            "label": "Unity chime"
+          },
+          {
+            "id": "key",
+            "label": "Key test"
+          },
+          {
+            "id": "ribbon",
+            "label": "Silver ribbon"
+          },
+          {
+            "id": "ink",
+            "label": "Invitation ink"
+          }
+        ]
+      },
+      "next": "spell-book",
+      "finale": false
+    },
+    {
+      "id": "spell-book",
+      "title": "The Spell-Book Margin",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "The Spell-Book Margin",
+          "text": "The old ceremony book has a charm written as numbers: 21 · 14 · 9 · 20 · 25. Its translation will open the display’s instruction drawer."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your bookmark says 1 = A, 2 = B, and so on through 26 = Z. The first two numbers make U and N."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your page supplies 9 = I and 20 = T. This is a word about people coming together, not about a royal title."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Your endpaper says 25 = Y. The resulting word names the Crown’s special ceremony, not a student."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "cipher",
+        "instruction": "Translate the spell written in numbers.",
+        "solution": "UNITY",
+        "hints": [
+          "Ask Headquarters: use letter positions in the alphabet.",
+          "The translated letters begin U N I T.",
+          "Enter UNITY."
+        ],
+        "resolution": "The drawer reveals a rule: “When the Unity chime rings, bring the crown to those who work together unseen.” The route is selected by three seals.",
+        "method": "letter-number",
+        "encoded": "21 · 14 · 9 · 20 · 25"
+      },
+      "next": "ceremony-seals",
+      "finale": false
+    },
+    {
+      "id": "ceremony-seals",
+      "title": "The Three Ceremony Seals",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "The Three Ceremony Seals",
+          "text": "A small route lock asks for three numbers in this order: leaf, star, ribbon. Each agent can read one seal."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The leaf seal has four veins. Only the large veins count; tiny decorative dots are not part of the code. Your number is 4."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The star seal has six long points. The two little sparkles beside it are decoration. Your number is 6."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The ribbon seal has two loops. The trailing ends are not loops. Your number is 2. Read the lock labels before entering all three numbers."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "combination",
+        "instruction": "Set the leaf, star, and ribbon seals.",
+        "solution": [
+          "4",
+          "6",
+          "2"
+        ],
+        "hints": [
+          "Ask Headquarters: each seal gives one whole number.",
+          "Use the field order printed on the lock, not the order people speak.",
+          "Enter 4, 6, 2."
+        ],
+        "resolution": "The route opens to the Lantern Workshop. The crown floats above the apprentices who made everyone’s lanterns—including Bram, Tavi, Nella, and Elara after rehearsal.",
+        "fields": [
+          "Leaf",
+          "Star",
+          "Ribbon"
+        ]
+      },
+      "next": "crown-truth",
+      "finale": false
+    },
+    {
+      "id": "crown-truth",
+      "title": "The Crown’s Choice",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "The Crown’s Choice",
+          "text": "Elara admits she rang the Unity chime to thank the lantern makers. She did not know the old crown would follow it. Bram looks relieved, then accidentally rhymes “crown” with “upside-down.” What really happened?"
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The display glass was never opened, and the crown is resting safely in the workshop. The leaf mirror showed its destination from the beginning."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The spell-book says the crown honors people who work together unseen. Elara’s thank-you chime activated a forgotten ceremony."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The timetable clears a theft: the display moved the crown by itself at the chime. No student carried it away, and no one was trying to ruin the ball."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "choice",
+        "instruction": "Choose the explanation supported by all three kinds of evidence.",
+        "solution": "ceremony",
+        "hints": [
+          "Ask Headquarters: connect the unbroken glass, the chime, and the workshop.",
+          "The crown traveled by ceremony, not by a thief’s hand.",
+          "Choose The thank-you chime activated the crown’s forgotten ceremony."
+        ],
+        "resolution": "The academy moves the first dance to the workshop courtyard. Every lantern maker gets a turn beneath the crown.",
+        "options": [
+          {
+            "id": "bram",
+            "label": "Bram stole it with purple ink"
+          },
+          {
+            "id": "ceremony",
+            "label": "The thank-you chime activated the crown’s forgotten ceremony"
+          },
+          {
+            "id": "nella",
+            "label": "Nella hid it in the dessert vines"
+          }
+        ]
+      },
+      "next": null,
+      "finale": true
+    }
+  ],
+  "ending": "The Royal Lantern Ball begins beneath a crown that belongs to everyone for one evening. Elara invites the lantern makers to lead the dance. Bram’s apology poem is so funny that the crown tilts with laughter. Your owl messenger leaves a gold leaf seal on the case file. A good investigation, it turns out, makes room for a kinder explanation.",
+  "achievement": "Lantern Circle Investigator"
+}

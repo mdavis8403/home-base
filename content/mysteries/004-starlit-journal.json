@@ -1,0 +1,468 @@
+{
+  "schemaVersion": 1,
+  "slug": "starlit-journal",
+  "version": 1,
+  "title": "The Starlit Ranger Journal",
+  "series": "Starglass National Park",
+  "caseNumber": 4,
+  "description": "A historic ranger journal has vanished just before the Silver Crossing, a rare procession of bright stars above Starglass National Park. Your family has been appointed honorary Junior Rangers.",
+  "difficulty": "Medium",
+  "minutes": [
+    25,
+    30
+  ],
+  "cover": {
+    "motif": "mountain",
+    "subtitle": "Some trails wake only beneath the stars."
+  },
+  "introduction": "A historic ranger journal has vanished just before the Silver Crossing, a rare procession of bright stars above Starglass National Park. Your family has been appointed honorary Junior Rangers.\nCertain marked trails appear only beneath starlight, and Lantern Falls glows after dark. Ranger Fern asks you to follow the evidence without leaving paths, disturbing animals, or taking anything from the park. An owl arrives wearing a very small ranger hat.",
+  "start": "ranger-log",
+  "scenes": [
+    {
+      "id": "ranger-log",
+      "title": "Ranger Fern’s Log",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "Ranger Fern’s Log",
+          "text": "Three records describe where the journal was last seen. Put the park’s morning in order before deciding which trail to follow."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "At 8:10, Ranger Fern placed the journal at the station desk. At 9:00, a volunteer carried it to the sheltered lookout for a history talk."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "At 9:25, the history talk ended. At 9:40, a rain warning arrived. Nobody reported a missing journal until after the warning."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The events on the cards are desk, talk begins, talk ends, and rain warning. The talk took place at Granite Lookout, on the marked trail."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "ordering",
+        "instruction": "Arrange the ranger-log events from earliest to latest.",
+        "solution": [
+          "desk",
+          "talk",
+          "end",
+          "rain"
+        ],
+        "hints": [
+          "Ask Headquarters: read the four clock times aloud.",
+          "The talk is between the desk entry and the rain warning.",
+          "Order: station desk, talk begins, talk ends, rain warning."
+        ],
+        "resolution": "At Granite Lookout you find a waterproof note: “Moved for shelter. Follow the tracks on the posted identification board.”",
+        "options": [
+          {
+            "id": "rain",
+            "label": "Rain warning"
+          },
+          {
+            "id": "end",
+            "label": "Talk ends"
+          },
+          {
+            "id": "desk",
+            "label": "Station desk"
+          },
+          {
+            "id": "talk",
+            "label": "Talk begins"
+          }
+        ]
+      },
+      "next": "tracks",
+      "finale": false
+    },
+    {
+      "id": "tracks",
+      "title": "Tracks Without Following Animals",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "Tracks Without Following Animals",
+          "text": "The printed track guide has three patterns. Match them using your separate ranger cards. These are drawings on a sign—no need to follow or approach a real animal."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Deer tracks split into two pointed halves, like a small heart. Match Deer with Split hoof."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Otter tracks have five rounded toes with a webbed impression. Match Otter with Webbed toes."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Owl tracks show three long forward toes and a smaller rear mark. Match Owl with Bird toes. The owl icon marks the next official clue sign."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "matching",
+        "instruction": "Match the animals to the printed track patterns.",
+        "solution": [
+          "hoof",
+          "webbed",
+          "bird"
+        ],
+        "hints": [
+          "Ask Headquarters: this is identification, not a wildlife chase.",
+          "Deer leave split hooves; compare the other two cards.",
+          "Deer → split hoof; Otter → webbed toes; Owl → bird toes."
+        ],
+        "resolution": "The owl-marked sign holds three compass clues. Ranger Fern reminds you: the clue is on the sign, not on a living bird.",
+        "left": [
+          {
+            "id": "deer",
+            "label": "Deer"
+          },
+          {
+            "id": "otter",
+            "label": "Otter"
+          },
+          {
+            "id": "owl",
+            "label": "Owl"
+          }
+        ],
+        "right": [
+          {
+            "id": "bird",
+            "label": "Bird toes"
+          },
+          {
+            "id": "hoof",
+            "label": "Split hoof"
+          },
+          {
+            "id": "webbed",
+            "label": "Webbed toes"
+          }
+        ]
+      },
+      "next": "compass",
+      "finale": false
+    },
+    {
+      "id": "compass",
+      "title": "The Starlight Trail",
+      "shared": [
+        {
+          "kind": "map",
+          "title": "Official trail map",
+          "text": "Only the named, marked routes are open. Use the three clues together.",
+          "art": {
+            "theme": "park",
+            "caption": "Starglass National Park. Stay on the marked trails; north is up.",
+            "objects": [
+              {
+                "id": "cedar",
+                "label": "Cedar Camp",
+                "glyph": "♧",
+                "x": 20,
+                "y": 25
+              },
+              {
+                "id": "lookout",
+                "label": "Granite Lookout",
+                "glyph": "△",
+                "x": 52,
+                "y": 20
+              },
+              {
+                "id": "falls",
+                "label": "Lantern Falls",
+                "glyph": "≋",
+                "x": 26,
+                "y": 62
+              },
+              {
+                "id": "meadow",
+                "label": "Star Meadow",
+                "glyph": "✦",
+                "x": 70,
+                "y": 65
+              },
+              {
+                "id": "station",
+                "label": "Ranger Station",
+                "glyph": "⌂",
+                "x": 50,
+                "y": 84
+              }
+            ]
+          }
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The next clue is SOUTH of Cedar Camp. Cedar Camp itself cannot qualify. North is at the top of the map."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "It is WEST of Star Meadow. It is not the Ranger Station, which is where you began."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "It is a waterfall, not a campsite or overlook. The clue box sits at the official viewing platform; there is no need to enter the water."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "hotspot",
+        "instruction": "Select the next marked destination.",
+        "solution": "falls",
+        "hints": [
+          "Ask Headquarters: south is down; west is left.",
+          "Look below Cedar Camp and left of Star Meadow for water.",
+          "Select Lantern Falls."
+        ],
+        "resolution": "The safe viewing platform has an elevation plate and an old brass journal-box lock. The glow comes from harmless fictional starglass minerals.",
+        "art": {
+          "theme": "park",
+          "caption": "Starglass National Park. Stay on the marked trails; north is up.",
+          "objects": [
+            {
+              "id": "cedar",
+              "label": "Cedar Camp",
+              "glyph": "♧",
+              "x": 20,
+              "y": 25
+            },
+            {
+              "id": "lookout",
+              "label": "Granite Lookout",
+              "glyph": "△",
+              "x": 52,
+              "y": 20
+            },
+            {
+              "id": "falls",
+              "label": "Lantern Falls",
+              "glyph": "≋",
+              "x": 26,
+              "y": 62
+            },
+            {
+              "id": "meadow",
+              "label": "Star Meadow",
+              "glyph": "✦",
+              "x": 70,
+              "y": 65
+            },
+            {
+              "id": "station",
+              "label": "Ranger Station",
+              "glyph": "⌂",
+              "x": 50,
+              "y": 84
+            }
+          ]
+        }
+      },
+      "next": "elevation",
+      "finale": false
+    },
+    {
+      "id": "elevation",
+      "title": "The Waterfall Diagram",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "The Waterfall Diagram",
+          "text": "A posted diagram shows three elevation markers. The lock asks for two differences and one constellation count, not the elevations themselves."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The upper marker is 120 meters. The middle marker is 85 meters. For the first field, subtract middle from upper: 120 minus 85."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The middle marker is 85 meters. The lower marker is 60 meters. For the second field, subtract lower from middle: 85 minus 60."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The official constellation drawing has 5 large stars. Small dots are background decoration. Put the two elevation differences first, then the star count."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "combination",
+        "instruction": "Combine your measurements in the labeled order.",
+        "solution": [
+          "35",
+          "25",
+          "5"
+        ],
+        "hints": [
+          "Ask Headquarters: use subtraction for the first two fields.",
+          "120−85=35. Now calculate 85−60 and share the stars.",
+          "Enter 35, 25, 5."
+        ],
+        "resolution": "The box opens onto a rain-protection log. A ranger moved the journal into a dry observation cabinet when the warning arrived. The cabinet uses a star cipher.",
+        "fields": [
+          "Upper to middle",
+          "Middle to lower",
+          "Large stars"
+        ]
+      },
+      "next": "star-cipher",
+      "finale": false
+    },
+    {
+      "id": "star-cipher",
+      "title": "The Constellation Cabinet",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "The Constellation Cabinet",
+          "text": "The cabinet reads TUBS. A tiny wheel beside it has the alphabet around its rim. Talk through the direction before turning imaginary letters."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The instruction is “take ONE step BACK in the alphabet.” A becomes Z. This is a Caesar shift, named after an old kind of letter code."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The first two letters decode like this: T goes back to S; U goes back to T. Keep the original order."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "For the last two letters, B goes back to A and S goes back to R. Combine the four decoded letters without spaces."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "cipher",
+        "instruction": "Decode TUBS to open the cabinet.",
+        "solution": "STAR",
+        "hints": [
+          "Ask Headquarters: move backward, not forward.",
+          "The word begins S T.",
+          "Enter STAR."
+        ],
+        "resolution": "The dry journal is inside, with a signed note from Ranger Moss: “Protected from the rain, ready for the Silver Crossing.” The final page asks how Junior Rangers should finish their visit.",
+        "method": "caesar",
+        "encoded": "T U B S"
+      },
+      "next": "ranger-choice",
+      "finale": false
+    },
+    {
+      "id": "ranger-choice",
+      "title": "A Journal Returned, a Park Protected",
+      "shared": [
+        {
+          "kind": "evidence",
+          "title": "A Journal Returned, a Park Protected",
+          "text": "The journal was moved for safekeeping, not stolen. Choose the team’s final action so the rare star event can begin with the park undisturbed."
+        }
+      ],
+      "private": {
+        "mia": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "Ranger Fern needs the journal at the staffed station. Carry only this borrowed park item along the marked path; leave rocks, plants, and feathers where they are."
+          }
+        ],
+        "mom": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The rain warning explains why Ranger Moss used the dry cabinet. A message never reached Fern because the old signal bell was being repaired."
+          }
+        ],
+        "dad": [
+          {
+            "kind": "evidence",
+            "title": "Your field note",
+            "text": "The correct plan returns the journal, tells Fern why it was moved, and leaves the viewing platform clean. It does not involve shortcuts or following wildlife."
+          }
+        ]
+      },
+      "puzzle": {
+        "type": "choice",
+        "instruction": "What is the best conclusion to your investigation?",
+        "solution": "return",
+        "hints": [
+          "Ask Headquarters: protect both the story and the place.",
+          "Return the borrowed journal and share the missing message.",
+          "Choose Return it by the marked trail, tell Fern, and leave the platform clean."
+        ],
+        "resolution": "Fern thanks you for solving the mystery without leaving a trace. Moss fixes the missed message, and the journal is ready in time.",
+        "options": [
+          {
+            "id": "souvenir",
+            "label": "Keep the journal as a souvenir"
+          },
+          {
+            "id": "shortcut",
+            "label": "Take an unmarked shortcut through the meadow"
+          },
+          {
+            "id": "return",
+            "label": "Return it by the marked trail, tell Fern, and leave the platform clean"
+          }
+        ]
+      },
+      "next": null,
+      "finale": true
+    }
+  ],
+  "ending": "From the marked overlook, your family watches the Silver Crossing stitch a shining path across the sky. Ranger Fern reads the journal aloud: “A park’s best stories belong to everyone who cares for it.” Lantern Falls glows softly below. The owl tips its ranger hat. You leave with a memory, a solved case, and nothing missing from the mountains.",
+  "achievement": "Starglass Junior Rangers"
+}

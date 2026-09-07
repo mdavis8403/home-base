@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "db:migrate": "tsx --env-file=.env.local scripts/migrate.ts",
     "db:seed": "tsx --env-file=.env.local scripts/seed.ts",
-    "check": "npm test && npm run typecheck && npm run lint && npm run build && npm run test:e2e"
+    "check": "npm test && npm run test:mysteries && npm run typecheck && npm run lint && npm run build && npm run test:e2e",
+    "test:mysteries": "node --import tsx scripts/validate-mysteries.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1127.0",
