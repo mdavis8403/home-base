@@ -1030,6 +1030,10 @@ Recommended family authentication model:
 4. Enter profile PIN/passcode.
 5. Choose "Remember this device."
 
+The shared family access phrase must be 8–256 characters. Each separate profile
+passcode must remain 6–256 characters, with different passcodes for Mom, Dad, and
+Mia. Supply credentials privately during setup; never hardcode a default phrase.
+
 After successful authentication, create a secure session.
 
 ## 13.1 Child experience

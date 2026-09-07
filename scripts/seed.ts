@@ -14,7 +14,7 @@ function hash(value: string) {
   return `scrypt:${salt}:${scryptSync(value, salt, 64).toString("hex")}`;
 }
 if (!process.env.DATABASE_URL) throw new Error("Set DATABASE_URL first.");
-const phrase = credential("FAMILY_ACCESS_PHRASE", 16);
+const phrase = credential("FAMILY_ACCESS_PHRASE", 8);
 const passcodes = INITIAL_PROFILES.map((p) =>
   credential(`${p.key.toUpperCase()}_PASSCODE`, 6),
 );

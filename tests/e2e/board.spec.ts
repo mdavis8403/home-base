@@ -11,7 +11,7 @@ async function login(page: Page, key: "mom" | "mia" | "dad") {
   const request = page.context().request;
   await request.post(origin + "/api/auth/family", {
     headers: { Origin: origin },
-    data: { phrase: "isolated-browser-test-family" },
+    data: { phrase: "testonly" },
   });
   const r = await request.post(origin + "/api/auth/profile", {
     headers: { Origin: origin },

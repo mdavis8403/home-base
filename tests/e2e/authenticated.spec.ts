@@ -4,7 +4,7 @@ async function signIn(page: Page, name: "Mia" | "Mom" | "Dad", code: string) {
   await page.goto(`${origin}/enter`);
   await page
     .getByLabel("Your family’s access phrase")
-    .fill("isolated-browser-test-family");
+    .fill("testonly");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("radio", { name }).check();
   await page.getByLabel("Your passcode", { exact: true }).fill(code);

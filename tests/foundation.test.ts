@@ -32,7 +32,7 @@ const adapter: Database = {
   },
 };
 const auth = new AuthService(adapter);
-const phrase = "only-for-automated-tests";
+const phrase = "testonly"; // Eight-character test fixture, never a real credential.
 const passcode = "test-passcode";
 async function login(key = "mom", remember = true) {
   const { challenge } = await auth.begin(phrase);

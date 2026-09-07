@@ -31,7 +31,7 @@ cp .env.example .env.local
 docker compose up -d
 ```
 
-Edit `.env.local` privately. Set an access phrase of at least 16 characters and a **different** passcode of at least 6 characters for each profile. The example database password is only for the localhost-only Docker development database. Never use it for a hosted database.
+Edit `.env.local` privately. Set an access phrase of at least 8 characters and a **different** passcode of at least 6 characters for each profile. The example database password is only for the localhost-only Docker development database. Never use it for a hosted database.
 
 ```sh
 npm run db:migrate
