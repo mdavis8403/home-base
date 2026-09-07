@@ -1,0 +1,6 @@
+HOMEBASE_SPEC.md
+package-lock.json
+.next
+node_modules
+playwright-report
+test-results
