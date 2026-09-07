@@ -3,7 +3,13 @@ import { useRef, useState, type PointerEvent } from "react";
 type Point = { x: number; y: number };
 type Stroke = { points: Point[]; color: string; width: number };
 const palette = ["#192f3a", "#ad483b", "#397457", "#855ca2", "#b07718"];
-export function Doodle({ onSave }: { onSave: (blob: Blob) => void }) {
+export function Doodle({
+  onSave,
+  helpText = "Draw with a finger, stylus, or mouse. A written note or photo works too.",
+}: {
+  onSave: (blob: Blob) => void;
+  helpText?: string;
+}) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const strokes = useRef<Stroke[]>([]);
   const drawing = useRef(false);
@@ -149,9 +155,7 @@ export function Doodle({ onSave }: { onSave: (blob: Blob) => void }) {
           drawing.current = false;
         }}
       />
-      <p className="muted">
-        Draw with a finger, stylus, or mouse. A written note or photo works too.
-      </p>
+      <p className="muted">{helpText}</p>
       <button
         type="button"
         className="button"

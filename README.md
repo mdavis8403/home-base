@@ -7,7 +7,7 @@ A private place for Mia, Mom, and Dad. **Foundation + Phase 1 Messages.**
 ## What is ready
 
 - Next.js App Router, React, strict TypeScript, Tailwind and custom design tokens.
-- Responsive entrance, family navigation, home shell, Messages and three clearly labeled placeholder sections, and parent settings foundation.
+- Responsive entrance, family navigation, home shell, Messages, Family Board and two clearly labeled placeholder sections, and parent settings foundation.
 - PostgreSQL migration with family/profile/session tables and reserved future-feature tables.
 - Family phrase → profile → passcode authentication; secure remembered devices; session expiry; logout; parent reauthentication and revocation of other devices.
 - Mia as child; Mom and Dad as administrators. No public signup or default real-family credentials.
@@ -15,7 +15,7 @@ A private place for Mia, Mom, and Dad. **Foundation + Phase 1 Messages.**
 - Installable PWA metadata, icons and generic offline shell. No private pages, APIs, or media in the service-worker cache.
 - Unit/database integration tests and production-browser tests for phone, iPad and laptop.
 
-Messages includes personal notes, photo/voice/video/drawing attachments, recipient selection, scheduling, unread state, private favorites, hearts, and archive filters. Family Board activities, Mystery Club gameplay, and Our Story generation are **not implemented**. No global presence, online status, last-seen, location/GPS, analytics, or activity monitoring is implemented.
+Messages includes personal notes, photo/voice/video/drawing attachments, recipient selection, scheduling, unread state, private favorites, hearts, and archive filters. Family Board includes daily questions, private photo/drawing responses, automatic reveal, Past Boards, and parent prompts/preferences. Mystery Club gameplay and Our Story generation are **not implemented**. No global presence, online status, last-seen, location/GPS, analytics, or activity monitoring is implemented.
 
 ## For the family
 
@@ -64,6 +64,6 @@ Use a Node.js/container host that runs Next.js server routes, has ffprobe instal
 
 Run migrations and the one-time seed using the private setup environment. Enable database backups in your provider. Do not put setup credentials into a build command or public configuration. Keep runtime database and storage credentials in the hosting provider's **server-side secret settings**. There are no `NEXT_PUBLIC_` secrets.
 
-For Messages attachments: provision a **private** S3-compatible bucket, block public access, disable public listing, enable provider encryption at rest, and use a narrowly scoped server credential. Fill the S3 settings in `.env.example` on the server. Without storage, written notes work but media sends fail clearly and preserve the draft. Set FFPROBE_PATH if ffprobe is not on the server PATH. Configure private-bucket CORS for GET from the exact app origin if your provider requires it for media playback; never allow public reads. AI and real-time services are not needed yet.
+For Messages and Family Board attachments: provision a **private** S3-compatible bucket, block public access, disable public listing, enable provider encryption at rest, and use a narrowly scoped server credential. Fill the S3 settings in `.env.example` on the server. Without storage, written notes work but media sends fail clearly and preserve the draft. Set FFPROBE_PATH if ffprobe is not on the server PATH. Configure private-bucket CORS for GET from the exact app origin if your provider requires it for media playback; never allow public reads. AI and real-time services are not needed yet.
 
 See [docs/architecture.md](docs/architecture.md) for shared contracts, security rules and phase boundaries.

@@ -28,7 +28,8 @@ export const destinations = [
     label: "Family Board",
     symbol: "▧",
     description: "A little something to share.",
-    detail: "Questions, photos, and drawings will have a home here.",
+    detail:
+      "Questions, photos, and drawings. A little piece of our day, together.",
     color: "blue",
   },
 ] as const;

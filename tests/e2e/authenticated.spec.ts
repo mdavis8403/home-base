@@ -32,7 +32,7 @@ test("Mia can navigate placeholders and is protected from parent settings", asyn
   expect(await page.evaluate(() => document.cookie)).not.toContain(
     "hb-session",
   );
-  for (const label of ["Mystery Club", "Our Story", "Family Board"]) {
+  for (const label of ["Mystery Club", "Our Story"]) {
     await page
       .getByRole("navigation")
       .getByRole("link", { name: label, exact: true })

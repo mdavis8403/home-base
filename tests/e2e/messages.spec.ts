@@ -118,7 +118,14 @@ test("personal notes, recipients, scheduled privacy, hearts and keepsakes", asyn
   await page.mouse.up();
   await page.getByRole("button", { name: "Use this drawing" }).click();
   await expect(page.getByAltText("Your attachment preview")).toBeVisible();
+  // Wait for the intentional preview focus transition before entering text in WebKit.
+  await expect(
+    page.getByRole("group", { name: "Attachment preview" }),
+  ).toBeFocused();
   await page.getByLabel("Describe your picture").fill("A little swoosh");
+  await expect(page.getByLabel("Describe your picture")).toHaveValue(
+    "A little swoosh",
+  );
   await page.getByRole("button", { name: "Mom", exact: true }).click();
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({

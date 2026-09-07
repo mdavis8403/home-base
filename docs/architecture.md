@@ -1,6 +1,6 @@
 # Foundation contracts
 
-Authority: `HOMEBASE_SPEC.md`. Scope: Foundation contracts and the Phase 1 Messages extension below. One shared foundation; no parallel systems.
+Authority: `HOMEBASE_SPEC.md`. Scope: Foundation contracts and the Phase 1 Messages and Family Board extensions below. One shared foundation; no parallel systems.
 
 ## Boundaries
 
@@ -62,7 +62,7 @@ Next feature work must build on these contracts. Phase 1 implements Messages, Fa
 
 ## Phase 1: Messages (implemented)
 
-Messages is the first authorized feature; all other feature rooms remain placeholders.
+Messages is the first authorized feature. Family Board is implemented in the extension below; Mystery Club and Our Story remain placeholders.
 The existing authenticated route group now has a concrete `/messages` page.
 `MessagesService` uses the Foundation database, session permissions, reserved tables,
 private storage adapter and media-signing service. Migration 002 adds only recipient
@@ -80,3 +80,21 @@ hearts and media/sender indexes.
 - The host/reverse proxy must permit 46 MB requests and at least the 20-second inspection window. Choose a Node/container host supporting those limits; a small serverless request-body limit will not accommodate this upload path.
 - No production mock repository or storage fallback is installed. Automated tests use isolated PGlite plus a fake private-storage adapter for signing/upload assertions; browser tests run real Foundation authentication against an isolated database. Real media fixtures exercise byte/duration validation. Chromium runs native MediaRecorder with generated audio/video input streams because the headless test host does not support capture hardware; permission denial is tested separately. Physical-device microphone/camera permissions and live S3 round trips remain deployment acceptance checks.
 - Parent deletion controls remain part of the deferred Parent Settings work. Messages have no user deletion action and remain in the archive.
+
+## Phase 1: Family Board (implemented)
+
+Family Board is the second authorized feature. Mystery Club, Our Story, the opening-door experience, and home prioritization remain outside this task.
+
+`BoardService` reuses Foundation sessions, permissions, `database()`, reserved board tables, `MediaService`, S3 storage, and Messages' actual-byte media inspector. Migration 003 adds board preferences, prompt categories and built-in identifiers, indexes, and two transactional PostgreSQL functions. There is no browser database access.
+
+- `POST /api/board/open` creates today's board if missing. A family row lock serializes simultaneous opens. All reads use the family's timezone. Sixteen age-appropriate prompts cover all three activities and four categories; least-recently-used selection gives unused custom prompts priority. No empty boards are invented for days nobody opened the room.
+- `GET /api/board` is read-only. SQL returns only the signed-in member's response before reveal, even for parents who have already answered. Other response text, names, asset IDs and metadata never enter the payload. After reveal, every submitted response is returned together. No participation counts or missing-person indicators are returned.
+- Reveal is `revealed_at IS NOT NULL OR reveal_at <= statement_timestamp()`. The third unique response sets `revealed_at` in the same transaction. A board row lock serializes concurrent responses. The time-based reveal needs no worker or scheduler; all readers apply the same database clock. The visible room refreshes every 10 seconds and on focus, without writing presence or activity records. This gives an open browser up to 10 seconds of display latency after a reveal.
+- `POST /api/board/respond` derives identity only from the current session. Exactly one immutable response per member per board; duplicate retries succeed without replacement. Questions require text; photos/drawings require exactly one matching inspected image. Media upload precedes the atomic asset/response transaction; duplicate and failed writes remove the unused uploaded object. One member may add a late response to today's revealed board; it appears immediately. Past boards cannot receive new responses.
+- `GET /api/board/media/:id` uses the canonical asset and response relationship plus the same reveal rule before signing a 60-second private read URL. Parents never bypass early media privacy. The endpoint shares Messages' storage adapter, and uses a 12 MB streamed request cap for image uploads (8 MB actual file maximum).
+- `POST /api/board/prompt` requires fresh `content:manage`; `/settings` requires fresh `family:manage`. Both use the existing parent passcode endpoint. Strict schemas reject submitted identities, unknown fields, empty category selections and invalid times. Settings and custom prompts apply to the next new daily board; an existing board's reveal instant and prompt are fixed.
+- Default reveal time is 20:00 in `families.timezone`. PostgreSQL converts each local board date and clock time to a UTC instant, including daylight-saving offsets. In a spring-forward gap it uses the standard-time interpretation (the skipped time moves forward); an ambiguous autumn time uses the later standard-time occurrence. Family timezone editing remains deferred to the existing family-management phase.
+- Past Boards is a newest-first archive with question answers and private signed photo/drawing views. Parent custom prompts and preferences are in Family Board → Parent touches, linked from Parent Settings.
+- Drawing Challenge directly reuses the Messages `Doodle` component and its tools. A drawing-file picker provides a keyboard-accessible alternative to freehand canvas input. The optional 60-second timer begins on Start timer, may be disabled, and never submits, discards, or locks a drawing. Its end is a gentle cue; the family can keep drawing.
+
+Validation includes actual PostgreSQL-engine migrations and service tests for cross-family/expired-session denial, parent reauthentication, pre-reveal DTO and media privacy, all-three/timed reveal, concurrent and duplicate responses, archived boards, prompt rotation, timezone and daylight-saving conversion, real image inspection, and upload/database failure cleanup. Production browser tests exercise real authentication and three clients on Chromium and WebKit iPad/phone, including automatic reveal, archive navigation, parent settings, photo preview, the shared canvas, and optional timer. Live S3 round trips and physical-device acceptance remain hosting work; no application fake storage or test routes were introduced.
