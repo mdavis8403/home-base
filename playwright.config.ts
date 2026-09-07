@@ -20,7 +20,13 @@ export default defineConfig({
     },
   ],
   projects: [
-    { name: "laptop", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "laptop",
+      use: {
+        ...devices["Desktop Chrome"],
+        timezoneId: "America/Los_Angeles",
+      },
+    },
     { name: "ipad", use: { ...devices["iPad (gen 7)"] } },
     { name: "phone", use: { ...devices["iPhone 13"] } },
   ],

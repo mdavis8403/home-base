@@ -11,7 +11,7 @@ export function assertSameOrigin(request: Request) {
   if (site && site !== "same-origin" && site !== "none")
     throw new AppError("CSRF", "Please reload Home Base and try again.", 403);
 }
-export async function readJson(request: Request) {
+export async function readJson(request: Request, maxBytes = 4096) {
   if (!request.headers.get("content-type")?.startsWith("application/json"))
     throw new AppError("INVALID_REQUEST", "Expected a JSON request.", 415);
   // Stream with an actual cap rather than trusting Content-Length.
@@ -23,7 +23,7 @@ export async function readJson(request: Request) {
     const { done, value } = await reader.read();
     if (done) break;
     bytes += value.byteLength;
-    if (bytes > 4096) {
+    if (bytes > maxBytes) {
       await reader.cancel();
       throw new AppError("INVALID_REQUEST", "Request is too large.", 413);
     }

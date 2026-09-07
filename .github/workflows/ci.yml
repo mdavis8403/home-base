@@ -1,4 +1,4 @@
-name: Foundation checks
+name: Home Base checks
 on:
   push:
     branches: [main]
@@ -27,6 +27,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Install private media inspector
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: npm ci
       - name: Verify real PostgreSQL setup
         env:

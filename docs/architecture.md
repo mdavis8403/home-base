@@ -1,6 +1,6 @@
 # Foundation contracts
 
-Authority: `HOMEBASE_SPEC.md`. Scope: Phase 0 only. One shared foundation; no parallel systems.
+Authority: `HOMEBASE_SPEC.md`. Scope: Foundation contracts and the Phase 1 Messages extension below. One shared foundation; no parallel systems.
 
 ## Boundaries
 
@@ -59,3 +59,24 @@ Manifest includes 192/512 PNG icons, a maskable icon, standalone display and lau
 Vitest runs security/business rules plus actual migration queries using PGlite's PostgreSQL engine. Playwright starts two production servers (unconfigured and configured) and tests real authentication using an isolated PostgreSQL socket and the actual migration/seed scripts. Chromium laptop and WebKit iPad/phone projects cover the public shell, private redirects, profile identity, placeholders, child denial, parent verification and revocation. Chromium checks the offline cache. CI additionally exercises setup on PostgreSQL 17. Hosted TLS/storage configuration and installation on physical family devices remain deployment acceptance work.
 
 Next feature work must build on these contracts. Phase 1 implements Messages, Family Board, Mystery Engine, mystery content and Our Story only when requested. Mystery validators, puzzles, reveal/scheduled visibility, story turns and all related feature tests are deferred alongside their features. Session-specific game `joined_at`/`ready` fields are reserved only; there is no realtime or global presence service. Do not implement global online status, last-seen, location, GPS or activity monitoring in any future phase.
+
+## Phase 1: Messages (implemented)
+
+Messages is the first authorized feature; all other feature rooms remain placeholders.
+The existing authenticated route group now has a concrete `/messages` page.
+`MessagesService` uses the Foundation database, session permissions, reserved tables,
+private storage adapter and media-signing service. Migration 002 adds only recipient
+hearts and media/sender indexes.
+
+- GET `/api/messages` returns delivered recipient messages; `?view=sent` returns the sender's own notes, including scheduled ones. Favorites/read state is joined only for the authenticated recipient. Read times and favorite times are never returned; deliberately sent hearts include names.
+- POST `/api/messages` accepts a strict message DTO, an idempotency UUID, profile keys for recipients, optional future ISO delivery instant and one optional media attachment (with optional accompanying text). The server resolves keys within the session family; the sender is never taken from input. Everyone includes the sender. Two-person choices exclude the sender.
+- A single SQL CTE atomically inserts the message, recipients and asset metadata. Storage uploads precede that transaction; a database failure triggers removal. Retrying the same UUID cannot duplicate delivery.
+- POST `/api/messages/:id` sets read, favorite or heart state only on the active recipient's delivered message. Values are explicit and retry-safe.
+- GET `/api/messages/media/:assetId` loads the canonical database asset, then applies exact family/entity membership and delivery authorization through `MediaService`. Only the sender can view a scheduled attachment early. Being a parent does not bypass recipient privacy. Links expire in 60 seconds and bypass Next image optimization; storage responses are private/no-store.
+- No delivery worker is needed: PostgreSQL `now()` controls visibility each fetch. The inbox refreshes when the window regains focus or Refresh is tapped. No global presence, heartbeat, typing or activity records are created.
+- Scheduling uses the device's explicitly displayed timezone and sends a UTC instant. Voice/video descriptions support transcripts and text alternatives. Native browser recording starts only after Record; tracks stop on stop, error, discard and unmount.
+- Recordings are capped at 5/2 minutes and video recording targets 1.2 Mbps. Upload caps are 8 MB images, 12 MB audio, 32 MB video. JSON is streamed with a 46 MB cap only for the message send endpoint (base64 overhead); existing auth limits stay 4 KB.
+- Actual media inspection uses server-side **ffprobe** (from FFmpeg), requiring a host with that executable or `FFPROBE_PATH`. It checks container, codecs, file signatures and actual durations/packet timestamps; it rejects unsupported formats and overlong files. Allowed demuxers and protocols are restricted. Temporary files are removed in a finally block. Media fails closed if inspection/storage is unavailable; text remains usable.
+- The host/reverse proxy must permit 46 MB requests and at least the 20-second inspection window. Choose a Node/container host supporting those limits; a small serverless request-body limit will not accommodate this upload path.
+- No production mock repository or storage fallback is installed. Automated tests use isolated PGlite plus a fake private-storage adapter for signing/upload assertions; browser tests run real Foundation authentication against an isolated database. Real media fixtures exercise byte/duration validation. Chromium runs native MediaRecorder with generated audio/video input streams because the headless test host does not support capture hardware; permission denial is tested separately. Physical-device microphone/camera permissions and live S3 round trips remain deployment acceptance checks.
+- Parent deletion controls remain part of the deferred Parent Settings work. Messages have no user deletion action and remain in the archive.
