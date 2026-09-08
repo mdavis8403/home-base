@@ -4,8 +4,8 @@ test("entrance is accessible, responsive, and honest about setup", async ({
   browserName,
 }, testInfo) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "There’s no place",
+  await expect(page.locator(".cottage-tagline")).toContainText(
+    "No matter where we are",
   );
   await page.screenshot({
     path: testInfo.outputPath("entrance.png"),
@@ -22,9 +22,9 @@ test("entrance is accessible, responsive, and honest about setup", async ({
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
-  await page.getByRole("link", { name: "Enter Home Base" }).click();
+  await page.getByRole("button", { name: "Open the cottage door" }).click();
   await expect(
-    page.getByRole("heading", { name: "We’re getting your keys ready." }),
+    page.getByText("We’re getting your keys ready.", { exact: false }),
   ).toBeVisible();
   await expect(page.locator("input[type=password]")).toHaveCount(0);
 });

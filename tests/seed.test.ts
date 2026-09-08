@@ -16,16 +16,14 @@ beforeEach(() => {
   vi.spyOn(console, "log").mockImplementation(() => {});
   vi.stubEnv("DATABASE_URL", "postgresql://unused-test-database");
   vi.stubEnv("FAMILY_ACCESS_PHRASE", "testonly");
-  vi.stubEnv("MIA_PASSCODE", "111111");
-  vi.stubEnv("MOM_PASSCODE", "222222");
-  vi.stubEnv("DAD_PASSCODE", "333333");
+  vi.stubEnv("ADMIN_ACCESS_KEY", "test-admin-key-only");
 });
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
 it.each(["testonly", "testonly9"])(
-  "accepts a %s test phrase and preserves hashed profile passcodes",
+  "accepts a %s test phrase and creates credential-free profiles",
   async (phrase) => {
     vi.stubEnv("FAMILY_ACCESS_PHRASE", phrase);
     await import("../scripts/seed");
@@ -38,11 +36,12 @@ it.each(["testonly", "testonly9"])(
       sql.includes("INSERT INTO profiles"),
     );
     expect(profiles).toHaveLength(3);
-    for (const [, values] of profiles) {
-      const passcode = { mia: "111111", mom: "222222", dad: "333333" }[
-        values[2] as "mia" | "mom" | "dad"
-      ];
-      expect(await verifyCredential(passcode, values[7])).toBe(true);
+    expect(await verifyCredential("test-admin-key-only", family[1][4])).toBe(
+      true,
+    );
+    for (const [sql, values] of profiles) {
+      expect(sql).not.toContain("passcode");
+      expect(values).toHaveLength(7);
     }
   },
 );
@@ -56,17 +55,18 @@ it.each(["", "1234567", "x".repeat(257)])(
     expect(mocks.connect).not.toHaveBeenCalled();
   },
 );
-it("keeps the profile passcode minimum and distinctness requirements", async () => {
-  vi.stubEnv("MIA_PASSCODE", "12345");
+it("keeps the administration key separate and optional", async () => {
+  vi.stubEnv("ADMIN_ACCESS_KEY", "short");
   await expect(import("../scripts/seed")).rejects.toThrow(
-    "MIA_PASSCODE must be 6–256 characters",
+    "ADMIN_ACCESS_KEY must be 12–256 characters",
   );
   vi.resetModules();
-  vi.stubEnv("MIA_PASSCODE", "222222");
-  await expect(import("../scripts/seed")).rejects.toThrow(
-    "Use different passcodes",
-  );
-  expect(mocks.connect).not.toHaveBeenCalled();
+  vi.stubEnv("ADMIN_ACCESS_KEY", "");
+  await import("../scripts/seed");
+  const family = mocks.query.mock.calls.find(([sql]) =>
+    sql.includes("INSERT INTO families"),
+  )!;
+  expect(family[1][4]).toBeNull();
 });
 it("does not replace an existing family's credentials", async () => {
   mocks.query.mockImplementation(async (sql: string) => ({
@@ -78,4 +78,42 @@ it("does not replace an existing family's credentials", async () => {
   expect(
     mocks.query.mock.calls.some(([sql]) => /INSERT|UPDATE/.test(sql)),
   ).toBe(false);
+});
+it("provisions a separate administration key and invalidates previous grants", async () => {
+  const { hashCredential } = await import("../src/lib/server/crypto");
+  const familyHash = await hashCredential("testonly");
+  mocks.query.mockImplementation(async (sql: string) => ({
+    rows: sql.startsWith("SELECT id, access_phrase_hash")
+      ? [{ id: "test-family", access_phrase_hash: familyHash }]
+      : [],
+  }));
+  await import("../scripts/set-admin-key");
+  const write = mocks.query.mock.calls.find(([sql]) =>
+    sql.startsWith("UPDATE families"),
+  )!;
+  expect(await verifyCredential("test-admin-key-only", write[1][0])).toBe(true);
+  expect(write[1][1]).toBe("test-family");
+  expect(
+    mocks.query.mock.calls.some(([sql]) =>
+      sql.includes("parent_verified_until=NULL"),
+    ),
+  ).toBe(true);
+});
+it("refuses to use the family phrase as the administration key", async () => {
+  const { hashCredential } = await import("../src/lib/server/crypto");
+  const key = "shared-test-phrase";
+  vi.stubEnv("ADMIN_ACCESS_KEY", key);
+  const familyHash = await hashCredential(key);
+  mocks.query.mockImplementation(async (sql: string) => ({
+    rows: sql.startsWith("SELECT id, access_phrase_hash")
+      ? [{ id: "test-family", access_phrase_hash: familyHash }]
+      : [],
+  }));
+  await expect(import("../scripts/set-admin-key")).rejects.toThrow(
+    "different from the family phrase",
+  );
+  expect(mocks.query.mock.calls.some(([sql]) => sql.startsWith("UPDATE"))).toBe(
+    false,
+  );
+  expect(mocks.query).toHaveBeenCalledWith("ROLLBACK");
 });

@@ -48,17 +48,17 @@ export function BoardSettings({
         onSubmit={(e) => {
           e.preventDefault();
           const form = e.currentTarget;
-          const passcode = new FormData(form).get("passcode");
+          const adminKey = new FormData(form).get("adminKey");
           void run(async () => {
-            await authRequest("reauth", { passcode });
+            await authRequest("reauth", { adminKey });
             form.reset();
-          }, "Passcode confirmed for 10 minutes.");
+          }, "Administration key confirmed for 10 minutes.");
         }}
       >
         <label>
-          Your parent passcode
+          Administration key
           <input
-            name="passcode"
+            name="adminKey"
             type="password"
             required
             autoComplete="current-password"
@@ -66,7 +66,7 @@ export function BoardSettings({
           />
         </label>
         <button className="secondary-button" disabled={busy}>
-          Confirm passcode
+          Confirm administration key
         </button>
       </form>
       <form

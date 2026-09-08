@@ -14,7 +14,7 @@ At the ending, the family gets a case-specific seal and a short summary. **Solve
 
 ## Parent case desk
 
-Mom or Dad can confirm their own passcode and import a new JSON mystery file. The app checks the file and lets a parent preview every scene as Mia, Mom, or Dad before publishing. Invalid files cannot be published. A parent can also unpublish a case to stop new games. Existing games and solved memories remain available.
+Mom or Dad can confirm the separate administration key and import a new JSON mystery file. The app checks the file and lets a parent preview every scene as Mia, Mom, or Dad before publishing. Invalid files cannot be published. A parent can also unpublish a case to stop new games. Existing games and solved memories remain available.
 
 The five launch files and an author guide are in `content/mysteries`. New mysteries use the same engine; adding one through the parent desk does not require rebuilding the website. When revising a file, increase its version number. Games already started continue with their original version.
 

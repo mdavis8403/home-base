@@ -17,7 +17,6 @@ async function login(page: Page, key: "mom" | "mia" | "dad") {
     headers: { Origin: origin },
     data: {
       key,
-      passcode: { mom: "222222", mia: "111111", dad: "333333" }[key],
       remember: false,
     },
   });
@@ -149,11 +148,13 @@ test("time-based reveal opens automatically with one answer and protects parent 
     .fill("What would our sofa name its spaceship?");
   await page.getByRole("button", { name: "Add custom prompt" }).click();
   await expect(page.locator("main").getByRole("alert")).toContainText(
-    "confirm their passcode",
+    "confirm the administration key",
   );
-  await page.getByLabel("Your parent passcode").fill("222222");
-  await page.getByRole("button", { name: "Confirm passcode" }).click();
-  await expect(page.getByRole("status")).toContainText("Passcode confirmed");
+  await page.getByLabel("Administration key").fill("test-admin-key-only");
+  await page
+    .getByRole("button", { name: "Confirm administration key" })
+    .click();
+  await expect(page.getByRole("status")).toContainText("Administration key confirmed");
   await page.getByRole("button", { name: "Add custom prompt" }).click();
   await expect(page.locator(".custom-prompts")).toContainText(
     "What would our sofa name its spaceship?",

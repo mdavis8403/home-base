@@ -9,23 +9,23 @@ export function ParentSecurity({ admin }: { admin: boolean }) {
     <section className="settings-panel">
       <h2>Remembered devices</h2>
       <p>
-        Confirm your own passcode to protect sensitive settings for the next 10
-        minutes.
+        Confirm the separate administration key to protect sensitive settings
+        for the next 10 minutes.
       </p>
       <form
         className="entry-form"
         onSubmit={async (event) => {
           event.preventDefault();
           const form = event.currentTarget;
-          const passcode = new FormData(form).get("passcode");
+          const adminKey = new FormData(form).get("adminKey");
           setBusy(true);
           setError("");
           setMessage("");
           try {
-            await authRequest("reauth", { passcode });
+            await authRequest("reauth", { adminKey });
             form.reset();
             setMessage(
-              "Passcode confirmed. Parent protection is unlocked for 10 minutes.",
+              "Administration key confirmed. Parent protection is unlocked for 10 minutes.",
             );
           } catch (e) {
             setError(e instanceof Error ? e.message : "Please try again.");
@@ -34,17 +34,17 @@ export function ParentSecurity({ admin }: { admin: boolean }) {
           }
         }}
       >
-        <label htmlFor="parent-passcode">Your parent passcode</label>
+        <label htmlFor="parent-adminKey">Administration key</label>
         <input
-          id="parent-passcode"
+          id="parent-adminKey"
           type="password"
-          name="passcode"
+          name="adminKey"
           autoComplete="current-password"
           maxLength={256}
           required
         />
         <button className="button" disabled={busy}>
-          Confirm passcode
+          Confirm administration key
         </button>
       </form>
       {admin && (

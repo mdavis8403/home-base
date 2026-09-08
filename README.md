@@ -9,7 +9,7 @@ A private place for Mia, Mom, and Dad. **Foundation + Messages, Family Board, an
 - Next.js App Router, React, strict TypeScript, Tailwind and custom design tokens.
 - Responsive entrance, family navigation, home shell, Messages, Family Board, Mystery Club and an Our Story placeholder, and parent settings foundation.
 - PostgreSQL migration with family/profile/session tables and reserved future-feature tables.
-- Family phrase → profile → passcode authentication; secure remembered devices; session expiry; logout; parent reauthentication and revocation of other devices.
+- Cottage → family phrase → one-tap profile selection; secure remembered devices; session expiry; logout; parent reauthentication and revocation of other devices.
 - Mia as child; Mom and Dad as administrators. No public signup or default real-family credentials.
 - Private S3-compatible media adapter with short-lived signed reads and a default-deny authorization service; a server-only story-provider interface.
 - Installable PWA metadata, icons and generic offline shell. No private pages, APIs, or media in the service-worker cache.
@@ -31,7 +31,7 @@ cp .env.example .env.local
 docker compose up -d
 ```
 
-Edit `.env.local` privately. Set an access phrase of at least 8 characters and a **different** passcode of at least 6 characters for each profile. The example database password is only for the localhost-only Docker development database. Never use it for a hosted database.
+Edit `.env.local` privately. Set an access phrase of at least 8 characters. Profiles have no passwords. Optionally set a separate `ADMIN_ACCESS_KEY` of at least 12 characters, different from the family phrase, for sensitive parent actions. The example database password is only for the localhost-only Docker development database. Never use it for a hosted database.
 
 ```sh
 npm run db:migrate
@@ -39,7 +39,7 @@ npm run db:seed
 npm run dev
 ```
 
-Open `http://localhost:3000`. Seed creates exactly Mia, Mom, and Dad, with both parents as admins. It refuses to overwrite any existing family. After seeding, remove `FAMILY_ACCESS_PHRASE`, `MIA_PASSCODE`, `MOM_PASSCODE`, and `DAD_PASSCODE` from the setup environment. Only their salted hashes remain in the database. Keep the passcodes in a password manager, not source control.
+Open `http://localhost:3000`. Seed creates exactly Mia, Mom, and Dad, with both parents as admins. It refuses to overwrite any existing family. After seeding, remove `FAMILY_ACCESS_PHRASE` and `ADMIN_ACCESS_KEY` from the setup environment. Only their salted hashes remain in the database. Keep the administration key in a password manager, not source control.
 
 `DATABASE_URL` and `APP_ORIGIN` remain necessary. `APP_ORIGIN` must match the exact browser origin, without a trailing slash. Use HTTPS on a hosted app; HTTP is accepted only for local development/testing. Secure cookies use `__Host-` names on HTTPS. Temporary device sessions expire after 12 hours; remembered sessions expire after 30 days, without sliding activity-based renewal.
 
@@ -69,3 +69,5 @@ Run migrations and the one-time seed using the private setup environment. Enable
 For Messages and Family Board attachments: provision a **private** S3-compatible bucket, block public access, disable public listing, enable provider encryption at rest, and use a narrowly scoped server credential. Fill the S3 settings in `.env.example` on the server. Without storage, written notes work but media sends fail clearly and preserve the draft. Set FFPROBE_PATH if ffprobe is not on the server PATH. Configure private-bucket CORS for GET from the exact app origin if your provider requires it for media playback; never allow public reads. AI and real-time services are not needed yet.
 
 See [docs/architecture.md](docs/architecture.md) for shared contracts, security rules and phase boundaries.
+
+The immersive cottage entry and migration instructions are in [docs/ENTRY_FLOW.md](docs/ENTRY_FLOW.md).

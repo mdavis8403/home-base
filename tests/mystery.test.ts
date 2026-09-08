@@ -76,7 +76,7 @@ beforeAll(async () => {
   );
   for (const p of INITIAL_PROFILES)
     await db.query(
-      "INSERT INTO profiles(id,family_id,profile_key,display_name,role,avatar,profile_color,passcode_hash) VALUES($1,$2,$3,$4,$5,$6,$7,'test')",
+      "INSERT INTO profiles(id,family_id,profile_key,display_name,role,avatar,profile_color) VALUES($1,$2,$3,$4,$5,$6,$7)",
       [p.id, FAMILY_ID, p.key, p.displayName, p.role, p.avatar, p.color],
     );
 });

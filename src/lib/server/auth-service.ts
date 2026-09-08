@@ -54,12 +54,7 @@ export class AuthService {
     );
     return { challenge, profiles: profiles.rows };
   }
-  async signIn(
-    challenge: string,
-    key: string,
-    passcode: string,
-    remember: boolean,
-  ) {
+  async signIn(challenge: string, key: string, remember: boolean) {
     const { rows } = await this.db.query<{ family_id: string }>(
       "SELECT family_id FROM auth_challenges WHERE token_hash=$1 AND expires_at > now()",
       [digest(challenge)],
@@ -71,18 +66,15 @@ export class AuthService {
         401,
       );
     const familyId = rows[0].family_id;
-    await this.rateLimit(`profile:${familyId}:${key}`, 10);
-    const profile = await this.db.query<Profile & { hash: string }>(
-      `SELECT ${profileSelect}, p.passcode_hash AS hash FROM profiles p WHERE family_id=$1 AND profile_key=$2`,
+    await this.rateLimit(`profile:${familyId}`, 30);
+    const profile = await this.db.query<Profile>(
+      `SELECT ${profileSelect} FROM profiles p WHERE family_id=$1 AND profile_key=$2`,
       [familyId, key],
     );
-    if (
-      !profile.rows[0] ||
-      !(await verifyCredential(passcode, profile.rows[0].hash))
-    )
+    if (!profile.rows[0])
       throw new AppError(
         "INVALID_CREDENTIALS",
-        "That passcode didn’t match. Try again.",
+        "That choice is not available. Please try again.",
         401,
       );
     // Consume once, including under concurrent requests.
@@ -153,24 +145,24 @@ export class AuthService {
     if (!canPerform(session, permission))
       throw new AppError(
         "FORBIDDEN",
-        "A parent with permission must confirm their passcode first.",
+        "A parent with permission must confirm the administration key first.",
         403,
       );
   }
-  async reauthenticate(session: Session, passcode: string) {
+  async reauthenticate(session: Session, adminKey: string) {
     this.require(session, "settings:view");
-    await this.rateLimit(`reauth:${session.profile.id}`, 10);
+    await this.rateLimit(`reauth:${session.profile.familyId}`, 10);
     const result = await this.db.query<{ hash: string }>(
-      "SELECT passcode_hash AS hash FROM profiles WHERE id=$1",
-      [session.profile.id],
+      "SELECT admin_key_hash AS hash FROM families WHERE id=$1",
+      [session.profile.familyId],
     );
     if (
-      !result.rows[0] ||
-      !(await verifyCredential(passcode, result.rows[0].hash))
+      !result.rows[0]?.hash ||
+      !(await verifyCredential(adminKey, result.rows[0].hash))
     )
       throw new AppError(
         "INVALID_CREDENTIALS",
-        "That passcode didn’t match. Try again.",
+        "The administration key wasn’t accepted. Ask the person who set up Home Base.",
         401,
       );
     await this.db.query(

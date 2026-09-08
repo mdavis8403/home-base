@@ -1,19 +1,20 @@
 import { test, expect, type Page } from "@playwright/test";
 const origin = "http://localhost:3101";
-async function signIn(page: Page, name: "Mia" | "Mom" | "Dad", code: string) {
+async function signIn(page: Page, name: "Mia" | "Mom" | "Dad") {
   await page.goto(`${origin}/enter`);
-  await page.getByLabel("Your family’s access phrase").fill("testonly");
-  await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByRole("radio", { name }).check();
-  await page.getByLabel("Your passcode", { exact: true }).fill(code);
-  await page.getByRole("button", { name: "Come on in" }).click();
+  await page.getByRole("button", { name: "Open the cottage door" }).click();
+  await page.getByLabel("Our family’s magic word").fill("testonly");
+  await page
+    .getByRole("button", { name: "Open the door", exact: true })
+    .click();
+  await page.getByRole("button", { name, exact: true }).click();
   await expect(page).toHaveURL(`${origin}/home`);
 }
 test("Mia can navigate placeholders and is protected from parent settings", async ({
   page,
   context,
 }, testInfo) => {
-  await signIn(page, "Mia", "111111");
+  await signIn(page, "Mia");
   await page.screenshot({
     path: testInfo.outputPath("home.png"),
     fullPage: true,
@@ -51,10 +52,10 @@ test("Mia can navigate placeholders and is protected from parent settings", asyn
   await expect(page.getByText("This door doesn’t open here.")).toBeVisible();
   const denied = await context.request.post(`${origin}/api/auth/reauth`, {
     headers: { Origin: origin },
-    data: { passcode: "111111" },
+    data: { adminKey: "test-admin-key-only" },
   });
   expect(denied.status()).toBe(403);
-  await page.goto(origin);
+  await page.goto(origin + "/home");
   await expect(page).toHaveURL(`${origin}/home`);
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(`${origin}/`);
@@ -67,18 +68,22 @@ test("parent reauthentication and device revocation work end to end", async ({
 }) => {
   const other = await browser.newContext();
   const childPage = await other.newPage();
-  await signIn(childPage, "Dad", "333333");
-  await signIn(page, "Mom", "222222");
+  await signIn(childPage, "Dad");
+  await signIn(page, "Mom");
   await page.getByRole("link", { name: "Parent Settings" }).click();
   await page
     .getByRole("button", { name: "Sign out all other devices" })
     .click();
   await expect(page.locator("main").getByRole("alert")).toContainText(
-    "confirm their passcode",
+    "confirm the administration key",
   );
-  await page.getByLabel("Your parent passcode").fill("222222");
-  await page.getByRole("button", { name: "Confirm passcode" }).click();
-  await expect(page.getByRole("status")).toContainText("Passcode confirmed");
+  await page.getByLabel("Administration key").fill("test-admin-key-only");
+  await page
+    .getByRole("button", { name: "Confirm administration key" })
+    .click();
+  await expect(page.getByRole("status")).toContainText(
+    "Administration key confirmed",
+  );
   await page
     .getByRole("button", { name: "Sign out all other devices" })
     .click();

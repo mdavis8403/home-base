@@ -8,7 +8,7 @@ import {
   vi,
 } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { AuthService } from "../src/lib/server/auth-service";
 import {
   hashCredential,
@@ -33,26 +33,32 @@ const adapter: Database = {
 };
 const auth = new AuthService(adapter);
 const phrase = "testonly"; // Eight-character test fixture, never a real credential.
-const passcode = "test-passcode";
+const adminKey = "test-admin-key-only";
 async function login(key = "mom", remember = true) {
   const { challenge } = await auth.begin(phrase);
-  return auth.signIn(challenge, key, passcode, remember);
+  return auth.signIn(challenge, key, remember);
 }
 async function signedIn(key = "mom") {
   const result = await login(key);
   return (await auth.session(result.sessionToken, result.deviceToken))!;
 }
 beforeAll(async () => {
-  await db.exec(await readFile("db/migrations/001_foundation.sql", "utf8"));
+  for (const file of (await readdir("db/migrations")).sort())
+    await db.exec(await readFile("db/migrations/" + file, "utf8"));
   await db.query(
-    "INSERT INTO families (id,name,timezone,access_phrase_hash) VALUES ($1,$2,$3,$4)",
-    [FAMILY_ID, "Test family", "America/Chicago", await hashCredential(phrase)],
+    "INSERT INTO families (id,name,timezone,access_phrase_hash,admin_key_hash) VALUES ($1,$2,$3,$4,$5)",
+    [
+      FAMILY_ID,
+      "Test family",
+      "America/Chicago",
+      await hashCredential(phrase),
+      await hashCredential(adminKey),
+    ],
   );
-  const hash = await hashCredential(passcode);
   for (const p of INITIAL_PROFILES)
     await db.query(
-      "INSERT INTO profiles (id,family_id,profile_key,display_name,role,avatar,profile_color,passcode_hash) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-      [p.id, FAMILY_ID, p.key, p.displayName, p.role, p.avatar, p.color, hash],
+      "INSERT INTO profiles (id,family_id,profile_key,display_name,role,avatar,profile_color) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+      [p.id, FAMILY_ID, p.key, p.displayName, p.role, p.avatar, p.color],
     );
 });
 beforeEach(async () => {
@@ -108,12 +114,12 @@ describe("PostgreSQL schema", () => {
 });
 describe("credentials and sessions", () => {
   it("uses salted hashes and rejects incorrect or malformed credentials", async () => {
-    const hash = await hashCredential(passcode);
-    expect(hash).not.toContain(passcode);
-    expect(hash).not.toBe(await hashCredential(passcode));
-    expect(await verifyCredential(passcode, hash)).toBe(true);
+    const hash = await hashCredential(adminKey);
+    expect(hash).not.toContain(adminKey);
+    expect(hash).not.toBe(await hashCredential(adminKey));
+    expect(await verifyCredential(adminKey, hash)).toBe(true);
     expect(await verifyCredential("wrong", hash)).toBe(false);
-    expect(await verifyCredential(passcode, "broken")).toBe(false);
+    expect(await verifyCredential(adminKey, "broken")).toBe(false);
   });
   it("rejects the wrong family phrase", async () => {
     await expect(auth.begin("wrong")).rejects.toMatchObject({
@@ -126,21 +132,21 @@ describe("credentials and sessions", () => {
     expect(JSON.stringify(result.profiles)).not.toContain("scrypt");
   });
   it("requires a valid phrase challenge before checking a profile", async () => {
-    await expect(
-      auth.signIn("forged", "mom", passcode, true),
-    ).rejects.toMatchObject({ code: "CHALLENGE_EXPIRED" });
+    await expect(auth.signIn("forged", "mom", true)).rejects.toMatchObject({
+      code: "CHALLENGE_EXPIRED",
+    });
   });
-  it("rejects expired challenges and wrong passcodes", async () => {
+  it("rejects expired challenges and unknown profiles", async () => {
     const { challenge } = await auth.begin(phrase);
     await expect(
-      auth.signIn(challenge, "mom", "wrong", true),
+      auth.signIn(challenge, "outsider", true),
     ).rejects.toMatchObject({ code: "INVALID_CREDENTIALS" });
     await db.exec(
       "UPDATE auth_challenges SET expires_at=now()-interval '1 second'",
     );
-    await expect(
-      auth.signIn(challenge, "mom", passcode, true),
-    ).rejects.toMatchObject({ code: "CHALLENGE_EXPIRED" });
+    await expect(auth.signIn(challenge, "mom", true)).rejects.toMatchObject({
+      code: "CHALLENGE_EXPIRED",
+    });
   });
   it("stores opaque token hashes and requires both cookies", async () => {
     const result = await login();
@@ -156,10 +162,10 @@ describe("credentials and sessions", () => {
   });
   it("consumes a family challenge only once", async () => {
     const { challenge } = await auth.begin(phrase);
-    await auth.signIn(challenge, "mia", passcode, false);
-    await expect(
-      auth.signIn(challenge, "mom", passcode, true),
-    ).rejects.toMatchObject({ code: "CHALLENGE_EXPIRED" });
+    await auth.signIn(challenge, "mia", false);
+    await expect(auth.signIn(challenge, "mom", true)).rejects.toMatchObject({
+      code: "CHALLENGE_EXPIRED",
+    });
   });
   it("assigns bounded remembered and temporary lifetimes", async () => {
     expect((await login("mia", false)).lifetime).toBe(43200);
@@ -188,16 +194,45 @@ describe("credentials and sessions", () => {
     );
     await expect(auth.rateLimit("concurrent", 10)).resolves.toBeUndefined();
   });
-  it("rate limits repeated invalid profile passcodes", async () => {
+  it("rate limits repeated invalid profile selections", async () => {
     const { challenge } = await auth.begin(phrase);
-    for (let i = 0; i < 10; i++)
+    for (let i = 0; i < 30; i++)
       await expect(
-        auth.signIn(challenge, "mia", "wrong", false),
+        auth.signIn(challenge, "outsider", false),
       ).rejects.toMatchObject({ code: "INVALID_CREDENTIALS" });
-    await expect(
-      auth.signIn(challenge, "mia", passcode, false),
-    ).rejects.toMatchObject({ code: "RATE_LIMITED" });
+    await expect(auth.signIn(challenge, "mia", false)).rejects.toMatchObject({
+      code: "RATE_LIMITED",
+    });
   });
+});
+it("removes profile credential storage and issues just one session for concurrent choices", async () => {
+  const columns = await db.query<{ column_name: string }>(
+    "SELECT column_name FROM information_schema.columns WHERE table_name='profiles'",
+  );
+  expect(columns.rows.map((r) => r.column_name)).not.toContain("passcode_hash");
+  const { challenge } = await auth.begin(phrase);
+  const results = await Promise.allSettled([
+    auth.signIn(challenge, "mom", false),
+    auth.signIn(challenge, "dad", false),
+  ]);
+  expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+});
+it("fails closed for missing administration keys without blocking normal entry", async () => {
+  await db.query("UPDATE families SET admin_key_hash=NULL WHERE id=$1", [
+    FAMILY_ID,
+  ]);
+  try {
+    const session = await signedIn("mom");
+    await expect(auth.reauthenticate(session, adminKey)).rejects.toMatchObject({
+      code: "INVALID_CREDENTIALS",
+    });
+    expect(canPerform(session, "family:use")).toBe(true);
+  } finally {
+    await db.query("UPDATE families SET admin_key_hash=$1 WHERE id=$2", [
+      await hashCredential(adminKey),
+      FAMILY_ID,
+    ]);
+  }
 });
 describe("parent permissions", () => {
   it("denies Mia settings and sensitive actions even with a forged verification date", async () => {
@@ -205,14 +240,14 @@ describe("parent permissions", () => {
     mia.parentVerifiedUntil = new Date(Date.now() + 100000);
     expect(canPerform(mia, "security:manage")).toBe(false);
     expect(hasPermission("child", "settings:view")).toBe(false);
-    await expect(auth.reauthenticate(mia, passcode)).rejects.toMatchObject({
+    await expect(auth.reauthenticate(mia, adminKey)).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
     await expect(auth.revokeOtherDevices(mia)).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
   });
-  it("requires a fresh parent passcode and binds verification to this session", async () => {
+  it("requires a separate administration key and binds verification to this session", async () => {
     const a = await login(),
       b = await login();
     let session = (await auth.session(a.sessionToken, a.deviceToken))!;
@@ -222,7 +257,7 @@ describe("parent permissions", () => {
     await expect(auth.reauthenticate(session, "wrong")).rejects.toMatchObject({
       code: "INVALID_CREDENTIALS",
     });
-    await auth.reauthenticate(session, passcode);
+    await auth.reauthenticate(session, adminKey);
     session = (await auth.session(a.sessionToken, a.deviceToken))!;
     expect(canPerform(session, "security:manage")).toBe(true);
     expect(
@@ -352,4 +387,58 @@ describe("private media boundary", () => {
   it("rejects path traversal", () => {
     expect(() => mediaPath(FAMILY_ID, "messages", "../../private")).toThrow();
   });
+});
+it("migrates an existing family without losing profiles, messages, or normal sessions", async () => {
+  const legacy = new PGlite();
+  try {
+    await legacy.exec(
+      await readFile("db/migrations/001_foundation.sql", "utf8"),
+    );
+    await legacy.query(
+      "INSERT INTO families(id,name,timezone,access_phrase_hash) VALUES($1,'Existing family','America/Chicago','old-family-hash')",
+      [FAMILY_ID],
+    );
+    const mom = INITIAL_PROFILES.find((p) => p.key === "mom")!;
+    await legacy.query(
+      "INSERT INTO profiles(id,family_id,profile_key,display_name,role,avatar,profile_color,passcode_hash) VALUES($1,$2,'mom','Mom','admin','M','gold','obsolete-hash')",
+      [mom.id, FAMILY_ID],
+    );
+    await legacy.query(
+      "INSERT INTO messages(id,family_id,sender_profile_id,message_type,text_body,send_at) VALUES(gen_random_uuid(),$1,$2,'text','Keep this memory',now())",
+      [FAMILY_ID, mom.id],
+    );
+    await legacy.query(
+      "INSERT INTO sessions(id,profile_id,token_hash,device_identifier_hash,remembered,expires_at,parent_verified_until) VALUES(gen_random_uuid(),$1,'session-hash','device-hash',true,now()+interval '30 days',now()+interval '10 minutes')",
+      [mom.id],
+    );
+    await legacy.exec(
+      await readFile("db/migrations/005_family_entry.sql", "utf8"),
+    );
+    expect(
+      (await legacy.query("SELECT id,profile_key FROM profiles")).rows,
+    ).toEqual([{ id: mom.id, profile_key: "mom" }]);
+    expect((await legacy.query("SELECT text_body FROM messages")).rows).toEqual(
+      [{ text_body: "Keep this memory" }],
+    );
+    expect(
+      (
+        await legacy.query(
+          "SELECT token_hash,parent_verified_until,expires_at>now() AS valid FROM sessions",
+        )
+      ).rows,
+    ).toEqual([
+      { token_hash: "session-hash", parent_verified_until: null, valid: true },
+    ]);
+    expect(
+      (
+        await legacy.query(
+          "SELECT access_phrase_hash,admin_key_hash FROM families",
+        )
+      ).rows,
+    ).toEqual([
+      { access_phrase_hash: "old-family-hash", admin_key_hash: null },
+    ]);
+  } finally {
+    await legacy.close();
+  }
 });

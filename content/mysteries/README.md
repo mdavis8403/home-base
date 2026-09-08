@@ -14,7 +14,7 @@ Times are estimates for a family reading and talking together; there is no count
 
 ## Adding a case
 
-Copy a package, give it a new `slug`, and author every shared and private clue, puzzle, hint, resolution, and ending. Keep `schemaVersion: 1`; increment `version` when revising an existing slug. Use **Parent case desk** in Mystery Club to confirm your passcode, import the JSON, validate, preview every player's view, and publish. Parents can unpublish a case to stop new games. Existing games and completed memories keep their own immutable case copy.
+Copy a package, give it a new `slug`, and author every shared and private clue, puzzle, hint, resolution, and ending. Keep `schemaVersion: 1`; increment `version` when revising an existing slug. Use **Parent case desk** in Mystery Club to confirm the separate administration key, import the JSON, validate, preview every player's view, and publish. Parents can unpublish a case to stop new games. Existing games and completed memories keep their own immutable case copy.
 
 `mystery.schema.json` is the exported structural JSON Schema. The shared `validateMystery` function additionally checks scene reachability, cycles, references, unique IDs, complete permutations/matches, answer references, and exactly one final deduction. A validator cannot judge whether a story's clues are fair: use the walkthrough below and test with people before publishing a new case.
 

@@ -31,7 +31,6 @@ async function login(page: Page, key: "mia" | "mom" | "dad") {
     headers: { Origin: origin },
     data: {
       key,
-      passcode: { mia: "111111", mom: "222222", dad: "333333" }[key],
       remember: false,
     },
   });
@@ -205,11 +204,19 @@ for (let index = 0; index < 5; index++)
         }
         if (index === 0 && sceneIndex === 1)
           await shot(page, info.project.name, "shared-puzzle");
-        if ([...scene.shared, ...scene.private.mia].some((clue) => clue.tones)) {
-          await page.getByRole("button", { name: "Play original clue" }).click();
-          await expect(page.getByRole("button", { name: "Stop sound" })).toBeVisible();
+        if (
+          [...scene.shared, ...scene.private.mia].some((clue) => clue.tones)
+        ) {
+          await page
+            .getByRole("button", { name: "Play original clue" })
+            .click();
+          await expect(
+            page.getByRole("button", { name: "Stop sound" }),
+          ).toBeVisible();
           await page.getByRole("button", { name: "Stop sound" }).click();
-          await expect(page.getByRole("button", { name: "Play original clue" })).toBeVisible();
+          await expect(
+            page.getByRole("button", { name: "Play original clue" }),
+          ).toBeVisible();
         }
         await solveUI(page, scene);
         // Everyone sees the resolution without manually refreshing. Mom advances the shared scene.
@@ -261,8 +268,10 @@ test("parent imports validate before publish and child requests cannot bypass pe
   ).toBe(403);
   await login(page, "mom");
   await page.getByRole("button", { name: "Parent case desk" }).click();
-  await page.getByLabel("Your parent passcode").fill("222222");
-  await page.getByRole("button", { name: "Confirm passcode" }).click();
+  await page.getByLabel("Administration key").fill("test-admin-key-only");
+  await page
+    .getByRole("button", { name: "Confirm administration key" })
+    .click();
   await expect(page.getByRole("status")).toContainText("confirmed");
   const malformed = { ...cases[0], scenes: [] };
   await page.getByLabel("Import Mystery File").setInputFiles({

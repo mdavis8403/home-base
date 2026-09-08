@@ -39,7 +39,13 @@ const note = (extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 beforeAll(async () => {
-  for (const name of ["001_foundation", "002_messages"])
+  for (const name of [
+    "001_foundation",
+    "002_messages",
+    "003_family_board",
+    "004_mystery_club",
+    "005_family_entry",
+  ])
     await db.exec(await readFile("db/migrations/" + name + ".sql", "utf8"));
   await db.query(
     "INSERT INTO families(id,name,timezone,access_phrase_hash) VALUES($1,'Test','America/Chicago','test')",
@@ -47,7 +53,7 @@ beforeAll(async () => {
   );
   for (const p of INITIAL_PROFILES)
     await db.query(
-      "INSERT INTO profiles(id,family_id,profile_key,display_name,role,avatar,profile_color,passcode_hash) VALUES($1,$2,$3,$4,$5,$6,$7,'test')",
+      "INSERT INTO profiles(id,family_id,profile_key,display_name,role,avatar,profile_color) VALUES($1,$2,$3,$4,$5,$6,$7)",
       [p.id, FAMILY_ID, p.key, p.displayName, p.role, p.avatar, p.color],
     );
 });

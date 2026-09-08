@@ -15,9 +15,7 @@ const env = {
   DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:54329/postgres",
   APP_ORIGIN: "http://localhost:3101",
   FAMILY_ACCESS_PHRASE: "testonly",
-  MIA_PASSCODE: "111111",
-  MOM_PASSCODE: "222222",
-  DAD_PASSCODE: "333333",
+  ADMIN_ACCESS_KEY: "test-admin-key-only",
 };
 async function setup(file: string) {
   await new Promise<void>((resolve, reject) => {

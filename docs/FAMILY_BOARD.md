@@ -12,7 +12,7 @@ Choose **Past Boards** to revisit previous days. Those answers, photos and drawi
 
 ## Parent choices
 
-Mom or Dad can choose **Parent touches** inside Family Board. Confirm your own parent passcode, then:
+Mom or Dad can choose **Parent touches** inside Family Board. Confirm the separate administration key, then:
 
 - Set the reveal time. The family timezone is displayed beside it.
 - Choose any mix of silly, imaginative, reflective, and family planning prompts. Keep at least one category selected.

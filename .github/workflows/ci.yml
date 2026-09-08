@@ -34,9 +34,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://homebase:ci-only-password@localhost:5432/homebase_test
           FAMILY_ACCESS_PHRASE: isolated-ci-family-phrase
-          MIA_PASSCODE: "111111"
-          MOM_PASSCODE: "222222"
-          DAD_PASSCODE: "333333"
+          ADMIN_ACCESS_KEY: isolated-ci-administration-key
         run: |
           npx tsx scripts/migrate.ts
           npx tsx scripts/migrate.ts

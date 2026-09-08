@@ -246,30 +246,6 @@ legend {
   height: 22px;
   accent-color: var(--color-gold);
 }
-.profile-picker {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-top: 12px;
-}
-.profile-choice {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px 7px;
-  border: 1px solid #637780;
-  border-radius: 12px;
-  cursor: pointer;
-}
-.profile-choice:has(input:checked) {
-  border-color: var(--color-gold);
-  background: #354a50;
-}
-.profile-choice input {
-  accent-color: var(--color-gold);
-}
 .avatar {
   display: inline-flex;
   align-items: center;
@@ -279,10 +255,6 @@ legend {
   border-radius: 50%;
   color: #192f3a;
   font-weight: bold;
-}
-.profile-choice .avatar {
-  width: 42px;
-  height: 42px;
 }
 fieldset {
   border: 0;
@@ -1804,5 +1776,236 @@ input::file-selector-button {
   .mystery-diagram {
     margin-left: -8px;
     margin-right: -8px;
+  }
+}
+
+/* Immersive cottage entry. Artwork and door use the original 1672 × 941 coordinates. */
+.cottage-entry {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  background: #101e23;
+  display: grid;
+  place-items: center;
+}
+.cottage-scene {
+  position: absolute;
+  width: max(100vw, 177.6833svh);
+  height: max(100svh, 56.2799vw);
+  left: 47.85%;
+  top: 50%;
+  transform: translate(-47.85%, -50%);
+  transition:
+    filter 0.6s,
+    opacity 0.6s;
+}
+.cottage-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.cottage-door {
+  position: absolute;
+  left: 40.9%;
+  top: 30.2%;
+  width: 14%;
+  height: 41%;
+  border: 0;
+  padding: 0;
+  border-radius: 50% 50% 4% 4% / 28% 28% 2% 2%;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 0.3s,
+    box-shadow 0.3s;
+  -webkit-tap-highlight-color: transparent;
+}
+.cottage-door:hover,
+.cottage-door:focus-visible,
+.cottage-door:active {
+  outline: none;
+  background: #ffd98726;
+  box-shadow:
+    0 0 35px 12px #ffcf7870,
+    inset 0 0 24px #ffe6a766;
+}
+.cottage-opening .cottage-door {
+  background: #fff5cecc;
+  box-shadow: 0 0 100px 65px #ffd99199;
+  transition: all 0.65s ease-out;
+}
+.cottage-opening .cottage-scene {
+  filter: brightness(1.35);
+}
+.cottage-tagline {
+  position: absolute;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  left: 0;
+  width: 100%;
+  margin: 0;
+  padding: 30px 16px 12px;
+  color: #fff5df;
+  text-align: center;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: clamp(1.1rem, 2.7vw, 1.9rem);
+  text-shadow: 0 2px 8px #000;
+  pointer-events: none;
+}
+.cottage-tagline::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -45px 0 -40px;
+  background: linear-gradient(transparent, #061417ce);
+}
+.phone-break {
+  display: none;
+}
+.magic-dialog {
+  width: min(90vw, 490px);
+  max-height: 88svh;
+  overflow: auto;
+  margin: auto;
+  border: 1px solid #dcc18d;
+  border-radius: 24px;
+  padding: clamp(26px, 5vw, 46px);
+  background: #f6eedc;
+  color: #192f3a;
+  box-shadow: 0 24px 100px #080e15aa;
+}
+.magic-dialog::backdrop {
+  background: #07152366;
+  backdrop-filter: blur(3px);
+}
+.magic-dialog h1 {
+  font-size: clamp(1.9rem, 5vw, 2.8rem);
+  margin: 12px 0 20px;
+}
+.magic-dialog .eyebrow {
+  color: #78613d;
+  padding-right: 12px;
+}
+.magic-dialog .entry-form {
+  color: #192f3a;
+}
+.magic-dialog .entry-form input[type="password"] {
+  background: #fffaf0;
+  color: #192f3a;
+  border-color: #92826a;
+}
+.magic-dialog .form-error,
+.homecoming-panel .form-error {
+  color: #843d32;
+}
+.magic-close {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  border: 0;
+  background: transparent;
+  color: #192f3a;
+  width: 44px;
+  height: 44px;
+  font-size: 28px;
+  cursor: pointer;
+}
+.cottage-profiles .cottage-scene {
+  filter: blur(6px) brightness(0.45);
+  pointer-events: none;
+}
+.homecoming-panel {
+  position: relative;
+  width: min(92vw, 750px);
+  margin: 30px 0;
+  padding: clamp(24px, 5vw, 56px);
+  background: #f6eedcf5;
+  color: #192f3a;
+  text-align: center;
+  border-radius: 30px;
+  box-shadow: 0 20px 100px #0006;
+}
+.homecoming-panel h1 {
+  font-size: clamp(2rem, 5vw, 3.3rem);
+  margin: 18px 0 34px;
+}
+.homecoming-panel h1:focus {
+  outline: none;
+}
+.homecoming-panel .eyebrow {
+  color: #78613d;
+}
+.homecoming-panel .muted {
+  color: #58615a;
+  font-size: 0.85rem;
+}
+.homecoming-profiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(10px, 3vw, 24px);
+}
+.homecoming-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 24px 6px;
+  background: #fffbf2;
+  color: #192f3a;
+  border: 1px solid #d6c6a8;
+  border-radius: 70px 70px 24px 24px;
+  font:
+    600 clamp(1.3rem, 3vw, 1.8rem) Georgia,
+    serif;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.homecoming-profile:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px #56483220;
+}
+.homecoming-emblem {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  width: clamp(50px, 9vw, 88px);
+  height: clamp(50px, 9vw, 88px);
+  background: #e9b39b;
+  color: #503f37;
+  font-size: 2.5rem;
+}
+.homecoming-dad .homecoming-emblem {
+  background: #c2d1bd;
+}
+.homecoming-mia .homecoming-emblem {
+  background: #ebd095;
+}
+.remember-home {
+  justify-content: center;
+  margin-top: 32px;
+  font-size: 0.95rem;
+}
+.homecoming-panel .text-button {
+  color: #42594e;
+  margin-top: 12px;
+}
+@media (max-width: 500px) {
+  .phone-break {
+    display: initial;
+  }
+  .homecoming-panel {
+    padding: 26px 18px;
+  }
+  .homecoming-profile {
+    gap: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cottage-entry *,
+  .cottage-entry *::before {
+    transition: none !important;
+    animation: none !important;
   }
 }

@@ -10,7 +10,6 @@ async function login(page: Page, key: "mom" | "mia" | "dad") {
     headers: { Origin: origin },
     data: {
       key,
-      passcode: { mom: "222222", mia: "111111", dad: "333333" }[key],
       remember: false,
     },
   });

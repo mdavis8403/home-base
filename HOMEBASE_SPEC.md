@@ -139,27 +139,28 @@ The experience should feel like a family clubhouse rather than business software
 
 ## 4.1 Home Base Door
 
-On initial entry to the application, show a simple Home Base entrance.
+The first screen at `/` or `/enter` is the existing fairy-tale cottage artwork,
+`public/images/home-base-door.png`, displayed immersively across the viewport.
+Do not replace or regenerate the artwork. Overlay only the tagline:
 
-Example:
+**No matter where we are, we meet here.**
 
-HOME BASE
+No forms, profile cards, navigation or app menus appear until the actual teal
+front door is tapped. A responsive, keyboard-accessible hotspot follows the door
+in the image; hover, focus and touch produce a subtle warm glow, never a rectangular
+web-button appearance.
 
-No matter where we are, we meet here.
+The door opens a storybook-style modal asking **What’s the magic word?** over the
+cottage. Never display the password on the page. Wrong attempts receive a gentle,
+nontechnical response. Successful family-password verification produces a short
+warm-light transition, then **Who’s coming home?** with exactly Mom, Dad and Mia.
+Selecting a name immediately creates that profile’s session and enters Home Base.
+There is no individual password, PIN, passcode or second authentication step.
 
-[ ENTER ]
-
-Visual treatment should resemble an inviting clubhouse/front door rather than a login portal.
-
-The entrance animation should be subtle and fast.
-
-Maximum desired animation time:
-
-**1.5 seconds**
-
-Returning users may bypass this screen after their device has been remembered.
-
-A setting may allow the entrance animation to be enabled or disabled.
+Keep transitions under 1.5 seconds and respect reduced-motion preferences.
+Prioritize iPad while preserving laptop and phone layouts. Remembered sessions can
+still open protected destinations directly; visiting the entrance explicitly
+always shows the cottage. Remembering a device is optional on profile selection.
 
 ---
 
@@ -1016,62 +1017,61 @@ Both parents may be admins.
 
 # 13. AUTHENTICATION
 
-The application is private.
+The application is private with no public signup. The shared family password is
+the single authentication requirement for normal entry. Its intended value is
+supplied privately during setup; never hardcode or display a real credential in
+source code, the browser, or documentation. It must be 8–256 characters.
 
-There is no public signup.
+1. Show the cottage.
+2. Tap its glowing front door.
+3. Enter the family magic word in the modal.
+4. Show a brief warm door-opening transition.
+5. Choose **Mom**, **Dad**, or **Mia**.
+6. Immediately enter Home Base as that profile.
 
-Recommended family authentication model:
+There are NO individual profile passwords or PINs. Profiles retain their distinct
+IDs, roles, messages, favorites, Board responses and Mystery clues. A short-lived,
+one-use server challenge proves family-password entry before profile selection.
+Profile keys are resolved inside that challenge’s family; all subsequent identity
+comes from secure session cookies, never client-supplied profile IDs.
 
-### Initial device setup
+## 13.1 Remembered devices and family trust
 
-1. Open Home Base.
-2. Enter family access phrase.
-3. Select profile.
-4. Enter profile PIN/passcode.
-5. Choose "Remember this device."
+Keep the existing 12-hour temporary / 30-day remembered sessions and device
+revocation. Remembering a device is optional. Normal protected destinations can
+resume a valid session; `/` and `/enter` show the cottage for a fresh entry flow.
 
-The shared family access phrase must be 8–256 characters. Each separate profile
-passcode must remain 6–256 characters, with different passcodes for Mom, Dad, and
-Mia. Supply credentials privately during setup; never hardcode a default phrase.
+The family password grants access to choosing any of the three profiles. Profile
+selection is attribution, not proof of which person is holding the device.
+Private content remains filtered to the selected profile. Family members should
+choose their own profile; there is no individual-password identity barrier.
 
-After successful authentication, create a secure session.
+## 13.2 Separate administrative protection
 
-## 13.1 Child experience
+Mom and Dad never need a password to select their profiles or use normal features.
+Sensitive changes (device revocation, content publishing, family configuration,
+deletions and future provider settings) require a separate **administration key**
+inside the relevant parent settings. This key belongs to the family’s administration,
+not to Mom, Dad or Mia. It must differ from the family password and be 12–256 characters.
+It is provisioned privately, stored only as a salted hash on the family row, and
+unlocks existing sensitive permissions for ten minutes on the current parent
+session. Child sessions cannot use it. Rate limits and session expiry still apply.
 
-Mia should not need to type a password every time.
-
-After her iPad is authorized:
-
-**This device belongs to Mia**
-
-Normal reopening should go directly to her Home Base.
-
-Sensitive settings remain parent protected.
-
-## 13.2 Parent settings
-
-Changing:
-
-- profiles
-- family authentication
-- content imports
-- deletion
-- AI configuration
-- storage settings
-
-requires parent re-authentication.
+If this optional key is not configured, sensitive actions remain locked; normal
+entry and gameplay continue. Existing installations discard profile credential
+hashes through a new migration, clear old administrative grants, and configure
+a new key separately. Never reuse an old profile password automatically.
 
 ## 13.3 Security requirements
 
-- password/passphrase hashes only
-- never store plaintext credentials
-- HttpOnly secure cookies
-- CSRF protection
-- rate limit authentication attempts
-- private object storage
-- signed media URLs
+- salted hashes only for the shared phrase and separate administration key
+- no plaintext credentials in source, browser bundles or logs
+- HttpOnly secure cookies, fixed session expiry and revocation
+- same-origin CSRF protection and database-backed rate limits
+- one-use, expiring family-entry challenges
+- private object storage and signed media URLs
 - server-side authorization on every data mutation
-- never trust profile IDs sent by the client without validating the active session
+- no global presence or activity monitoring
 
 ---
 
@@ -1413,7 +1413,7 @@ Parent Settings includes:
 ### Security
 
 - change family access phrase
-- profile PINs
+- separate administration-key protection
 - revoke remembered device
 
 ### Mystery Club

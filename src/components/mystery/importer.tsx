@@ -36,33 +36,34 @@ export function MysteryImporter({
       <p className="eyebrow">PARENT CASE DESK</p>
       <h2>Bring a new mystery home.</h2>
       <p>
-        Confirm your passcode, choose a case file, and inspect its clues before
-        publishing. New versions leave games already in progress intact.
+        Confirm the separate administration key, choose a case file, and inspect
+        its clues before publishing. New versions leave games already in
+        progress intact.
       </p>
       <form
         className="entry-form"
         onSubmit={(e) => {
           e.preventDefault();
           const form = e.currentTarget;
-          const passcode = new FormData(form).get("passcode");
+          const adminKey = new FormData(form).get("adminKey");
           void run(async () => {
-            await authRequest("reauth", { passcode });
+            await authRequest("reauth", { adminKey });
             form.reset();
             setNotice("Parent access confirmed for 10 minutes.");
           });
         }}
       >
         <label>
-          Your parent passcode
+          Administration key
           <input
             required
             type="password"
-            name="passcode"
+            name="adminKey"
             autoComplete="current-password"
           />
         </label>
         <button className="secondary-button" disabled={busy}>
-          Confirm passcode
+          Confirm administration key
         </button>
       </form>
       <label className="file-picker">
