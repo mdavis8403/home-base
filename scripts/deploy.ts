@@ -1,9 +1,9 @@
 import { spawnSync } from "node:child_process";
 // Run only from the deliberately configured production Workers Build.
-// Wrangler auto-provisions the named D1 and private R2 bindings on the first deploy.
+// Use the existing D1/R2 resources. Migrate before exposing code that needs the schema.
 for (const args of [
-  ["deploy"],
   ["d1", "migrations", "apply", "DB", "--remote"],
+  ["deploy"],
 ]) {
   const result = spawnSync(
     process.execPath,

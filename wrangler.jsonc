@@ -13,6 +13,7 @@
     {
       "binding": "DB",
       "database_name": "home-base-db",
+      "database_id": "dca181d9-6a68-4b40-a57b-5d97b7ae8c94",
       "migrations_dir": "db/d1",
     },
   ],
@@ -20,11 +21,10 @@
     { "binding": "FAMILY_MEDIA", "bucket_name": "home-base-private-media" },
   ],
   "vars": {
-    "APP_ORIGIN": "https://mdhomebase.com",
+    "APP_ORIGIN": "https://home-base.mdavis8403.workers.dev",
     "FAMILY_TIMEZONE": "America/Chicago",
   },
-  "workers_dev": false,
+  "workers_dev": true,
   "preview_urls": false,
   "observability": { "enabled": false },
-  "limits": { "cpu_ms": 30000 },
 }
