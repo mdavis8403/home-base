@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, afterAll, expect, it } from "vitest";
-import { PGlite } from "@electric-sql/pglite";
+import { TestDatabase } from "./d1";
 import { readFile, readdir } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { MysteryService } from "../src/lib/server/mystery/service";
@@ -10,8 +10,9 @@ import {
 } from "../src/lib/shared/mystery/schema";
 import { FAMILY_ID, INITIAL_PROFILES } from "../src/lib/shared/profiles";
 import type { Session } from "../src/lib/shared/types";
-const db = new PGlite();
+const db = new TestDatabase();
 const service = new MysteryService({
+  batch: (statements) => db.batch(statements),
   query: async <T>(sql: string, values?: unknown[]) => db.query<T>(sql, values),
 });
 const people = INITIAL_PROFILES.map(
@@ -58,10 +59,7 @@ async function start(index = 0) {
   return id;
 }
 beforeAll(async () => {
-  for (const f of (await readdir("db/migrations"))
-    .filter((f) => f.endsWith(".sql"))
-    .sort())
-    await db.exec(await readFile("db/migrations/" + f, "utf8"));
+  await db.migrate();
   for (const f of (await readdir("content/mysteries"))
     .filter((f) => /^\d.*json$/.test(f))
     .sort())
@@ -229,6 +227,7 @@ it("serializes scene progress, preserves hints and handles stale/double submissi
   expect((await service.view(mia, id)).scene?.id).toBe(cases[0].scenes[1].id);
   await expect(send(mia, id, "advance")).rejects.toMatchObject({ status: 409 });
   const fresh = new MysteryService({
+    batch: (s) => db.batch(s),
     query: async <T>(sql: string, values?: unknown[]) =>
       db.query<T>(sql, values),
   });

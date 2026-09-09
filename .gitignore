@@ -8,3 +8,7 @@ test-results/
 !.env.example
 *.tsbuildinfo
 .DS_Store
+.open-next/
+.wrangler/
+.dev.vars*
+!.dev.vars.example

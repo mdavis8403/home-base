@@ -1,11 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
-import { Pool } from "pg";
+import { BrowserTestDatabase } from "./database";
 const origin = "http://localhost:3101";
-const db = new Pool({
-  connectionString: "postgresql://postgres:postgres@127.0.0.1:54329/postgres",
-  max: 1,
-});
+const db = new BrowserTestDatabase();
 test.beforeEach(async () => {
   await db.query("DELETE FROM auth_rate_limits");
 });
@@ -121,7 +118,9 @@ test("each profile enters without a credential and profile APIs still require th
     await expect(page.getByRole("heading", { level: 1 })).toContainText(name);
     await page.getByRole("button", { name: "Sign out", exact: true }).click();
     await expect(page).toHaveURL(origin + "/");
-    await expect(page.getByRole("button", { name: "Open the cottage door" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Open the cottage door" }),
+    ).toBeVisible();
   }
   expect(
     (

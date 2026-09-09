@@ -1,0 +1,6 @@
+# Local server-only settings. Copy privately to .dev.vars; never commit real values.
+APP_ORIGIN="http://localhost:3101"
+FAMILY_ACCESS_PHRASE=""
+# Optional 12–256 character administration key, different from the family phrase.
+ADMIN_ACCESS_KEY=""
+FAMILY_TIMEZONE="America/Chicago"

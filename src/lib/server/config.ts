@@ -1,6 +1,10 @@
 import "server-only";
+import { bindings } from "./cloudflare";
 export function appOrigin(): string {
-  const value = process.env.APP_ORIGIN;
+  let value = process.env.APP_ORIGIN;
+  try {
+    value = bindings().APP_ORIGIN || value;
+  } catch {}
   if (!value) throw new Error("APP_ORIGIN is required.");
   const url = new URL(value);
   if (

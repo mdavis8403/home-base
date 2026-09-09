@@ -23,16 +23,16 @@ export class MessagesService {
     const { rows } = await this.db.query<MessageItem>(
       `
       SELECT m.id, p.profile_key AS sender, p.display_name AS "senderName",
-      coalesce(m.text_body,'') AS text, m.send_at AS "sendAt", (m.send_at > now()) AS scheduled,
+      coalesce(m.text_body,'') AS text, m.send_at AS "sendAt", (m.send_at > strftime('%Y-%m-%dT%H:%M:%fZ','now')) AS scheduled,
       (r.read_at IS NOT NULL) AS read, (r.favorited_at IS NOT NULL) AS favorite,
-      (r.loved_at IS NOT NULL) AS loved, (r.id IS NOT NULL AND m.send_at <= now()) AS "isRecipient",
-      ARRAY(SELECT pr.display_name FROM message_recipients rr JOIN profiles pr ON pr.id=rr.recipient_profile_id WHERE rr.message_id=m.id ORDER BY pr.profile_key) AS recipients,
-      ARRAY(SELECT pr.display_name FROM message_recipients rr JOIN profiles pr ON pr.id=rr.recipient_profile_id WHERE rr.message_id=m.id AND rr.loved_at IS NOT NULL ORDER BY pr.profile_key) AS hearts,
-      coalesce((SELECT jsonb_agg(jsonb_build_object('id',a.id,'mediaType',a.media_type,'metadata',a.metadata))
+      (r.loved_at IS NOT NULL) AS loved, (r.id IS NOT NULL AND m.send_at <= strftime('%Y-%m-%dT%H:%M:%fZ','now')) AS "isRecipient",
+      (SELECT json_group_array(pr.display_name ORDER BY pr.profile_key) FROM message_recipients rr JOIN profiles pr ON pr.id=rr.recipient_profile_id WHERE rr.message_id=m.id) AS recipients,
+      (SELECT json_group_array(pr.display_name ORDER BY pr.profile_key) FROM message_recipients rr JOIN profiles pr ON pr.id=rr.recipient_profile_id WHERE rr.message_id=m.id AND rr.loved_at IS NOT NULL) AS hearts,
+      coalesce((SELECT json_group_array(json_object('id',a.id,'mediaType',a.media_type,'metadata',json(a.metadata)))
         FROM media_assets a WHERE a.family_id=m.family_id AND a.related_entity_type='messages' AND a.related_entity_id=m.id),'[]') AS media
       FROM messages m JOIN profiles p ON p.id=m.sender_profile_id
       LEFT JOIN message_recipients r ON r.message_id=m.id AND r.recipient_profile_id=$2
-      WHERE m.family_id=$1 AND ${sent ? "m.sender_profile_id=$2" : "r.id IS NOT NULL AND m.send_at <= now()"}
+      WHERE m.family_id=$1 AND ${sent ? "m.sender_profile_id=$2" : "r.id IS NOT NULL AND m.send_at <= strftime('%Y-%m-%dT%H:%M:%fZ','now')"}
       ORDER BY m.send_at DESC, m.id DESC`,
       [session.profile.familyId, session.profile.id],
     );
@@ -98,38 +98,57 @@ export class MessagesService {
       );
     }
     try {
-      // One atomic statement: no partially delivered message or unattached media row.
-      const result = await this.db.query<{ id: string }>(
-        `
-        WITH msg AS (
-          INSERT INTO messages(id,family_id,sender_profile_id,message_type,text_body,send_at)
-          VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(id) DO NOTHING RETURNING id
-        ), recipients AS (
-          INSERT INTO message_recipients(id,family_id,message_id,recipient_profile_id)
-          SELECT gen_random_uuid(),$2,msg.id,p.id FROM msg, profiles p
-          WHERE p.family_id=$2 AND p.profile_key=ANY($7::text[])
-        ), media AS (
-          INSERT INTO media_assets(id,family_id,owner_profile_id,related_entity_type,related_entity_id,storage_path,media_type,metadata)
-          SELECT $8::uuid,$2,$3,'messages',msg.id,$9,$10,$11::jsonb FROM msg WHERE $8::uuid IS NOT NULL
-        ) SELECT id FROM msg`,
-        [
-          input.id,
-          session.profile.familyId,
-          session.profile.id,
-          input.attachment
-            ? input.text
-              ? "mixed"
-              : input.attachment.kind
-            : "text",
-          input.text,
-          sendAt,
-          keys,
-          asset?.id ?? null,
-          asset?.storagePath ?? null,
-          asset?.mediaType ?? null,
-          JSON.stringify(asset?.metadata ?? {}),
-        ],
-      );
+      // D1 batch is transactional. A unique write token prevents a concurrent
+      // retry from adding recipients or assets to somebody else's winning insert.
+      const writeToken = randomUUID();
+      const values = [
+        input.id,
+        session.profile.familyId,
+        session.profile.id,
+        input.attachment
+          ? input.text
+            ? "mixed"
+            : input.attachment.kind
+          : "text",
+        input.text,
+        sendAt,
+        writeToken,
+      ];
+      const statements: import("./db").Statement[] = [
+        {
+          sql: `INSERT INTO messages(id,family_id,sender_profile_id,message_type,text_body,send_at,write_token)
+        VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(id) DO NOTHING RETURNING id`,
+          values,
+        },
+      ];
+      for (const profile of profiles.filter((p) => keys.includes(p.key)))
+        statements.push({
+          sql: `INSERT INTO message_recipients(id,family_id,message_id,recipient_profile_id)
+          SELECT $1,$2,id,$3 FROM messages WHERE id=$4 AND write_token=$5`,
+          values: [
+            randomUUID(),
+            session.profile.familyId,
+            profile.id,
+            input.id,
+            writeToken,
+          ],
+        });
+      if (asset)
+        statements.push({
+          sql: `INSERT INTO media_assets(id,family_id,owner_profile_id,related_entity_type,related_entity_id,storage_path,media_type,metadata)
+          SELECT $1,$2,$3,'messages',id,$4,$5,$6 FROM messages WHERE id=$7 AND write_token=$8`,
+          values: [
+            asset.id,
+            asset.familyId,
+            asset.ownerProfileId,
+            asset.storagePath,
+            asset.mediaType,
+            JSON.stringify(asset.metadata),
+            input.id,
+            writeToken,
+          ],
+        });
+      const [result] = await this.db.batch(statements);
       if (!result.rows.length) {
         if (asset) await this.storage!.remove(asset.storagePath);
         const retry = await this.db.query(
@@ -161,9 +180,9 @@ export class MessagesService {
       love: "loved_at",
     }[input.action];
     const result = await this.db.query(
-      `UPDATE message_recipients r SET ${column}=${input.value ? "coalesce(r." + column + ",now())" : "NULL"}
+      `UPDATE message_recipients AS r SET ${column}=${input.value ? "coalesce(r." + column + ",strftime('%Y-%m-%dT%H:%M:%fZ','now'))" : "NULL"}
       FROM messages m WHERE r.message_id=m.id AND m.id=$1 AND m.family_id=$2
-      AND r.recipient_profile_id=$3 AND m.send_at<=now() RETURNING r.id`,
+      AND r.recipient_profile_id=$3 AND m.send_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now') RETURNING id`,
       [id, session.profile.familyId, session.profile.id],
     );
     if (!result.rows.length)
@@ -189,7 +208,7 @@ export class MessagesService {
     return new MediaService(this.storage, async (s, a) => {
       const allowed = await this.db.query(
         `SELECT m.id FROM messages m WHERE m.id=$1 AND m.family_id=$2
-        AND (m.sender_profile_id=$3 OR (m.send_at<=now() AND EXISTS(
+        AND (m.sender_profile_id=$3 OR (m.send_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now') AND EXISTS(
           SELECT 1 FROM message_recipients r WHERE r.message_id=m.id AND r.recipient_profile_id=$3)))`,
         [a.entityId, s.profile.familyId, s.profile.id],
       );

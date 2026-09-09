@@ -1,42 +1,63 @@
-import { randomBytes, scryptSync } from "node:crypto";
-import { Pool } from "pg";
-// Offline setup operation, never a public route or a profile credential.
+// Offline recovery helper for Codex. Never imported by the app or invoked by deployment.
+import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 const key = process.env.ADMIN_ACCESS_KEY;
 if (!key || key.length < 12 || key.length > 256)
-  throw new Error("Set ADMIN_ACCESS_KEY to 12–256 characters privately.");
-if (!process.env.DATABASE_URL) throw new Error("Set DATABASE_URL first.");
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const client = await pool.connect();
-try {
-  await client.query("BEGIN");
-  const { rows } = await client.query<{
-    id: string;
-    access_phrase_hash: string;
-  }>("SELECT id, access_phrase_hash FROM families FOR UPDATE");
-  if (rows.length !== 1)
-    throw new Error("Expected exactly one configured family.");
-  const [, oldSalt, oldHash] = rows[0].access_phrase_hash.split(":");
-  if (scryptSync(key, oldSalt, 64).toString("hex") === oldHash)
+  throw new Error("ADMIN_ACCESS_KEY must be 12–256 characters.");
+const location = process.argv.includes("--remote") ? "--remote" : "--local";
+const folder = mkdtempSync(join(tmpdir(), "homebase-admin-recovery-"));
+function query(sql: string) {
+  const file = join(folder, "recovery.sql");
+  writeFileSync(file, sql, { mode: 0o600 });
+  const r = spawnSync(
+    process.execPath,
+    [
+      "node_modules/wrangler/bin/wrangler.js",
+      "d1",
+      "execute",
+      "DB",
+      location,
+      "--file",
+      file,
+      "--json",
+    ],
+    {
+      encoding: "utf8",
+      env: { ...process.env, WRANGLER_SEND_METRICS: "false" },
+    },
+  );
+  // Never print database results, credential hashes, or the SQL to the console.
+  if (r.status !== 0)
     throw new Error(
-      "Choose an administration key different from the family phrase.",
+      "D1 recovery could not complete. Check the account/database configuration.",
     );
-  const salt = randomBytes(16).toString("hex");
-  await client.query("UPDATE families SET admin_key_hash=$1 WHERE id=$2", [
-    `scrypt:${salt}:${scryptSync(key, salt, 64).toString("hex")}`,
-    rows[0].id,
-  ]);
-  await client.query(
-    "UPDATE sessions SET parent_verified_until=NULL WHERE profile_id IN (SELECT id FROM profiles WHERE family_id=$1)",
-    [rows[0].id],
+  return JSON.parse(r.stdout) as {
+    results: { id: string; access_phrase_hash: string }[];
+  }[];
+}
+try {
+  const rows = query("SELECT id,access_phrase_hash FROM families;")[0].results;
+  if (rows.length !== 1)
+    throw new Error("Recovery requires exactly one configured family.");
+  const [scheme, salt, encoded] = rows[0].access_phrase_hash.split(":");
+  if (scheme !== "scrypt" || !/^[0-9a-f]{128}$/.test(encoded))
+    throw new Error("Unrecognized family credential format.");
+  if (timingSafeEqual(scryptSync(key, salt, 64), Buffer.from(encoded, "hex")))
+    throw new Error(
+      "The administration key must be different from the family phrase.",
+    );
+  const freshSalt = randomBytes(16).toString("hex");
+  const hash = `scrypt:${freshSalt}:${scryptSync(key, freshSalt, 64).toString("hex")}`;
+  // A trigger makes changing the key and clearing grants one atomic D1 statement.
+  query(
+    `UPDATE families SET admin_key_hash='${hash}' WHERE id='${rows[0].id.replaceAll("'", "''")}';`,
   );
-  await client.query("COMMIT");
   console.log(
-    "Administration key configured. Remove its setup environment entry.",
+    "Administration key replaced. Previous administrative grants were cleared.",
   );
-} catch (error) {
-  await client.query("ROLLBACK");
-  throw error;
 } finally {
-  client.release();
-  await pool.end();
+  rmSync(folder, { recursive: true, force: true });
 }

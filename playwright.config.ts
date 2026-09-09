@@ -7,10 +7,10 @@ export default defineConfig({
   use: { baseURL: "http://localhost:3100", trace: "retain-on-failure" },
   webServer: [
     {
-      command: "npm run start -- --port 3100",
+      command: "npx tsx tests/e2e/start-server.ts 3100",
       url: "http://localhost:3100",
       reuseExistingServer: false,
-      env: { APP_ORIGIN: "http://localhost:3100", DATABASE_URL: "" },
+      timeout: 60000,
     },
     {
       command: "npx tsx tests/e2e/start-server.ts",

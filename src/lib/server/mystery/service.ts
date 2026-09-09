@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { Database } from "../db";
 import type { Session, ProfileKey } from "../../shared/types";
@@ -51,11 +52,22 @@ export class MysteryService {
   async install(s: Session, cases: MysteryPackage[]) {
     this.check(s);
     // Atomic library installation. Existing packages, including unpublished ones, stay untouched.
-    await this.db.query(
-      `INSERT INTO mysteries(id,family_id,title,series,case_number,description,content_version,content_json,published,package_slug)
-    SELECT gen_random_uuid(),$1,c->>'title',c->>'series',(c->>'caseNumber')::int,c->>'description',(c->>'version')::int,c,true,c->>'slug'
-    FROM jsonb_array_elements($2::jsonb) c ON CONFLICT(family_id,package_slug) DO NOTHING`,
-      [s.profile.familyId, JSON.stringify(cases.map(validateMystery))],
+    await this.db.batch(
+      cases.map(validateMystery).map((c) => ({
+        sql: `INSERT INTO mysteries(id,family_id,title,series,case_number,description,content_version,content_json,published,package_slug)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,1,$9) ON CONFLICT(family_id,package_slug) DO NOTHING`,
+        values: [
+          randomUUID(),
+          s.profile.familyId,
+          c.title,
+          c.series,
+          c.caseNumber,
+          c.description,
+          c.version,
+          JSON.stringify(c),
+          c.slug,
+        ],
+      })),
     );
     return this.library(s);
   }
@@ -98,7 +110,7 @@ export class MysteryService {
     const p = z.object({ id: z.uuid(), caseId: z.uuid() }).strict().parse(raw);
     await this.db.query(
       `INSERT INTO mystery_sessions(id,mystery_id,family_id,status,current_scene,state_json,content_snapshot)
-   SELECT $1,m.id,$2,'lobby',m.content_json->>'start',$4::jsonb,m.content_json FROM mysteries m WHERE m.id=$3 AND m.family_id=$2 AND m.published ON CONFLICT DO NOTHING`,
+   SELECT $1,m.id,$2,'lobby',json_extract(m.content_json,'$.start'),$4,m.content_json FROM mysteries m WHERE m.id=$3 AND m.family_id=$2 AND m.published ON CONFLICT DO NOTHING`,
       [p.id, s.profile.familyId, p.caseId, JSON.stringify(initialState())],
     );
     const { rows } = await this.db.query<{ id: string }>(
@@ -118,7 +130,7 @@ export class MysteryService {
     z.uuid().parse(id);
     const { rows } = await this.db.query<GameRow>(
       `SELECT g.id,g.revision,g.status,g.content_snapshot AS content,g.state_json AS state,g.current_scene AS "sceneId",g.completed_at AS "completedAt",
-   coalesce((SELECT jsonb_agg(jsonb_build_object('id',p.id,'key',p.profile_key,'name',p.display_name,'ready',j.ready) ORDER BY p.profile_key)
+   coalesce((SELECT json_group_array(json_object('id',p.id,'key',p.profile_key,'name',p.display_name,'ready',j.ready) ORDER BY p.profile_key)
     FROM mystery_session_players j JOIN profiles p ON p.id=j.profile_id WHERE j.mystery_session_id=g.id),'[]') AS players
    FROM mystery_sessions g WHERE g.id=$1 AND g.family_id=$2`,
       [id, s.profile.familyId],
@@ -261,27 +273,40 @@ export class MysteryService {
         else status = "completed";
       }
     }
-    const result = await this.db.query<{ result: string }>(
-      "SELECT apply_mystery_event($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$9,$10) AS result",
+    const result = await this.db.query<{ id: string }>(
+      `INSERT INTO mystery_events(id,family_id,mystery_session_id,profile_id,event_type,event_data)
+       SELECT $1,$2,g.id,$3,$4,$5 FROM mystery_sessions g
+       WHERE g.id=$6 AND g.family_id=$2 AND g.revision=$7
+       AND EXISTS(SELECT 1 FROM profiles WHERE id=$3 AND family_id=$2)
+       ON CONFLICT(id) DO NOTHING RETURNING id`,
       [
+        p.id,
         s.profile.familyId,
         s.profile.id,
-        g.id,
-        p.id,
-        g.revision,
         p.action,
-        JSON.stringify(state),
-        next,
-        status,
-        p.ready ?? false,
+        JSON.stringify({
+          state,
+          next,
+          status,
+          ready: p.ready ?? false,
+          scene: g.sceneId,
+        }),
+        g.id,
+        g.revision,
       ],
     );
-    if (result.rows[0].result !== "ok")
-      throw new AppError(
-        "CONFLICT",
-        "Someone just turned this page. Please try again.",
-        409,
+    if (!result.rows.length) {
+      const retry = await this.db.query(
+        `SELECT id FROM mystery_events WHERE id=$1 AND mystery_session_id=$2 AND profile_id=$3 AND family_id=$4`,
+        [p.id, g.id, s.profile.id, s.profile.familyId],
       );
+      if (!retry.rows.length)
+        throw new AppError(
+          "CONFLICT",
+          "Someone just turned this page. Please try again.",
+          409,
+        );
+    }
     return { accepted: true };
   }
   preview(s: Session, raw: unknown) {
@@ -307,7 +332,7 @@ export class MysteryService {
     const c = this.preview(s, p.package);
     const { rows } = await this.db.query<{ id: string }>(
       `INSERT INTO mysteries(id,family_id,title,series,case_number,description,content_version,content_json,published,package_slug)
-   VALUES(gen_random_uuid(),$1,$2,$3,$4,$5,$6,$7::jsonb,$8,$9)
+   VALUES($10,$1,$2,$3,$4,$5,$6,$7,$8,$9)
    ON CONFLICT(family_id,package_slug) DO UPDATE SET title=excluded.title,series=excluded.series,case_number=excluded.case_number,description=excluded.description,content_version=excluded.content_version,content_json=excluded.content_json,published=excluded.published
    WHERE mysteries.content_version<excluded.content_version OR mysteries.content_json=excluded.content_json RETURNING id`,
       [
@@ -320,6 +345,7 @@ export class MysteryService {
         JSON.stringify(c),
         p.published,
         c.slug,
+        randomUUID(),
       ],
     );
     if (!rows.length)

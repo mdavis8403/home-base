@@ -1,7 +1,7 @@
 # Synthetic media fixtures
 
 These files contain only generated colors and tones, never family content.
-They exercise real ffprobe inspection and duration limits.
+They exercise Workers-compatible actual-byte inspection and duration limits.
 
 Generated with FFmpeg lavfi:
 - note.png: one 80 × 60 coral frame.

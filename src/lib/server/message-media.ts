@@ -1,12 +1,16 @@
 import "server-only";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import { mkdtemp, writeFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import {
+  Input,
+  BufferSource,
+  EncodedPacketSink,
+  MP4,
+  WEBM,
+  MP3,
+  WAVE,
+} from "mediabunny";
+import { imageSize } from "image-size";
 import type { MessageInput } from "../shared/messages";
 import { AppError } from "./errors";
-const exec = promisify(execFile);
 export async function inspectAttachment(
   input: NonNullable<MessageInput["attachment"]>,
 ) {
@@ -21,89 +25,117 @@ export async function inspectAttachment(
       "INVALID_MEDIA",
       `Please use a file smaller than ${max} MB.`,
     );
-  const dir = await mkdtemp(join(tmpdir(), "homebase-media-"));
   try {
-    const path = join(dir, "attachment");
-    await writeFile(path, data);
-    // Inspect actual bytes, codecs and packet timestamps, never browser duration/MIME claims.
-    const { stdout } = await exec(
-      process.env.FFPROBE_PATH || "ffprobe",
-      [
-        "-v",
-        "error",
-        "-protocol_whitelist",
-        "file",
-        "-format_whitelist",
-        "png_pipe,jpeg_pipe,webp_pipe,matroska,webm,mov,mp4,m4a,3gp,3g2,mj2,mp3,wav",
-        "-show_streams",
-        "-show_format",
-        "-show_packets",
-        "-show_entries",
-        "packet=pts_time,duration_time:stream=codec_type,codec_name,duration:format=format_name,duration",
-        "-of",
-        "json",
-        path,
-      ],
-      { timeout: 20000, maxBuffer: 16 * 1024 * 1024 },
-    );
-    const info = JSON.parse(stdout) as {
-      streams: { codec_type: string; codec_name: string; duration?: string }[];
-      format: { format_name: string; duration?: string };
-      packets?: { pts_time?: string; duration_time?: string }[];
-    };
-    const codecs = info.streams?.map((s) => s.codec_name) ?? [];
-    let contentType = "";
+    let contentType: string;
     let durationSeconds: number | undefined;
     if (input.kind === "photo" || input.kind === "doodle") {
-      if (
-        data
-          .subarray(0, 8)
-          .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) &&
-        codecs[0] === "png"
-      )
+      const size = imageSize(data);
+      if (!size.width || !size.height || size.width * size.height > 50_000_000)
+        throw new Error("Image dimensions");
+      if (size.type === "png") {
+        // Walk complete chunks; reject incomplete/trailing content and header-only files.
+        let at = 8,
+          pixels = false,
+          ended = false;
+        while (at + 12 <= data.length) {
+          const length = data.readUInt32BE(at),
+            kind = data.toString("ascii", at + 4, at + 8);
+          if (at + length + 12 > data.length)
+            throw new Error("Truncated image");
+          if (kind === "IDAT" && length > 0) pixels = true;
+          at += length + 12;
+          if (kind === "IEND") {
+            ended = length === 0 && at === data.length;
+            break;
+          }
+        }
+        if (!pixels || !ended) throw new Error("Incomplete PNG");
         contentType = "image/png";
-      else if (data[0] === 255 && data[1] === 216 && codecs[0] === "mjpeg")
+      } else if (
+        size.type === "jpg" &&
+        data[0] === 255 &&
+        data[1] === 216 &&
+        data.at(-2) === 255 &&
+        data.at(-1) === 217
+      )
         contentType = "image/jpeg";
-      else if (data.toString("ascii", 8, 12) === "WEBP" && codecs[0] === "webp")
-        contentType = "image/webp";
-    } else {
-      const video = info.streams.some((s) => s.codec_type === "video");
-      const audio = info.streams.some((s) => s.codec_type === "audio");
-      if (
-        (input.kind === "video" && !video) ||
-        (input.kind === "audio" && (!audio || video))
-      )
-        throw new Error("Wrong media");
-      const times = [
-        Number(info.format.duration),
-        ...info.streams.map((s) => Number(s.duration)),
-        ...(info.packets ?? []).map(
-          (p) => Number(p.pts_time) + Number(p.duration_time || 0),
-        ),
-      ].filter(Number.isFinite);
-      durationSeconds = Math.max(0, ...times);
-      if (
-        durationSeconds <= 0 ||
-        durationSeconds > (input.kind === "video" ? 120 : 300) + 0.15
-      )
-        throw new Error("Duration");
-      const format = info.format.format_name;
-      if (
-        format.includes("webm") &&
-        codecs.every((c) => ["vp8", "vp9", "av1", "opus", "vorbis"].includes(c))
-      )
-        contentType = input.kind === "audio" ? "audio/webm" : "video/webm";
       else if (
-        format.includes("mp4") &&
-        codecs.every((c) => ["h264", "hevc", "aac", "av1"].includes(c))
+        size.type === "webp" &&
+        data.toString("ascii", 0, 4) === "RIFF" &&
+        data.readUInt32LE(4) + 8 === data.length
       )
-        contentType = input.kind === "audio" ? "audio/mp4" : "video/mp4";
-      else if (format === "mp3" && input.kind === "audio")
-        contentType = "audio/mpeg";
-      else if (format === "wav" && input.kind === "audio")
-        contentType = "audio/wav";
+        contentType = "image/webp";
+      else throw new Error("Unsupported image");
+    } else {
+      const media = new Input({
+        source: new BufferSource(data),
+        formats: [MP4, WEBM, MP3, WAVE],
+      });
+      try {
+        const tracks = await media.getTracks();
+        if (!tracks.length || tracks.length > 8) throw new Error("Tracks");
+        const video = tracks.some((t) => t.isVideoTrack()),
+          audio = tracks.some((t) => t.isAudioTrack());
+        if (input.kind === "video" ? !video : !audio || video)
+          throw new Error("Wrong media kind");
+        const format = await media.getFormat();
+        const codecs = await Promise.all(tracks.map((t) => t.getCodec()));
+        const allowed =
+          format === WEBM
+            ? ["vp8", "vp9", "av1", "opus", "vorbis"]
+            : format === MP4
+              ? ["avc", "hevc", "aac", "av1"]
+              : format === MP3
+                ? ["mp3"]
+                : [
+                    "pcm-s16",
+                    "pcm-s24",
+                    "pcm-s32",
+                    "pcm-f32",
+                    "pcm-u8",
+                    "pcm-s16be",
+                    "pcm-s24be",
+                    "pcm-s32be",
+                    "ulaw",
+                    "alaw",
+                  ];
+        if (codecs.some((c) => !c || !allowed.includes(c)))
+          throw new Error("Codec");
+        durationSeconds = await media.computeDuration();
+        let packets = 0;
+        // Inspect every encoded packet without decoding or trusting browser/container duration.
+        for (const track of tracks)
+          for await (const packet of new EncodedPacketSink(track).packets()) {
+            if (
+              ++packets > 100000 ||
+              !Number.isFinite(packet.timestamp) ||
+              !Number.isFinite(packet.duration)
+            )
+              throw new Error("Packet bounds");
+            durationSeconds = Math.max(
+              durationSeconds,
+              packet.timestamp + packet.duration,
+            );
+          }
+        if (
+          !packets ||
+          !Number.isFinite(durationSeconds) ||
+          durationSeconds <= 0 ||
+          durationSeconds > (input.kind === "video" ? 120 : 300) + 0.15
+        )
+          throw new Error("Duration");
+        contentType =
+          format === WEBM
+            ? `${input.kind}/webm`
+            : format === MP4
+              ? `${input.kind}/mp4`
+              : format === MP3
+                ? "audio/mpeg"
+                : "audio/wav";
+      } finally {
+        media.dispose();
+      }
     }
-    if (!contentType) throw new Error("Unsupported format");
     return {
       data,
       metadata: {
@@ -113,18 +145,10 @@ export async function inspectAttachment(
         ...(durationSeconds ? { durationSeconds } : {}),
       },
     };
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT")
-      throw new AppError(
-        "MEDIA_UNAVAILABLE",
-        "Media needs a little setup on our server. You can still send a written note.",
-        503,
-      );
+  } catch {
     throw new AppError(
       "INVALID_MEDIA",
       "Choose a JPEG, PNG or WebP photo, audio up to 5 minutes, or an MP4/WebM video up to 2 minutes.",
     );
-  } finally {
-    await rm(dir, { recursive: true, force: true });
   }
 }

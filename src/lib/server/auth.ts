@@ -1,4 +1,5 @@
 import "server-only";
+import { isConfigured } from "./cloudflare";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AuthService } from "./auth-service";
@@ -24,7 +25,7 @@ export function cookieOptions(maxAge?: number) {
 }
 export async function currentSession() {
   // A build and unconfigured entrance do not require a database connection.
-  if (!process.env.DATABASE_URL || !process.env.APP_ORIGIN) return null;
+  if (!isConfigured()) return null;
   const jar = await cookies(),
     names = cookieNames();
   return auth().session(

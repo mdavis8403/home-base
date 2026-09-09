@@ -1,12 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
-import { Pool } from "pg";
+import { BrowserTestDatabase } from "./database";
 import { mkdir } from "node:fs/promises";
 const origin = "http://localhost:3101";
 // Isolated browser-test database only. No fixture API is installed in the app.
-const db = new Pool({
-  connectionString: "postgresql://postgres:postgres@127.0.0.1:54329/postgres",
-  max: 1,
-});
+const db = new BrowserTestDatabase();
 async function login(page: Page, key: "mom" | "mia" | "dad") {
   const request = page.context().request;
   await request.post(origin + "/api/auth/family", {
@@ -47,7 +44,7 @@ async function snapshot(page: Page, name: string, project: string) {
 }
 test.beforeEach(async () => {
   await db.query(
-    "DELETE FROM board_responses;DELETE FROM media_assets WHERE related_entity_type='board';DELETE FROM board_days;DELETE FROM board_prompts;DELETE FROM auth_rate_limits;UPDATE families SET board_reveal_time='23:59',board_categories=ARRAY['silly','imaginative','reflective','family planning'];",
+    'DELETE FROM board_responses;DELETE FROM media_assets WHERE related_entity_type=\'board\';DELETE FROM board_days;DELETE FROM board_prompts;DELETE FROM auth_rate_limits;UPDATE families SET board_reveal_time=\'23:59\',board_categories=\'["silly","imaginative","reflective","family planning"]\';',
   );
 });
 test.afterAll(() => db.end());
@@ -58,7 +55,9 @@ test("three private answers reveal together and become a revisitable memory", as
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await login(page, "mia");
-  await db.query("UPDATE board_days SET reveal_at=now()+interval '1 hour'");
+  await db.query(
+    "UPDATE board_days SET reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','+1 hour')",
+  );
   await page.getByRole("button", { name: "Refresh board" }).click();
   await expect(
     page.getByRole("button", { name: "Parent touches" }),
@@ -102,7 +101,7 @@ test("three private answers reveal together and become a revisitable memory", as
   await page.reload();
   await expect(page.locator(".board-answer")).toHaveCount(3);
   await db.query(
-    "UPDATE board_days SET date=date-1,reveal_at=now()-interval '1 day' WHERE id=$1",
+    "UPDATE board_days SET date=date(date,'-1 day'),reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 day') WHERE id=$1",
     [board.id],
   );
   await page.reload();
@@ -130,14 +129,18 @@ test("time-based reveal opens automatically with one answer and protects parent 
   page,
 }, info) => {
   await login(page, "mom");
-  await db.query("UPDATE board_days SET reveal_at=now()+interval '1 hour'");
+  await db.query(
+    "UPDATE board_days SET reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','+1 hour')",
+  );
   await page.getByRole("button", { name: "Refresh board" }).click();
   await page.getByLabel("Your answer").fill("A restaurant for dragons");
   await page.getByRole("button", { name: "Tuck mine away" }).click();
   await expect(
     page.getByText("Yours is tucked away.", { exact: true }),
   ).toBeVisible();
-  await db.query("UPDATE board_days SET reveal_at=now()-interval '1 second'");
+  await db.query(
+    "UPDATE board_days SET reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 second')",
+  );
   await expect(
     page.getByRole("heading", { name: "The surprise is open!" }),
   ).toBeVisible({ timeout: 15000 });
@@ -154,7 +157,9 @@ test("time-based reveal opens automatically with one answer and protects parent 
   await page
     .getByRole("button", { name: "Confirm administration key" })
     .click();
-  await expect(page.getByRole("status")).toContainText("Administration key confirmed");
+  await expect(page.getByRole("status")).toContainText(
+    "Administration key confirmed",
+  );
   await page.getByRole("button", { name: "Add custom prompt" }).click();
   await expect(page.locator(".custom-prompts")).toContainText(
     "What would our sofa name its spaceship?",
@@ -173,7 +178,7 @@ test("time-based reveal opens automatically with one answer and protects parent 
     });
   expect(csrf.status()).toBe(403);
 });
-test("photo preview and shared drawing canvas, optional gentle timer, honest disconnected storage", async ({
+test("photo preview and shared drawing canvas, optional gentle timer, private R2 storage", async ({
   page,
 }, info) => {
   await login(page, "mia");
@@ -200,15 +205,18 @@ test("photo preview and shared drawing canvas, optional gentle timer, honest dis
     page.getByAltText("A little picture to make us smile"),
   ).toBeVisible();
   await page.getByRole("button", { name: "Tuck mine away" }).click();
-  await expect(page.locator("main").getByRole("alert")).toContainText(
-    "storage needs to be connected",
-  );
+  await expect(
+    page.getByText("Yours is tucked away.", { exact: true }),
+  ).toBeVisible();
   await snapshot(page, "photo-preview", info.project.name);
   const child = await post(page, "settings", {
     revealTime: "19:00",
     categories: ["silly"],
   });
   expect(child.status()).toBe(403);
+  await db.query(
+    "DELETE FROM board_responses; DELETE FROM media_assets WHERE related_entity_type='board'",
+  );
   await setType("drawing");
   await expect(page.getByLabel("Play with a 60-second timer")).toBeChecked();
   await page.clock.install();

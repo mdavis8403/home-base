@@ -1,13 +1,15 @@
+import { revealInstant } from "../src/lib/server/board-time";
 import { beforeAll, afterAll, beforeEach, expect, it, vi } from "vitest";
-import { PGlite } from "@electric-sql/pglite";
+import { TestDatabase } from "./d1";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { BoardService } from "../src/lib/server/board";
 import { FAMILY_ID, INITIAL_PROFILES } from "../src/lib/shared/profiles";
 import type { Session } from "../src/lib/shared/types";
 import type { Database } from "../src/lib/server/db";
-const db = new PGlite();
+const db = new TestDatabase();
 const adapter: Database = {
+  batch: (statements) => db.batch(statements),
   query: async <T>(sql: string, values?: unknown[]) => db.query<T>(sql, values),
 };
 const storage = {
@@ -41,7 +43,7 @@ async function current(type = "question") {
     [b.id, type],
   );
   await db.query(
-    "UPDATE board_days SET reveal_at=now()+interval '1 hour' WHERE id=$1",
+    "UPDATE board_days SET reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','+1 hour') WHERE id=$1",
     [b.id],
   );
   return b.id;
@@ -52,14 +54,7 @@ const picture = async (kind = "photo") => ({
   altText: "A little family picture",
 });
 beforeAll(async () => {
-  for (const name of [
-    "001_foundation",
-    "002_messages",
-    "003_family_board",
-    "004_mystery_club",
-    "005_family_entry",
-  ])
-    await db.exec(await readFile("db/migrations/" + name + ".sql", "utf8"));
+  await db.migrate();
   await db.query(
     "INSERT INTO families(id,name,timezone,access_phrase_hash) VALUES($1,'Test','America/Chicago','test')",
     [FAMILY_ID],
@@ -72,7 +67,7 @@ beforeAll(async () => {
 });
 beforeEach(async () => {
   await db.exec(
-    "DELETE FROM board_responses; DELETE FROM media_assets; DELETE FROM board_days; DELETE FROM board_prompts; UPDATE families SET timezone='America/Chicago',board_reveal_time='20:00',board_categories=ARRAY['silly','imaginative','reflective','family planning'];",
+    'DELETE FROM board_responses; DELETE FROM media_assets; DELETE FROM board_days; DELETE FROM board_prompts; UPDATE families SET timezone=\'America/Chicago\',board_reveal_time=\'20:00\',board_categories=\'["silly","imaginative","reflective","family planning"]\';',
   );
   vi.clearAllMocks();
 });
@@ -122,7 +117,7 @@ it("reveals at the database deadline with missing answers, allows a late answer 
   const id = await current();
   await service.respond(mia, answer(id));
   await db.query(
-    "UPDATE board_days SET reveal_at=statement_timestamp() WHERE id=$1",
+    "UPDATE board_days SET reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=$1",
     [id],
   );
   const b = (await service.list(mom)).boards[0];
@@ -173,7 +168,7 @@ it("authorizes photo and drawing bytes independently of lists; parents have no e
       60,
     );
     await db.query(
-      "UPDATE board_days SET reveal_at=now()-interval '1 second' WHERE id=$1",
+      "UPDATE board_days SET reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 second') WHERE id=$1",
       [id],
     );
     await expect(service.mediaUrl(mom, asset.id)).resolves.toHaveProperty(
@@ -244,7 +239,7 @@ it("retains archives, refuses archived submissions, rotates unused prompts and r
   const id = await current();
   await service.respond(mia, answer(id));
   await db.query(
-    "UPDATE board_days SET date=date-1,reveal_at=now()-interval '1 day' WHERE id=$1",
+    "UPDATE board_days SET date=date(date,'-1 day'),reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 day') WHERE id=$1",
     [id],
   );
   await expect(service.respond(mom, answer(id))).rejects.toMatchObject({
@@ -255,7 +250,7 @@ it("retains archives, refuses archived submissions, rotates unused prompts and r
   expect(data.boards[0].type).toBe("photo");
   expect(data.boards[1].responses).toHaveLength(1);
 });
-it("uses family-local dates around UTC midnight and PostgreSQL timezone rules across DST", async () => {
+it("uses family-local dates around UTC midnight and explicit timezone rules across DST", async () => {
   await db.query(
     "UPDATE families SET timezone='Pacific/Kiritimati' WHERE id=$1",
     [FAMILY_ID],
@@ -268,12 +263,18 @@ it("uses family-local dates around UTC midnight and PostgreSQL timezone rules ac
     day: "2-digit",
   }).format(new Date());
   expect(b.date).toBe(expected);
-  const { rows } = await db.query<{ winter: Date; summer: Date; gap: Date }>(
-    "SELECT ('2026-03-07'::date+'20:00'::time) AT TIME ZONE 'America/Chicago' AS winter, ('2026-03-08'::date+'20:00'::time) AT TIME ZONE 'America/Chicago' AS summer, ('2026-03-08'::date+'02:30'::time) AT TIME ZONE 'America/Chicago' AS gap",
+  expect(revealInstant("2026-03-07", "20:00", "America/Chicago")).toBe(
+    "2026-03-08T02:00:00.000Z",
   );
-  expect(new Date(rows[0].winter).getUTCHours()).toBe(2);
-  expect(new Date(rows[0].summer).getUTCHours()).toBe(1);
-  expect(new Date(rows[0].gap).toISOString()).toBe("2026-03-08T08:30:00.000Z");
+  expect(revealInstant("2026-03-08", "20:00", "America/Chicago")).toBe(
+    "2026-03-09T01:00:00.000Z",
+  );
+  expect(revealInstant("2026-03-08", "02:30", "America/Chicago")).toBe(
+    "2026-03-08T08:30:00.000Z",
+  );
+  expect(revealInstant("2026-11-01", "01:30", "America/Chicago")).toBe(
+    "2026-11-01T07:30:00.000Z",
+  );
 });
 it("rejects wrong response types and fails honestly without storage, preserving no partial responses", async () => {
   const id = await current("photo");
@@ -288,10 +289,9 @@ it("rejects wrong response types and fails honestly without storage, preserving 
   storage.put.mockRejectedValueOnce(new Error("Upload failed"));
   await expect(service.respond(mia, input)).rejects.toThrow();
   const broken: Database = {
-    query: async <T>(sql: string, values?: unknown[]) => {
-      if (sql.includes("SELECT submit_board_response"))
-        throw new Error("DB failed");
-      return adapter.query<T>(sql, values);
+    query: (sql, values) => adapter.query(sql, values),
+    batch: async () => {
+      throw new Error("DB failed");
     },
   };
   await expect(
@@ -319,7 +319,7 @@ it("keeps photo and drawing memories readable after rollover while denying anoth
       attachment: await picture(type === "photo" ? "photo" : "doodle"),
     });
     await db.query(
-      "UPDATE board_days SET date=date-1,reveal_at=now()-interval '1 day' WHERE id=$1",
+      "UPDATE board_days SET date=date(date,'-1 day'),reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 day') WHERE id=$1",
       [id],
     );
     const archived = (await service.list(dad)).boards.find((b) => b.id === id)!;
@@ -335,7 +335,10 @@ it("keeps photo and drawing memories readable after rollover while denying anoth
       status: 404,
     });
     if (type === "photo")
-      await db.query("UPDATE board_days SET date=date-1 WHERE id=$1", [id]);
+      await db.query(
+        "UPDATE board_days SET date=date(date,'-1 day') WHERE id=$1",
+        [id],
+      );
   }
   await db.query("DELETE FROM families WHERE id=$1", [otherFamily]);
 });

@@ -1,5 +1,5 @@
 import { beforeAll, afterAll, beforeEach, expect, it, vi } from "vitest";
-import { PGlite } from "@electric-sql/pglite";
+import { TestDatabase } from "./d1";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { MessagesService } from "../src/lib/server/messages";
@@ -7,8 +7,9 @@ import { inspectAttachment } from "../src/lib/server/message-media";
 import { FAMILY_ID, INITIAL_PROFILES } from "../src/lib/shared/profiles";
 import type { Database } from "../src/lib/server/db";
 import type { Session } from "../src/lib/shared/types";
-const db = new PGlite();
+const db = new TestDatabase();
 const adapter: Database = {
+  batch: (statements) => db.batch(statements),
   query: async <T>(sql: string, values?: unknown[]) => db.query<T>(sql, values),
 };
 const storage = {
@@ -39,14 +40,7 @@ const note = (extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 beforeAll(async () => {
-  for (const name of [
-    "001_foundation",
-    "002_messages",
-    "003_family_board",
-    "004_mystery_club",
-    "005_family_entry",
-  ])
-    await db.exec(await readFile("db/migrations/" + name + ".sql", "utf8"));
+  await db.migrate();
   await db.query(
     "INSERT INTO families(id,name,timezone,access_phrase_hash) VALUES($1,'Test','America/Chicago','test')",
     [FAMILY_ID],
@@ -110,7 +104,7 @@ it("enforces scheduled visibility for lists, mutations and media until database 
     60,
   );
   await db.query(
-    "UPDATE messages SET send_at=now()-interval '1 second' WHERE id=$1",
+    "UPDATE messages SET send_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 second') WHERE id=$1",
     [id],
   );
   expect((await service.list(mia))[0].id).toBe(id);
@@ -258,9 +252,9 @@ it("never creates a delivered note when private upload fails", async () => {
 });
 it("removes the private object if the atomic database write fails", async () => {
   const broken: Database = {
-    async query<T>(sql: string, values?: unknown[]) {
-      if (sql.includes("WITH msg")) throw new Error("Database failed");
-      return adapter.query<T>(sql, values);
+    query: (sql, values) => adapter.query(sql, values),
+    batch: async () => {
+      throw new Error("Database failed");
     },
   };
   await expect(

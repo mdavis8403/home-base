@@ -1,3 +1,6 @@
+import { initializeFamily } from "@/lib/server/setup";
+import { database } from "@/lib/server/db";
+import { bindings } from "@/lib/server/cloudflare";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import {
@@ -36,6 +39,7 @@ export async function POST(
     const service: AuthService = auth();
     if (action === "family") {
       const { phrase } = z.object({ phrase: credential }).strict().parse(body);
+      await initializeFamily(database(), bindings());
       const result = await service.begin(phrase);
       jar.set(names.challenge, result.challenge, cookieOptions(300));
       return success({ profiles: result.profiles });

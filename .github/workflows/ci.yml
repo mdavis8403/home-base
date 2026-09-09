@@ -8,39 +8,17 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: homebase
-          POSTGRES_PASSWORD: ci-only-password
-          POSTGRES_DB: homebase_test
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U homebase"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - name: Install private media inspector
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: npm ci
-      - name: Verify real PostgreSQL setup
-        env:
-          DATABASE_URL: postgresql://homebase:ci-only-password@localhost:5432/homebase_test
-          FAMILY_ACCESS_PHRASE: isolated-ci-family-phrase
-          ADMIN_ACCESS_KEY: isolated-ci-administration-key
-        run: |
-          npx tsx scripts/migrate.ts
-          npx tsx scripts/migrate.ts
-          npx tsx scripts/seed.ts
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run check
+        env:
+          WRANGLER_SEND_METRICS: 'false'
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

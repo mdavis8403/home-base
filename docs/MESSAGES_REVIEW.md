@@ -10,13 +10,13 @@ These screenshots come from the actual production build, using fictional notes a
 
 The personal-note inbox, text/photos/voice/video/drawings, one or two recipients or Everyone, Send Now/Send Later, unread state, hearts, private favorites, sender-filtered archive and sent/scheduled view.
 
-The app uses Foundation authentication, PostgreSQL tables, server permissions, private media signing and existing design tokens. Scheduled content and attachments stay inaccessible to recipients until delivery. No presence, online status, last-seen, location or typing indicators were added.
+The app uses Foundation authentication, D1 tables, server permissions, session-authorized private R2 media and existing design tokens. Scheduled content and attachments stay inaccessible to recipients until delivery. No presence, online status, last-seen, location or typing indicators were added.
 
 ## What still needs connecting
 
-This is not yet a live family website. Real hosting, PostgreSQL and a private media bucket still need connecting. Media validation also needs the server-side ffprobe utility and a host that accepts video-size uploads.
+This is not yet a live family website. Follow [Cloudflare setup for Matt](CLOUDFLARE_SETUP_FOR_MATT.md) to connect Workers, D1 and private R2. Media inspection runs within Workers.
 
-Tests use an isolated PostgreSQL-compatible database, a fake private-storage adapter, generated audio/video capture inputs and synthetic media files. The production application has no simulated database/storage fallback. Without storage, attachment sends explain the missing setup and retain the draft.
+Unit tests use isolated local D1 and storage assertions; browser tests use real local R2, generated capture inputs and synthetic media files. The production application has no simulated database/storage fallback. Without storage, attachment sends explain the missing setup and retain the draft.
 
 Physical iPad camera/microphone permission, installed-PWA behavior and real hosted storage transfers still need checking after deployment.
 

@@ -1058,9 +1058,9 @@ unlocks existing sensitive permissions for ten minutes on the current parent
 session. Child sessions cannot use it. Rate limits and session expiry still apply.
 
 If this optional key is not configured, sensitive actions remain locked; normal
-entry and gameplay continue. Existing installations discard profile credential
-hashes through a new migration, clear old administrative grants, and configure
-a new key separately. Never reuse an old profile password automatically.
+entry and gameplay continue. The fresh D1 schema contains no profile credential hashes. Historical PostgreSQL
+installations used a separate removal migration; the first Cloudflare deployment
+starts clean. Never reuse an old profile password automatically.
 
 ## 13.3 Security requirements
 
@@ -1069,7 +1069,7 @@ a new key separately. Never reuse an old profile password automatically.
 - HttpOnly secure cookies, fixed session expiry and revocation
 - same-origin CSRF protection and database-backed rate limits
 - one-use, expiring family-entry challenges
-- private object storage and signed media URLs
+- private R2 storage and session-authorized media URLs; every byte request rechecks visibility
 - server-side authorization on every data mutation
 - no global presence or activity monitoring
 
@@ -1273,7 +1273,9 @@ Recommended stack:
 
 ### Database
 
-- PostgreSQL
+- Cloudflare D1 with fresh SQLite-compatible migrations in `db/d1`
+- Atomic batches, conditional writes and triggers preserve privacy and concurrency
+- Disposable local PostgreSQL contents do not need migration
 
 ### Backend
 
@@ -1281,11 +1283,16 @@ Recommended stack:
 
 ### Storage
 
-- private object storage
+- Private Cloudflare R2 through server-only bindings
+- Home Base authorizes every media byte/range request; no public bucket URLs
+- Workers-compatible actual-byte media inspection; no external ffprobe process
 
 ### Multiplayer synchronization
 
-- WebSocket/realtime database events
+- D1 persists Mystery Club state, revisions, intentional Ready/Joined choices and history
+- Existing two-second read-only polling while game screens are visible
+- Durable Objects are optional only when session-scoped push coordination provides a clear benefit; they are not required for the current three-player engine
+- Never reuse game membership as global presence
 
 ### AI
 
@@ -1293,7 +1300,12 @@ Recommended stack:
 
 ### Deployment
 
-- Vercel or equivalent
+- Cloudflare Workers using the supported OpenNext adapter for the existing Next.js app
+- GitHub `main` via Workers Builds after deliberate dashboard connection
+- Production origin: `https://mdhomebase.com`
+- Local D1/R2 simulation managed by the repository; no cloud account needed for local development
+- No production deployment or DNS changes without first informing Matt
+- Dashboard-only family instructions: `docs/CLOUDFLARE_SETUP_FOR_MATT.md`
 
 Architecture should prioritize simplicity over microservices.
 

@@ -132,10 +132,8 @@ test("personal notes, recipients, scheduled privacy, hearts and keepsakes", asyn
     fullPage: true,
   });
   await page.getByRole("button", { name: "Send this message" }).click();
-  await expect(page.locator("main").getByRole("alert")).toContainText(
-    "Private media storage isn't connected",
-  );
-  await page.getByRole("button", { name: "Discard attachment" }).click();
+  await expect(page.getByRole("status")).toContainText("on its way");
+  await page.getByRole("button", { name: "Leave something" }).click();
   await page.getByRole("button", { name: "Voice", exact: false }).click();
   await expect(
     page.getByRole("button", { name: "Record", exact: true }),

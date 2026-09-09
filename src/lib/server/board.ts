@@ -1,4 +1,6 @@
 import "server-only";
+import { boardPrompts } from "./board-prompts";
+import { familyDate, revealInstant } from "./board-time";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { Database } from "./db";
@@ -15,7 +17,7 @@ import { AppError } from "./errors";
 import { MediaService, mediaPath, type PrivateStorage } from "./media";
 import { inspectAttachment } from "./message-media";
 const revealed =
-  "(b.revealed_at IS NOT NULL OR b.reveal_at<=statement_timestamp())";
+  "(b.revealed_at IS NOT NULL OR b.reveal_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now'))";
 export class BoardService {
   constructor(
     private db: Database,
@@ -31,32 +33,47 @@ export class BoardService {
   }
   async open(s: Session) {
     this.check(s);
-    await this.db.query("SELECT open_family_board($1)", [s.profile.familyId]);
+    const f = await this.preferences(s);
+    const today = familyDate(f.timezone);
+    await this.db.batch(
+      boardPrompts.map(([type, text, category, key]) => ({
+        sql: `INSERT INTO board_prompts(id,family_id,prompt_type,prompt_text,category,builtin_key)
+      VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(family_id,builtin_key) DO NOTHING`,
+        values: [randomUUID(), s.profile.familyId, type, text, category, key],
+      })),
+    );
+    await this.db.query(
+      `INSERT INTO board_days(id,family_id,date,prompt_id,reveal_at)
+      SELECT $1,$2,$3,p.id,$4 FROM board_prompts p LEFT JOIN board_days b ON b.prompt_id=p.id
+      WHERE p.family_id=$2 AND p.active AND p.category IN (SELECT value FROM json_each($5))
+      GROUP BY p.id ORDER BY max(b.date) ASC NULLS FIRST,(p.builtin_key IS NOT NULL),p.builtin_key,p.created_at,p.id LIMIT 1
+      ON CONFLICT(family_id,date) DO NOTHING`,
+      [
+        randomUUID(),
+        s.profile.familyId,
+        today,
+        revealInstant(today, f.revealTime, f.timezone),
+        f.categories,
+      ],
+    );
     return this.list(s);
   }
   async list(s: Session): Promise<BoardData> {
     this.check(s);
+    const f = await this.preferences(s);
     const { rows } = await this.db.query<BoardItem>(
       `
-      SELECT b.id,to_char(b.date,'YYYY-MM-DD') AS date,p.prompt_type AS type,p.prompt_text AS prompt,p.category,
+      SELECT b.id,b.date AS date,p.prompt_type AS type,p.prompt_text AS prompt,p.category,
       b.reveal_at AS "revealAt",${revealed} AS revealed,
-      b.date=(statement_timestamp() AT TIME ZONE f.timezone)::date AS today,
-      coalesce((SELECT jsonb_agg(jsonb_build_object('name',pr.display_name,'own',r.profile_id=$2,'text',coalesce(r.text_response,''),
-        'media',CASE WHEN a.id IS NULL THEN NULL ELSE jsonb_build_object('id',a.id,'mediaType',a.media_type,'metadata',a.metadata) END) ORDER BY pr.profile_key)
+      b.date=$3 AS today,
+      coalesce((SELECT json_group_array(json_object('name',pr.display_name,'own',r.profile_id=$2,'text',coalesce(r.text_response,''),
+        'media',CASE WHEN a.id IS NULL THEN NULL ELSE json_object('id',a.id,'mediaType',a.media_type,'metadata',json(a.metadata)) END) ORDER BY pr.profile_key)
         FROM board_responses r JOIN profiles pr ON pr.id=r.profile_id LEFT JOIN media_assets a ON a.id=r.media_asset_id
         WHERE r.board_day_id=b.id AND (r.profile_id=$2 OR ${revealed})), '[]') AS responses
       FROM board_days b JOIN board_prompts p ON p.id=b.prompt_id JOIN families f ON f.id=b.family_id
       WHERE b.family_id=$1 ORDER BY b.date DESC`,
-      [s.profile.familyId, s.profile.id],
+      [s.profile.familyId, s.profile.id, familyDate(f.timezone)],
     );
-    const family = await this.db.query<
-      Omit<BoardData, "boards" | "customPrompts">
-    >(
-      `SELECT timezone,to_char(board_reveal_time,'HH24:MI') AS "revealTime",board_categories AS categories FROM families WHERE id=$1`,
-      [s.profile.familyId],
-    );
-    if (!family.rows[0])
-      throw new AppError("NOT_FOUND", "This board isn't available.", 404);
     const custom =
       s.profile.role === "child"
         ? []
@@ -67,13 +84,26 @@ export class BoardService {
             )
           ).rows;
     return {
-      ...family.rows[0],
+      ...f,
       boards: rows.map((b) => ({
         ...b,
         revealAt: new Date(b.revealAt).toISOString(),
       })),
       customPrompts: custom,
     };
+  }
+  private async preferences(s: Session) {
+    const { rows } = await this.db.query<{
+      timezone: string;
+      revealTime: string;
+      categories: BoardData["categories"];
+    }>(
+      `SELECT timezone,board_reveal_time AS "revealTime",board_categories AS categories FROM families WHERE id=$1`,
+      [s.profile.familyId],
+    );
+    if (!rows[0])
+      throw new AppError("NOT_FOUND", "This board isn't available.", 404);
+    return rows[0];
   }
   async respond(s: Session, raw: unknown) {
     this.check(s);
@@ -129,20 +159,41 @@ export class BoardService {
       );
     }
     try {
-      const result = await this.db.query<{ saved: boolean }>(
-        "SELECT submit_board_response($1,$2,$3,$4,$5,$6,$7,$8::jsonb) AS saved",
-        [
-          board.id,
+      const today = familyDate((await this.preferences(s)).timezone);
+      const responseId = randomUUID();
+      const statements: import("./db").Statement[] = [];
+      if (asset)
+        statements.push({
+          sql: `INSERT INTO media_assets(id,family_id,owner_profile_id,related_entity_type,related_entity_id,storage_path,media_type,metadata)
+        SELECT $1,$2,$3,'board',b.id,$4,$5,$6 FROM board_days b WHERE b.id=$7 AND b.family_id=$2 AND b.date=$8
+        AND NOT EXISTS(SELECT 1 FROM board_responses WHERE board_day_id=b.id AND profile_id=$3)`,
+          values: [
+            asset.id,
+            asset.familyId,
+            asset.ownerProfileId,
+            asset.storagePath,
+            asset.mediaType,
+            JSON.stringify(asset.metadata),
+            board.id,
+            today,
+          ],
+        });
+      statements.push({
+        sql: `INSERT INTO board_responses(id,family_id,board_day_id,profile_id,text_response,media_asset_id)
+        SELECT $1,$2,b.id,$3,$4,$5 FROM board_days b WHERE b.id=$6 AND b.family_id=$2 AND b.date=$7
+        ON CONFLICT(board_day_id,profile_id) DO NOTHING RETURNING id`,
+        values: [
+          responseId,
           s.profile.familyId,
           s.profile.id,
           input.text,
           asset?.id ?? null,
-          asset?.storagePath ?? null,
-          asset?.mediaType ?? null,
-          JSON.stringify(asset?.metadata ?? {}),
+          board.id,
+          today,
         ],
-      );
-      if (!result.rows[0].saved && asset)
+      });
+      const results = await this.db.batch(statements);
+      if (!results.at(-1)!.rows.length && asset)
         await this.storage!.remove(asset.storagePath);
     } catch (error) {
       if (asset) await this.storage!.remove(asset.storagePath).catch(() => {});
@@ -161,7 +212,7 @@ export class BoardService {
     this.check(s, "family:manage");
     const p = settingsInput.parse(raw);
     await this.db.query(
-      "UPDATE families SET board_reveal_time=$2::time,board_categories=$3::text[] WHERE id=$1",
+      "UPDATE families SET board_reveal_time=$2,board_categories=$3 WHERE id=$1",
       [s.profile.familyId, p.revealTime, p.categories],
     );
   }

@@ -7,8 +7,8 @@ import {
   it,
   vi,
 } from "vitest";
-import { PGlite } from "@electric-sql/pglite";
-import { readFile, readdir } from "node:fs/promises";
+import { TestDatabase } from "./d1";
+
 import { AuthService } from "../src/lib/server/auth-service";
 import {
   hashCredential,
@@ -25,8 +25,9 @@ import {
 import { assertSameOrigin, readJson } from "../src/lib/server/http";
 import type { Database } from "../src/lib/server/db";
 import type { MediaAsset, Session } from "../src/lib/shared/types";
-const db = new PGlite();
+const db = new TestDatabase();
 const adapter: Database = {
+  batch: (statements) => db.batch(statements),
   async query<T>(sql: string, values?: unknown[]) {
     return db.query<T>(sql, values);
   },
@@ -43,8 +44,7 @@ async function signedIn(key = "mom") {
   return (await auth.session(result.sessionToken, result.deviceToken))!;
 }
 beforeAll(async () => {
-  for (const file of (await readdir("db/migrations")).sort())
-    await db.exec(await readFile("db/migrations/" + file, "utf8"));
+  await db.migrate();
   await db.query(
     "INSERT INTO families (id,name,timezone,access_phrase_hash,admin_key_hash) VALUES ($1,$2,$3,$4,$5)",
     [
@@ -69,7 +69,7 @@ beforeEach(async () => {
 afterAll(async () => {
   await db.close();
 });
-describe("PostgreSQL schema", () => {
+describe("D1 schema", () => {
   it("seeds exactly three profiles with a child and two admins", async () => {
     const { rows } = await db.query<{ role: string }>(
       "SELECT role FROM profiles",
@@ -84,14 +84,14 @@ describe("PostgreSQL schema", () => {
   it("prevents a message sender crossing families", async () => {
     await expect(
       db.query(
-        "INSERT INTO messages (id,family_id,sender_profile_id,message_type,send_at) VALUES (gen_random_uuid(),$1,$2,'text',now())",
+        "INSERT INTO messages (id,family_id,sender_profile_id,message_type,send_at) VALUES (lower(hex(randomblob(16))),$1,$2,'text',strftime('%Y-%m-%dT%H:%M:%fZ','now'))",
         [FAMILY_ID, "00000000-0000-4000-8000-000000000099"],
       ),
     ).rejects.toThrow();
   });
   it("contains all reserved feature tables", async () => {
     const { rows } = await db.query<{ table_name: string }>(
-      "SELECT table_name FROM information_schema.tables WHERE table_schema='public'",
+      "SELECT name AS table_name FROM sqlite_master WHERE type='table'",
     );
     expect(rows.map((r) => r.table_name)).toEqual(
       expect.arrayContaining([
@@ -142,7 +142,7 @@ describe("credentials and sessions", () => {
       auth.signIn(challenge, "outsider", true),
     ).rejects.toMatchObject({ code: "INVALID_CREDENTIALS" });
     await db.exec(
-      "UPDATE auth_challenges SET expires_at=now()-interval '1 second'",
+      "UPDATE auth_challenges SET expires_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 second')",
     );
     await expect(auth.signIn(challenge, "mom", true)).rejects.toMatchObject({
       code: "CHALLENGE_EXPIRED",
@@ -179,7 +179,9 @@ describe("credentials and sessions", () => {
       await auth.session(result.sessionToken, result.deviceToken),
     ).toBeNull();
     const second = await login();
-    await db.exec("UPDATE sessions SET expires_at=now()-interval '1 second'");
+    await db.exec(
+      "UPDATE sessions SET expires_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 second')",
+    );
     expect(
       await auth.session(second.sessionToken, second.deviceToken),
     ).toBeNull();
@@ -190,7 +192,7 @@ describe("credentials and sessions", () => {
     );
     expect(result.filter((r) => r.status === "rejected")).toHaveLength(2);
     await db.exec(
-      "UPDATE auth_rate_limits SET reset_at=now()-interval '1 second'",
+      "UPDATE auth_rate_limits SET reset_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 second')",
     );
     await expect(auth.rateLimit("concurrent", 10)).resolves.toBeUndefined();
   });
@@ -207,7 +209,7 @@ describe("credentials and sessions", () => {
 });
 it("removes profile credential storage and issues just one session for concurrent choices", async () => {
   const columns = await db.query<{ column_name: string }>(
-    "SELECT column_name FROM information_schema.columns WHERE table_name='profiles'",
+    "SELECT name AS column_name FROM pragma_table_info('profiles')",
   );
   expect(columns.rows.map((r) => r.column_name)).not.toContain("passcode_hash");
   const { challenge } = await auth.begin(phrase);
@@ -388,57 +390,28 @@ describe("private media boundary", () => {
     expect(() => mediaPath(FAMILY_ID, "messages", "../../private")).toThrow();
   });
 });
-it("migrates an existing family without losing profiles, messages, or normal sessions", async () => {
-  const legacy = new PGlite();
-  try {
-    await legacy.exec(
-      await readFile("db/migrations/001_foundation.sql", "utf8"),
-    );
-    await legacy.query(
-      "INSERT INTO families(id,name,timezone,access_phrase_hash) VALUES($1,'Existing family','America/Chicago','old-family-hash')",
-      [FAMILY_ID],
-    );
-    const mom = INITIAL_PROFILES.find((p) => p.key === "mom")!;
-    await legacy.query(
-      "INSERT INTO profiles(id,family_id,profile_key,display_name,role,avatar,profile_color,passcode_hash) VALUES($1,$2,'mom','Mom','admin','M','gold','obsolete-hash')",
-      [mom.id, FAMILY_ID],
-    );
-    await legacy.query(
-      "INSERT INTO messages(id,family_id,sender_profile_id,message_type,text_body,send_at) VALUES(gen_random_uuid(),$1,$2,'text','Keep this memory',now())",
-      [FAMILY_ID, mom.id],
-    );
-    await legacy.query(
-      "INSERT INTO sessions(id,profile_id,token_hash,device_identifier_hash,remembered,expires_at,parent_verified_until) VALUES(gen_random_uuid(),$1,'session-hash','device-hash',true,now()+interval '30 days',now()+interval '10 minutes')",
-      [mom.id],
-    );
-    await legacy.exec(
-      await readFile("db/migrations/005_family_entry.sql", "utf8"),
-    );
-    expect(
-      (await legacy.query("SELECT id,profile_key FROM profiles")).rows,
-    ).toEqual([{ id: mom.id, profile_key: "mom" }]);
-    expect((await legacy.query("SELECT text_body FROM messages")).rows).toEqual(
-      [{ text_body: "Keep this memory" }],
-    );
-    expect(
-      (
-        await legacy.query(
-          "SELECT token_hash,parent_verified_until,expires_at>now() AS valid FROM sessions",
-        )
-      ).rows,
-    ).toEqual([
-      { token_hash: "session-hash", parent_verified_until: null, valid: true },
-    ]);
-    expect(
-      (
-        await legacy.query(
-          "SELECT access_phrase_hash,admin_key_hash FROM families",
-        )
-      ).rows,
-    ).toEqual([
-      { access_phrase_hash: "old-family-hash", admin_key_hash: null },
-    ]);
-  } finally {
-    await legacy.close();
-  }
+it("clears existing administrative grants atomically when the family administration key changes", async () => {
+  const result = await login();
+  const session = (await auth.session(
+    result.sessionToken,
+    result.deviceToken,
+  ))!;
+  await auth.reauthenticate(session, adminKey);
+  expect(
+    canPerform(
+      (await auth.session(result.sessionToken, result.deviceToken))!,
+      "security:manage",
+    ),
+  ).toBe(true);
+  await db.query("UPDATE families SET admin_key_hash=$1 WHERE id=$2", [
+    await hashCredential(adminKey),
+    FAMILY_ID,
+  ]);
+  const refreshed = (await auth.session(
+    result.sessionToken,
+    result.deviceToken,
+  ))!;
+  expect(refreshed.parentVerifiedUntil).toBeNull();
+  expect(canPerform(refreshed, "family:use")).toBe(true);
+  expect(canPerform(refreshed, "security:manage")).toBe(false);
 });

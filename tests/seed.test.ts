@@ -1,119 +1,86 @@
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, expect, it } from "vitest";
+import { TestDatabase } from "./d1";
+import { initializeFamily } from "../src/lib/server/setup";
 import { verifyCredential } from "../src/lib/server/crypto";
-const mocks = vi.hoisted(() => ({ query: vi.fn(), connect: vi.fn() }));
-vi.mock("pg", () => ({
-  Pool: class {
-    connect = mocks.connect;
-    end = vi.fn();
-  },
-}));
-beforeEach(() => {
-  vi.resetModules();
-  mocks.query.mockReset().mockResolvedValue({ rows: [] });
-  mocks.connect
-    .mockReset()
-    .mockResolvedValue({ query: mocks.query, release: vi.fn() });
-  vi.spyOn(console, "log").mockImplementation(() => {});
-  vi.stubEnv("DATABASE_URL", "postgresql://unused-test-database");
-  vi.stubEnv("FAMILY_ACCESS_PHRASE", "testonly");
-  vi.stubEnv("ADMIN_ACCESS_KEY", "test-admin-key-only");
+let db: TestDatabase;
+const settings = {
+  FAMILY_ACCESS_PHRASE: "testonly",
+  ADMIN_ACCESS_KEY: "test-admin-key-only",
+};
+beforeEach(async () => {
+  db = new TestDatabase();
+  await db.migrate();
 });
-afterEach(() => {
-  vi.unstubAllEnvs();
-  vi.restoreAllMocks();
-});
-it.each(["testonly", "testonly9"])(
-  "accepts a %s test phrase and creates credential-free profiles",
-  async (phrase) => {
-    vi.stubEnv("FAMILY_ACCESS_PHRASE", phrase);
-    await import("../scripts/seed");
-    const family = mocks.query.mock.calls.find(([sql]) =>
-      sql.includes("INSERT INTO families"),
-    )!;
-    expect(await verifyCredential(phrase, family[1][3])).toBe(true);
-    expect(family[1][3]).not.toContain(phrase);
-    const profiles = mocks.query.mock.calls.filter(([sql]) =>
-      sql.includes("INSERT INTO profiles"),
-    );
-    expect(profiles).toHaveLength(3);
-    expect(await verifyCredential("test-admin-key-only", family[1][4])).toBe(
-      true,
-    );
-    for (const [sql, values] of profiles) {
-      expect(sql).not.toContain("passcode");
-      expect(values).toHaveLength(7);
-    }
-  },
-);
-it.each(["", "1234567", "x".repeat(257)])(
-  "rejects an out-of-range family phrase before connecting",
-  async (phrase) => {
-    vi.stubEnv("FAMILY_ACCESS_PHRASE", phrase);
-    await expect(import("../scripts/seed")).rejects.toThrow(
-      "FAMILY_ACCESS_PHRASE must be 8–256 characters",
-    );
-    expect(mocks.connect).not.toHaveBeenCalled();
-  },
-);
-it("keeps the administration key separate and optional", async () => {
-  vi.stubEnv("ADMIN_ACCESS_KEY", "short");
-  await expect(import("../scripts/seed")).rejects.toThrow(
-    "ADMIN_ACCESS_KEY must be 12–256 characters",
-  );
-  vi.resetModules();
-  vi.stubEnv("ADMIN_ACCESS_KEY", "");
-  await import("../scripts/seed");
-  const family = mocks.query.mock.calls.find(([sql]) =>
-    sql.includes("INSERT INTO families"),
-  )!;
-  expect(family[1][4]).toBeNull();
-});
-it("does not replace an existing family's credentials", async () => {
-  mocks.query.mockImplementation(async (sql: string) => ({
-    rows: sql === "SELECT id FROM families" ? [{ id: "existing" }] : [],
-  }));
-  await expect(import("../scripts/seed")).rejects.toThrow(
-    "Seed will never replace credentials",
-  );
+afterEach(() => db.close());
+it("initializes exactly three credential-free profiles and salted family credentials", async () => {
+  await initializeFamily(db, settings);
+  const { rows } = await db.query<{
+    access_phrase_hash: string;
+    admin_key_hash: string;
+  }>("SELECT * FROM families");
   expect(
-    mocks.query.mock.calls.some(([sql]) => /INSERT|UPDATE/.test(sql)),
-  ).toBe(false);
-});
-it("provisions a separate administration key and invalidates previous grants", async () => {
-  const { hashCredential } = await import("../src/lib/server/crypto");
-  const familyHash = await hashCredential("testonly");
-  mocks.query.mockImplementation(async (sql: string) => ({
-    rows: sql.startsWith("SELECT id, access_phrase_hash")
-      ? [{ id: "test-family", access_phrase_hash: familyHash }]
-      : [],
-  }));
-  await import("../scripts/set-admin-key");
-  const write = mocks.query.mock.calls.find(([sql]) =>
-    sql.startsWith("UPDATE families"),
-  )!;
-  expect(await verifyCredential("test-admin-key-only", write[1][0])).toBe(true);
-  expect(write[1][1]).toBe("test-family");
-  expect(
-    mocks.query.mock.calls.some(([sql]) =>
-      sql.includes("parent_verified_until=NULL"),
+    await verifyCredential(
+      settings.FAMILY_ACCESS_PHRASE,
+      rows[0].access_phrase_hash,
     ),
   ).toBe(true);
+  expect(
+    await verifyCredential(settings.ADMIN_ACCESS_KEY, rows[0].admin_key_hash),
+  ).toBe(true);
+  expect(
+    (await db.query("SELECT profile_key FROM profiles")).rows,
+  ).toHaveLength(3);
+  const columns = await db.query<{ name: string }>(
+    "SELECT name FROM pragma_table_info('profiles')",
+  );
+  expect(columns.rows.map((c) => c.name)).not.toContain("passcode_hash");
 });
-it("refuses to use the family phrase as the administration key", async () => {
-  const { hashCredential } = await import("../src/lib/server/crypto");
-  const key = "shared-test-phrase";
-  vi.stubEnv("ADMIN_ACCESS_KEY", key);
-  const familyHash = await hashCredential(key);
-  mocks.query.mockImplementation(async (sql: string) => ({
-    rows: sql.startsWith("SELECT id, access_phrase_hash")
-      ? [{ id: "test-family", access_phrase_hash: familyHash }]
-      : [],
-  }));
-  await expect(import("../scripts/set-admin-key")).rejects.toThrow(
-    "different from the family phrase",
+it.each(["", "1234567", "x".repeat(257)])(
+  "rejects invalid family phrase without partial setup",
+  async (phrase) => {
+    await expect(
+      initializeFamily(db, { ...settings, FAMILY_ACCESS_PHRASE: phrase }),
+    ).rejects.toThrow("8–256");
+    expect((await db.query("SELECT * FROM families")).rows).toEqual([]);
+  },
+);
+it("keeps the admin key optional, separate, and at least twelve characters", async () => {
+  await expect(
+    initializeFamily(db, { ...settings, ADMIN_ACCESS_KEY: "short" }),
+  ).rejects.toThrow("12–256");
+  await expect(
+    initializeFamily(db, {
+      FAMILY_ACCESS_PHRASE: "same-test-phrase",
+      ADMIN_ACCESS_KEY: "same-test-phrase",
+    }),
+  ).rejects.toThrow("differ");
+  await initializeFamily(db, { FAMILY_ACCESS_PHRASE: "testonly" });
+  expect(
+    (
+      await db.query<{ admin_key_hash: string | null }>(
+        "SELECT admin_key_hash FROM families",
+      )
+    ).rows[0].admin_key_hash,
+  ).toBeNull();
+});
+it("does not overwrite existing credentials or create duplicates on concurrent setup", async () => {
+  await Promise.all([
+    initializeFamily(db, settings),
+    initializeFamily(db, settings),
+  ]);
+  await initializeFamily(db, { FAMILY_ACCESS_PHRASE: "different-test-phrase" });
+  expect((await db.query("SELECT * FROM profiles")).rows).toHaveLength(3);
+  const { rows } = await db.query<{ access_phrase_hash: string }>(
+    "SELECT access_phrase_hash FROM families",
   );
-  expect(mocks.query.mock.calls.some(([sql]) => sql.startsWith("UPDATE"))).toBe(
-    false,
+  expect(await verifyCredential("testonly", rows[0].access_phrase_hash)).toBe(
+    true,
   );
-  expect(mocks.query).toHaveBeenCalledWith("ROLLBACK");
+});
+it("rolls back the whole D1 batch if profile creation fails", async () => {
+  await db.exec(
+    "CREATE TRIGGER test_failure BEFORE INSERT ON profiles BEGIN SELECT RAISE(ABORT,'test failure'); END;",
+  );
+  await expect(initializeFamily(db, settings)).rejects.toThrow("test failure");
+  expect((await db.query("SELECT * FROM families")).rows).toEqual([]);
 });

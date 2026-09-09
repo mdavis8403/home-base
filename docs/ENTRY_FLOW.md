@@ -4,23 +4,13 @@ Open Home Base. The cottage fills the screen. Tap its front door, enter the fami
 
 Anyone who knows the family magic word can select any profile. This is a shared family trust model. Profile-specific visibility remains enforced for the selected session, but selecting a name is not a separate identity check.
 
-## Updating an existing website
+## Cloudflare setup and separate administration key
 
-Your hosting helper should deploy this version with `npm run db:migrate`. Migration 005 removes old profile credential hashes while preserving the family, profile IDs and all content. Old administrative grants and unfinished entry challenges are cleared. Existing normal sessions retain their fixed expiry. Do not rerun the family seed or recreate the database.
+See [Cloudflare setup for Matt](CLOUDFLARE_SETUP_FOR_MATT.md). The first deployment uses the fresh D1 schema with no individual credential columns. Initial family and optional administration secrets are supplied privately in the dashboard; setup stores salted hashes and never overwrites an existing family.
 
-Normal entry uses the existing family-password hash. For a fresh setup, provide the intended family magic word privately through `FAMILY_ACCESS_PHRASE` and run the normal seed. Never place a real password in a committed file.
+Mom and Dad enter immediately without a second password. Only sensitive settings ask for the separate **Administration key**: publishing cases, Board settings/prompts and revoking devices. It must be 12–256 characters, different from the family phrase, and grants permission for ten minutes on that parent session. Mia cannot use it. If it is missing, sensitive settings stay locked while entry, messages and games work.
 
-## Separate administration key
-
-Mom and Dad can enter normally without another password. Only sensitive settings ask for an **Administration key**. This is a separate family administration credential, not a profile password. It protects publishing cases, changing Board settings/prompts and revoking devices. It grants permission for ten minutes on that parent session. Mia sessions cannot use it.
-
-Your hosting helper can choose a separate 12–256 character key, different from the family phrase, and supply it privately as `ADMIN_ACCESS_KEY`. For a new family the seed stores its salted hash. For an existing family, run:
-
-```sh
-node --env-file=.env.local --import tsx scripts/set-admin-key.ts
-```
-
-Remove the key from the setup environment afterward and keep it in the adults’ password manager. Running this setup command again replaces the key and clears prior administrative grants. If no key is configured, sensitive settings stay locked, while entry, messages and games still work. No individual profile password is retained or reused.
+Remove the setup secrets after first entry and retain a private recovery copy with the adults. Changing an initialization secret later does not reset the existing database hash. Ask Codex for help if a word is forgotten; do not recreate the database.
 
 ## Visual and browser review
 

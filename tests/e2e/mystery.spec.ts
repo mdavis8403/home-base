@@ -1,13 +1,10 @@
 import { test, expect, type Page, type BrowserContext } from "@playwright/test";
-import { Pool } from "pg";
+import { BrowserTestDatabase } from "./database";
 import { readdir, readFile, mkdir } from "node:fs/promises";
 import type { MysteryPackage } from "../../src/lib/shared/mystery/schema";
 import type { GameView, CaseCard } from "../../src/lib/shared/mystery/types";
 const origin = "http://localhost:3101";
-const db = new Pool({
-  connectionString: "postgresql://postgres:postgres@127.0.0.1:54329/postgres",
-  max: 1,
-});
+const db = new BrowserTestDatabase();
 const cases: MysteryPackage[] = [];
 test.beforeAll(async () => {
   for (const f of (await readdir("content/mysteries"))

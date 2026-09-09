@@ -20,13 +20,11 @@ Mom or Dad can choose **Parent touches** inside Family Board. Confirm the separa
 
 These choices begin with the next new board. Today's prompt and reveal time stay fixed. A new custom prompt gets a turn before unused built-in prompts, provided its category is enabled. Changing the family timezone itself is still part of future family settings.
 
-## What needs connecting for live family use
+## Cloudflare family setup
 
-If Messages already works on a live website with photos, Family Board uses that same hosting, private database, and private picture storage. The new database update (migration 003) must be applied before deploying this version. Do not re-create your family or re-run the initial family setup on an existing database.
+See [Cloudflare setup for Matt](CLOUDFLARE_SETUP_FOR_MATT.md). Workers hosts the app, D1 saves family content and game progress, and private R2 stores family media. The deployment process applies the fresh D1 migrations automatically. The historical PostgreSQL migrations are not part of this deployment.
 
-If those services are not connected yet, the website still needs an HTTPS host, a private database, and private media storage. Questions work once the website and database are ready; photos and drawings also need private storage and the same image-inspection program used by Messages. No extra account, AI provider, or reveal scheduler is needed.
-
-The technical setup steps are in README.md. Whoever connects the hosting should apply `npm run db:migrate` using the existing private database settings, deploy this version, and check one question, one photo, and one drawing with all three family profiles. Finish with a quick check on the actual iPad and phone. Automated browser tests use an isolated test family, not your real family data.
+Local tests use Cloudflare's isolated D1/R2 simulator and the production Workers build. The first live deployment still needs account setup and a family trial on the real iPad, phone and laptop. No extra AI or realtime account is needed.
 
 ## Visual review
 

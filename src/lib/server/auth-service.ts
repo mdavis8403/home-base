@@ -11,9 +11,9 @@ export class AuthService {
   constructor(private db: Database) {}
   async rateLimit(bucket: string, limit: number) {
     const result = await this.db.query<{ attempts: number }>(
-      `INSERT INTO auth_rate_limits (bucket, attempts, reset_at) VALUES ($1, 1, now() + interval '15 minutes')
-      ON CONFLICT (bucket) DO UPDATE SET attempts = CASE WHEN auth_rate_limits.reset_at <= now() THEN 1 ELSE auth_rate_limits.attempts + 1 END,
-      reset_at = CASE WHEN auth_rate_limits.reset_at <= now() THEN now() + interval '15 minutes' ELSE auth_rate_limits.reset_at END RETURNING attempts`,
+      `INSERT INTO auth_rate_limits (bucket, attempts, reset_at) VALUES ($1, 1, strftime('%Y-%m-%dT%H:%M:%fZ','now','+15 minutes'))
+      ON CONFLICT (bucket) DO UPDATE SET attempts = CASE WHEN auth_rate_limits.reset_at <= strftime('%Y-%m-%dT%H:%M:%fZ','now') THEN 1 ELSE auth_rate_limits.attempts + 1 END,
+      reset_at = CASE WHEN auth_rate_limits.reset_at <= strftime('%Y-%m-%dT%H:%M:%fZ','now') THEN strftime('%Y-%m-%dT%H:%M:%fZ','now','+15 minutes') ELSE auth_rate_limits.reset_at END RETURNING attempts`,
       [bucket],
     );
     if (result.rows[0].attempts > limit)
@@ -42,10 +42,10 @@ export class AuthService {
       );
     const challenge = token();
     await this.db.query(
-      "DELETE FROM auth_challenges WHERE expires_at <= now()",
+      "DELETE FROM auth_challenges WHERE expires_at <= strftime('%Y-%m-%dT%H:%M:%fZ','now')",
     );
     await this.db.query(
-      "INSERT INTO auth_challenges (token_hash, family_id, expires_at) VALUES ($1,$2,now() + interval '5 minutes')",
+      "INSERT INTO auth_challenges (token_hash, family_id, expires_at) VALUES ($1,$2,strftime('%Y-%m-%dT%H:%M:%fZ','now','+5 minutes'))",
       [digest(challenge), rows[0].id],
     );
     const profiles = await this.db.query<Profile>(
@@ -56,7 +56,7 @@ export class AuthService {
   }
   async signIn(challenge: string, key: string, remember: boolean) {
     const { rows } = await this.db.query<{ family_id: string }>(
-      "SELECT family_id FROM auth_challenges WHERE token_hash=$1 AND expires_at > now()",
+      "SELECT family_id FROM auth_challenges WHERE token_hash=$1 AND expires_at > strftime('%Y-%m-%dT%H:%M:%fZ','now')",
       [digest(challenge)],
     );
     if (!rows[0])
@@ -79,7 +79,7 @@ export class AuthService {
       );
     // Consume once, including under concurrent requests.
     const consumed = await this.db.query(
-      "DELETE FROM auth_challenges WHERE token_hash=$1 AND expires_at > now() RETURNING token_hash",
+      "DELETE FROM auth_challenges WHERE token_hash=$1 AND expires_at > strftime('%Y-%m-%dT%H:%M:%fZ','now') RETURNING token_hash",
       [digest(challenge)],
     );
     if (!consumed.rows.length)
@@ -91,9 +91,11 @@ export class AuthService {
     const sessionToken = token(),
       deviceToken = token();
     const lifetime = remember ? 30 * 24 * 60 * 60 : 12 * 60 * 60;
-    await this.db.query("DELETE FROM sessions WHERE expires_at <= now()");
     await this.db.query(
-      `INSERT INTO sessions (id,profile_id,token_hash,device_identifier_hash,remembered,expires_at) VALUES ($1,$2,$3,$4,$5,now() + $6 * interval '1 second')`,
+      "DELETE FROM sessions WHERE expires_at <= strftime('%Y-%m-%dT%H:%M:%fZ','now')",
+    );
+    await this.db.query(
+      `INSERT INTO sessions (id,profile_id,token_hash,device_identifier_hash,remembered,expires_at) VALUES ($1,$2,$3,$4,$5,strftime('%Y-%m-%dT%H:%M:%fZ','now', '+' || $6 || ' seconds'))`,
       [
         randomUUID(),
         profile.rows[0].id,
@@ -117,7 +119,7 @@ export class AuthService {
         parentVerifiedUntil: Date | null;
       }
     >(
-      `SELECT ${profileSelect}, s.id AS "sessionId", s.expires_at AS "expiresAt", s.parent_verified_until AS "parentVerifiedUntil" FROM sessions s JOIN profiles p ON p.id=s.profile_id WHERE s.token_hash=$1 AND s.device_identifier_hash=$2 AND s.expires_at > now()`,
+      `SELECT ${profileSelect}, s.id AS "sessionId", s.expires_at AS "expiresAt", s.parent_verified_until AS "parentVerifiedUntil" FROM sessions s JOIN profiles p ON p.id=s.profile_id WHERE s.token_hash=$1 AND s.device_identifier_hash=$2 AND s.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ','now')`,
       [digest(sessionToken), digest(deviceToken)],
     );
     const row = result.rows[0];
@@ -166,7 +168,7 @@ export class AuthService {
         401,
       );
     await this.db.query(
-      "UPDATE sessions SET parent_verified_until=now() + interval '10 minutes' WHERE id=$1 AND expires_at > now()",
+      "UPDATE sessions SET parent_verified_until=strftime('%Y-%m-%dT%H:%M:%fZ','now','+10 minutes') WHERE id=$1 AND expires_at > strftime('%Y-%m-%dT%H:%M:%fZ','now')",
       [session.id],
     );
   }

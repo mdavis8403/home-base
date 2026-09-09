@@ -1,73 +1,51 @@
 # Home Base
 
-A private place for Mia, Mom, and Dad. **Foundation + Messages, Family Board, and Mystery Club.**
+A private place for Mia, Mom, and Dad: Foundation, Messages, Family Board, and Mystery Club. Our Story remains a placeholder.
 
-`HOMEBASE_SPEC.md` is the authoritative specification. Read it in full before working on this project, followed by `AGENTS.md` and [the architecture guide](docs/architecture.md).
+Read `HOMEBASE_SPEC.md`, `AGENTS.md`, and [architecture](docs/architecture.md) before changes. Preserve the cottage, shared family magic word, immediate Mom/Dad/Mia selection, and profile attribution. No individual PINs, global presence, location tracking, or engagement metrics.
 
-## What is ready
+## Cloudflare deployment
 
-- Next.js App Router, React, strict TypeScript, Tailwind and custom design tokens.
-- Responsive entrance, family navigation, home shell, Messages, Family Board, Mystery Club and an Our Story placeholder, and parent settings foundation.
-- PostgreSQL migration with family/profile/session tables and reserved future-feature tables.
-- Cottage → family phrase → one-tap profile selection; secure remembered devices; session expiry; logout; parent reauthentication and revocation of other devices.
-- Mia as child; Mom and Dad as administrators. No public signup or default real-family credentials.
-- Private S3-compatible media adapter with short-lived signed reads and a default-deny authorization service; a server-only story-provider interface.
-- Installable PWA metadata, icons and generic offline shell. No private pages, APIs, or media in the service-worker cache.
-- Unit/database integration tests and production-browser tests for phone, iPad and laptop.
+Home Base runs on **Cloudflare Workers with OpenNext**, **D1** for application data, and **private R2** for media. The existing Next.js UI and business services remain. The target production origin is `https://mdhomebase.com`.
 
-Messages includes personal notes, photo/voice/video/drawing attachments, recipient selection, scheduling, unread state, private favorites, hearts, and archive filters. Family Board includes daily questions, private photo/drawing responses, automatic reveal, Past Boards, and parent prompts/preferences. Mystery Club includes five original cases, three-player lobbies, private clues, eight reusable puzzle types, hints, saved progress, and parent case import. Our Story generation is **not implemented**. No global presence, online status, last-seen, location/GPS, analytics, or activity monitoring is implemented.
+Matt's dashboard-only instructions: [CLOUDFLARE_SETUP_FOR_MATT.md](docs/CLOUDFLARE_SETUP_FOR_MATT.md).
 
-## For the family
+The repository does not deploy or change DNS merely by installing dependencies or running checks. GitHub Actions checks the code. Once deliberately connected, Cloudflare Workers Builds deploys `main` using `npm run build:cloudflare` and `npm run deploy`. The deploy script provisions the named D1/R2 resources through Wrangler and applies D1 migrations. No production account credentials are committed.
 
-See [SETUP_FOR_FAMILY.md](docs/SETUP_FOR_FAMILY.md). You do not need to understand the developer commands below. A website host and a private database still need to be connected before this becomes your family's working website. No paid services have been created.
+## Local development for Codex
 
-## Local development
-
-Requires Node.js 22 or newer, npm, FFmpeg (including ffprobe) for media inspection/tests, and PostgreSQL (the optional Docker Compose file supplies PostgreSQL 17).
+Node.js 22 or newer and npm are sufficient. No Docker, PostgreSQL, FFmpeg, cloud login, or R2 access keys are required.
 
 ```sh
 npm ci
-cp .env.example .env.local
-docker compose up -d
-```
-
-Edit `.env.local` privately. Set an access phrase of at least 8 characters. Profiles have no passwords. Optionally set a separate `ADMIN_ACCESS_KEY` of at least 12 characters, different from the family phrase, for sensitive parent actions. The example database password is only for the localhost-only Docker development database. Never use it for a hosted database.
-
-```sh
-npm run db:migrate
-npm run db:seed
 npm run dev
 ```
 
-Open `http://localhost:3000`. Seed creates exactly Mia, Mom, and Dad, with both parents as admins. It refuses to overwrite any existing family. After seeding, remove `FAMILY_ACCESS_PHRASE` and `ADMIN_ACCESS_KEY` from the setup environment. Only their salted hashes remain in the database. Keep the administration key in a password manager, not source control.
+On the first start, Codex supplies the intended family phrase privately as `FAMILY_ACCESS_PHRASE`; the launcher saves it in ignored `.dev.vars` with owner-only file permissions. Alternatively copy `.dev.vars.example` and fill it privately. `npm run dev` applies local D1 migrations and starts Next.js on `http://localhost:3101` with Cloudflare's binding simulator. Local D1/R2 data persists in ignored `.wrangler/state`. Subsequent starts need no setup. Do not delete that folder if local memories matter.
 
-`DATABASE_URL` and `APP_ORIGIN` remain necessary. `APP_ORIGIN` must match the exact browser origin, without a trailing slash. Use HTTPS on a hosted app; HTTP is accepted only for local development/testing. Secure cookies use `__Host-` names on HTTPS. Temporary device sessions expire after 12 hours; remembered sessions expire after 30 days, without sliding activity-based renewal.
-
-## Verification
+To test the actual production Workers runtime:
 
 ```sh
-npm test
-npm run typecheck
-npm run lint
-npm run build
-npx playwright install chromium webkit
-npm run test:e2e
+npm run build:cloudflare
+npm run preview
 ```
 
-Mystery Club instructions are in [docs/MYSTERY_CLUB.md](docs/MYSTERY_CLUB.md); case files and the author walkthrough are in [content/mysteries](content/mysteries/README.md).
+The cottage's first successful family setup creates three profiles atomically from server-side settings. The family phrase is 8–256 characters; optional separate administration key is 12–256 and must differ. Existing families are never reseeded or overwritten. Setup values can be removed after initialization. Profile selection remains immediate. Sessions are fixed at 12 hours or 30 remembered days. See [entry flow](docs/ENTRY_FLOW.md).
 
-Or run `npm run check` after installing browser engines. Unit/integration tests run the real SQL migration against the PostgreSQL-based PGlite engine. Browser tests start the **production build** on ports 3100/3101 and a disposable loopback-only PGlite PostgreSQL socket on 54329. They run the migration twice (idempotency), the actual seed script, and real HTTP authentication. Test credentials are isolated fixtures, never production defaults. Browser tests use Chromium for laptop and WebKit with iPad/phone emulation. Two offline emulation checks are intentionally skipped in WebKit; offline caching is exercised in Chromium. Physical iPad installation still needs a final check on the hosted HTTPS app.
+## Checks
 
-The production build uses Next's supported Webpack builder to avoid Turbopack's process/port restrictions in restricted development environments. Type checking and linting run separately. CI repeats all checks on pushes and pull requests. It also runs migrations and seeding against PostgreSQL 17.
+```sh
+npx playwright install chromium webkit
+npm run check
+```
 
-## Production setup
+`check` runs unit/security/D1 tests, all five mystery validators, TypeScript, ESLint, the production Cloudflare build, and browser tests. Browser tests use isolated local Workers/D1/R2 on ports 3100 and 3101; stop the ordinary preview first. They apply migrations twice and exercise the real app APIs, three-player games, save/resume, entry, responsive layouts and private media. They never use a hosted database. Two WebKit offline-emulation cases remain intentionally skipped; Chromium verifies service-worker cache behavior.
 
-Use a Node.js/container host that runs Next.js server routes, has ffprobe installed, and accepts 46 MB request bodies with a 20-second media-inspection window. A static-files-only host or a serverless endpoint with small upload limits is not sufficient. Connect a private PostgreSQL database using its TLS connection string. Use a migration/owner database credential only for setup; the running app needs `SELECT`, `INSERT`, `UPDATE`, and `DELETE` on application tables, not schema-management privileges. Never expose database credentials or a database HTTP API to the browser. Add `APP_ORIGIN` as the exact HTTPS website address.
+## Shared contracts
 
-Run migrations and the one-time seed using the private setup environment. Enable database backups in your provider. Do not put setup credentials into a build command or public configuration. Keep runtime database and storage credentials in the hosting provider's **server-side secret settings**. There are no `NEXT_PUBLIC_` secrets.
+- One server-only `Database` backed by D1 prepared statements and atomic batches. Fresh migrations are in `db/d1`. Historical `db/migrations` files are preserved as immutable PostgreSQL history and are **not** used for deployment.
+- One `PrivateStorage` backed by an R2 binding. No public bucket or S3 keys. Media byte requests reauthorize the session and feature visibility each time, including range requests and scheduled messages.
+- Mystery Club uses atomic D1 revision checks and the existing visible-page polling. Durable Objects were assessed and are unnecessary for the current three-person game. D1 remains the sole persistent source for lobbies, clues, progress, events and history.
+- The PWA caches only the generic offline shell and icons. No authenticated pages, API data or private media are cached.
 
-For Messages and Family Board attachments: provision a **private** S3-compatible bucket, block public access, disable public listing, enable provider encryption at rest, and use a narrowly scoped server credential. Fill the S3 settings in `.env.example` on the server. Without storage, written notes work but media sends fail clearly and preserve the draft. Set FFPROBE_PATH if ffprobe is not on the server PATH. Configure private-bucket CORS for GET from the exact app origin if your provider requires it for media playback; never allow public reads. AI and real-time services are not needed yet.
-
-See [docs/architecture.md](docs/architecture.md) for shared contracts, security rules and phase boundaries.
-
-The immersive cottage entry and migration instructions are in [docs/ENTRY_FLOW.md](docs/ENTRY_FLOW.md).
+Feature guides: [Messages review](docs/MESSAGES_REVIEW.md), [Family Board](docs/FAMILY_BOARD.md), [Mystery Club](docs/MYSTERY_CLUB.md), and [case authoring](content/mysteries/README.md).

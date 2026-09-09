@@ -18,13 +18,11 @@ Mom or Dad can confirm the separate administration key and import a new JSON mys
 
 The five launch files and an author guide are in `content/mysteries`. New mysteries use the same engine; adding one through the parent desk does not require rebuilding the website. When revising a file, increase its version number. Games already started continue with their original version.
 
-## Before live family testing
+## Cloudflare family setup
 
-The website host must deploy this version and apply the new database update, `004_mystery_club.sql`, using the existing migration command. This adds Mystery Club's saved-game support to the same private database used by Messages and Family Board. Do not recreate your family or rerun the initial family seed on an existing database.
+See [Cloudflare setup for Matt](CLOUDFLARE_SETUP_FOR_MATT.md). Workers hosts the app, D1 saves family content and game progress, and private R2 stores family media. The deployment process applies the fresh D1 migrations automatically. The historical PostgreSQL migrations are not part of this deployment.
 
-The launch collection appears automatically the first time someone opens the case library. No new account, AI service, paid realtime service, or media bucket is needed. The original illustrations and musical signals are built from the private case files. Existing Messages media storage is unchanged.
-
-Whoever manages hosting should run `npm run db:migrate` with the existing private database settings, deploy the site, and check a case with all three real devices. Normal HTTPS hosting and database access remain necessary. The automated tests use an isolated test family; real-device sound, comfortable reading size, and the estimated playtimes still deserve a family trial.
+Local tests use Cloudflare's isolated D1/R2 simulator and the production Workers build. The first live deployment still needs account setup and a family trial on the real iPad, phone and laptop. No extra AI or realtime account is needed.
 
 ## Visual review
 
