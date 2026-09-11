@@ -43,10 +43,15 @@ export interface Destination {
   /** Whether it opens a redesigned in-world overlay (Messages) or navigates
    *  to the existing feature route for now. */
   mode: "overlay" | "route";
-  /** Named group in the Spline scene (for emitEvent / hit-testing). */
+  /** Named invisible hit mesh in the Spline scene whose MouseDown runs a
+   *  SwitchCamera to this destination's camera. React drives the camera by
+   *  emitEvent('mouseDown', splineObject); real clicks on it fire the same. */
   splineObject: string;
   /** Named Spline camera for its close-up state. */
   splineCamera: string;
+  /** Name prefixes of the visible meshes that make up this place, so a real
+   *  runtime click on any of them still resolves to this destination. */
+  splinePrefixes: string[];
   /** Fallback room hit target + camera framing. */
   hotspot: Rect;
   camera: Framing;
@@ -54,6 +59,24 @@ export interface Destination {
 
 export const HOME_FRAMING: Framing = { cx: 0.5, cy: 0.5, zoom: 1 };
 export const HOME_CAMERA = "Cam Home";
+/** Invisible Spline mesh whose MouseDown switches back to Cam Home. */
+export const SPLINE_HOME_TRIGGER = "Home Trigger";
+
+/** Resolve a clicked Spline mesh name (hit box or a visible child) to a
+ *  destination — so real 3D clicks work however the ray lands. */
+export function destinationForSplineName(name: string | undefined): DestinationId | null {
+  if (!name) return null;
+  const hit = DESTINATIONS.find((d) =>
+    d.splinePrefixes.some((p) => name === p || name.startsWith(p)),
+  );
+  return hit ? hit.id : null;
+}
+
+/** The Spline mesh React should emit MouseDown on to move the camera to a view. */
+export function splineTriggerFor(view: CameraView): string {
+  const d = destinationById(view);
+  return d ? d.splineObject : SPLINE_HOME_TRIGGER;
+}
 
 export const DESTINATIONS: readonly Destination[] = [
   {
@@ -63,8 +86,9 @@ export const DESTINATIONS: readonly Destination[] = [
     affordance: "Leave a little something",
     event: "messagesSelected",
     mode: "overlay",
-    splineObject: "Messages Nook",
+    splineObject: "Hit Messages",
     splineCamera: "Cam Messages",
+    splinePrefixes: ["Hit Messages", "Desk", "Lamp", "Slot", "Message Indicator", "Stationery", "Letter Tray"],
     hotspot: { x: 0.03, y: 0.5, w: 0.22, h: 0.38 },
     camera: { cx: 0.16, cy: 0.62, zoom: 1.85 },
   },
@@ -75,8 +99,9 @@ export const DESTINATIONS: readonly Destination[] = [
     affordance: "See what today holds",
     event: "boardSelected",
     mode: "route",
-    splineObject: "Family Board",
+    splineObject: "Hit Board",
     splineCamera: "Cam Board",
+    splinePrefixes: ["Hit Board", "Board"],
     hotspot: { x: 0.62, y: 0.34, w: 0.19, h: 0.26 },
     camera: { cx: 0.71, cy: 0.44, zoom: 1.8 },
   },
@@ -87,8 +112,9 @@ export const DESTINATIONS: readonly Destination[] = [
     affordance: "Something is hidden back there",
     event: "mysterySelected",
     mode: "route",
-    splineObject: "Mystery Study",
+    splineObject: "Hit Mystery",
     splineCamera: "Cam Mystery",
+    splinePrefixes: ["Hit Mystery", "Mystery"],
     hotspot: { x: 0.82, y: 0.33, w: 0.11, h: 0.5 },
     camera: { cx: 0.86, cy: 0.5, zoom: 1.9 },
   },
@@ -99,8 +125,9 @@ export const DESTINATIONS: readonly Destination[] = [
     affordance: "A tale only we could tell",
     event: "storySelected",
     mode: "route",
-    splineObject: "Our Story",
+    splineObject: "Hit Story",
     splineCamera: "Cam Story",
+    splinePrefixes: ["Hit Story", "Story", "Chair"],
     hotspot: { x: 0.28, y: 0.62, w: 0.16, h: 0.28 },
     camera: { cx: 0.34, cy: 0.72, zoom: 1.75 },
   },

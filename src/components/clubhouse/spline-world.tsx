@@ -7,7 +7,8 @@
 // the SVG room — the app never depends on 3D.
 import { useEffect, useRef } from "react";
 import {
-  DESTINATIONS,
+  destinationForSplineName,
+  splineTriggerFor,
   type CameraView,
   type DestinationId,
 } from "@/lib/shared/clubhouse";
@@ -52,8 +53,10 @@ export function SplineWorld({
           return;
         }
         app.current = instance;
+        // Move the camera to Home once the scene is ready.
+        instance.emitEvent?.("mouseDown", splineTriggerFor("home"));
         instance.addEventListener?.("mouseDown", (e) => {
-          const id = idForObject(e?.target?.name);
+          const id = destinationForSplineName(e?.target?.name);
           if (id) onSelect(id);
         });
       } catch {
@@ -71,13 +74,13 @@ export function SplineWorld({
     };
   }, [scene, onSelect, onFail]);
 
-  // Drive the camera by triggering the destination's named Spline camera when
-  // the scene author has wired SwitchCamera events (documented contract).
+  // Drive the camera: emit MouseDown on the view's hit mesh, whose authored
+  // SwitchCamera event animates to the matching Spline camera.
   useEffect(() => {
     try {
-      app.current?.emitEvent?.("mouseDown", cameraTrigger(view));
+      app.current?.emitEvent?.("mouseDown", splineTriggerFor(view));
     } catch {
-      /* camera events are optional; the scene still renders at Home */
+      /* the scene still renders at Home if a trigger is missing */
     }
   }, [view]);
 
@@ -86,17 +89,4 @@ export function SplineWorld({
       <canvas ref={canvas} />
     </div>
   );
-}
-
-function idForObject(name?: string): DestinationId | null {
-  if (!name) return null;
-  const hit = DESTINATIONS.find(
-    (d) => name === d.splineObject || name.startsWith(d.splineObject),
-  );
-  return hit ? hit.id : null;
-}
-
-function cameraTrigger(view: CameraView): string {
-  const d = DESTINATIONS.find((x) => x.id === view);
-  return d ? d.splineCamera : "Cam Home";
 }
