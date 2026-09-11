@@ -1,63 +1,70 @@
-# Put Home Base on MDhomebase.com
+# Home Base on Cloudflare — what is actually deployed
 
-These are the Cloudflare dashboard steps you need to do. There are no Terminal commands to run. The repository creates the database tables and connects the private media bucket automatically. We have not deployed anything or changed your DNS during the migration.
+Home Base is **live** at **https://mdhomebase.com**. The cottage door, the family magic word, Mom/Dad/Mia selection, Messages, Family Board, and Mystery Club all work in production. This document describes the real, current setup and the few things only you can do from the Cloudflare dashboard. There is normally nothing here you need to run.
 
-Use the Cloudflare account that owns **MDhomebase.com**. The address will be **https://mdhomebase.com** (without `www`). Capitalization does not matter in a domain name.
+Everything runs on the **Cloudflare Free plan**. You do **not** need Workers Paid for this three-person family app, and no paid feature is enabled.
 
-## 1. Enable Workers and R2
+## What is running
 
-1. Sign in to [Cloudflare](https://dash.cloudflare.com).
-2. Open **Workers & Pages**. Use the **Workers Paid** plan for this app; its media/password processing needs the higher CPU limit. Review the current price shown by Cloudflare before accepting.
-3. Open **Storage & databases → R2 object storage**. If Cloudflare asks you to activate R2 and add billing details, complete that step. You do not need to create a bucket manually.
+| Piece | Value |
+| --- | --- |
+| Hosting | Cloudflare Workers (OpenNext build of the Next.js app) |
+| Worker name | `home-base` |
+| Production address | `https://mdhomebase.com` (custom domain, HTTPS managed by Cloudflare) |
+| Database | Cloudflare D1 — `home-base-db` (binding `DB`) |
+| Private media | Cloudflare R2 — `home-base-private-media` (binding `FAMILY_MEDIA`) |
+| Plan | Free |
+| `workers.dev` / preview URLs | Disabled — the app answers only on `mdhomebase.com` |
 
-No AI service, external database account, S3 access keys, or Durable Object setup is needed.
+The `wrangler.jsonc` in the repository is the source of truth for this configuration. Its production values are `APP_ORIGIN = https://mdhomebase.com` and `FAMILY_TIMEZONE = America/Chicago`.
 
-## 2. Connect the GitHub project
+## How deploys happen
 
-1. Go to **Workers & Pages → Create application → Import a repository** (the GitHub option may be called **Connect to Git**).
-2. Authorize GitHub access to **mdavis8403/home-base** and select that repository.
-3. Use Worker/project name **home-base**, branch **main**, and the repository root directory (leave the root field empty if offered).
-4. Set **Build command** to `npm run build:cloudflare`.
-5. Set **Deploy command** to `npm run deploy`.
-6. Under the build's API token option, let Cloudflare create a token. Open your profile menu in another tab: **My Profile → API Tokens**. Edit that newly created Workers Builds token and add **Account → D1 → Edit** for this account. Keep its existing Workers and R2 permissions. The standard generated token does not include D1 permission, which Home Base needs to create and migrate its database. Return to the build setup and keep that token selected. If Cloudflare only creates the token when the first build starts, let that build start, add D1 permission as soon as the token appears, then retry the build if needed.
-7. Choose **Deploy**. This is the deliberate first cloud deployment. It creates the Worker, **home-base-db**, and **home-base-private-media**, then creates the tables. The Worker remains without a public address until step 4 below. If a build already started before you added D1 permission, use **Builds → Retry build** afterward.
-8. In the Worker's **Settings → Builds**, keep **main** as the production branch and disable non-production branch deployments. Test branches must not share the family database. Future pushes to `main` will deploy automatically once this connection is enabled.
+Cloudflare **Workers Builds** is connected to the GitHub repository `mdavis8403/home-base`. Every push to the `main` branch builds with `npm run build:cloudflare` and deploys with `npm run deploy`, which applies any new D1 database migrations and then publishes the Worker. You do not deploy by hand.
 
-Do not select Cloudflare Pages or change the build to a static export. The project contains the required Workers configuration already.
+The custom domain `mdhomebase.com` is attached to the Worker as a dashboard setting (Custom Domain). Deploys do not change or remove it.
 
-## 3. Add the private family setup values
+## The private family values (secrets)
 
-1. Open **Workers & Pages → home-base → Settings → Variables and Secrets → Add**.
-2. Choose type **Secret**, name **FAMILY_ACCESS_PHRASE**, and enter the family magic word you already chose. Do not put it in a build command, GitHub file, or a public variable.
-3. Add another **Secret** named **ADMIN_ACCESS_KEY**. Choose a different phrase of at least 12 characters and keep it in the adults' password manager. It protects sensitive parent settings only; Mom, Dad and Mia still have no individual PINs. You can omit this key if you want sensitive settings to stay locked.
-4. Save/apply the secrets (Cloudflare may label this **Deploy**). The ordinary values **APP_ORIGIN = https://mdhomebase.com** and **FAMILY_TIMEZONE = America/Chicago** already come from the repository.
-5. Open the Worker's **Bindings** and confirm **DB** points to **home-base-db**, and **FAMILY_MEDIA** points to **home-base-private-media**. They should already be connected automatically.
-6. Open **R2 → home-base-private-media → Settings**. Leave **Public development URL** disabled and **Custom domains** empty. Private media is served through the Home Base app; never make this bucket public.
+In **Workers & Pages → home-base → Settings → Variables and Secrets** there is one runtime **Secret**:
 
-## 4. Deliberately connect your domain
+- `FAMILY_ACCESS_PHRASE` — the family magic word (currently the word your family uses to open the door). It is used **once**, the first time anyone enters, to create the family and store a protected hash. It is never shown in the app or committed to GitHub.
 
-This step makes Home Base reachable on your real domain and changes its routing. Do it when you are ready to go live.
+`ADMIN_ACCESS_KEY` is **optional** and is not set. Without it, the extra parent-only settings screen stays locked; ordinary entry and Mom/Dad/Mia selection are unaffected. You can add it later (a different phrase, at least 12 characters) if you ever want those settings.
 
-1. Open **Workers & Pages → home-base → Settings → Domains & Routes → Add → Custom Domain**.
-2. Enter **mdhomebase.com** and choose **Add Custom Domain**. Cloudflare manages the DNS connection and HTTPS certificate.
-3. Wait for the domain/certificate to show as active. If Cloudflare reports an existing conflicting DNS record, stop and ask Codex to review it rather than deleting an unrelated record.
-4. Keep **workers.dev** and **preview URLs** disabled. Use the exact `https://mdhomebase.com` address for sign-in.
+Because the family was already created during setup, you may delete `FAMILY_ACCESS_PHRASE` from the dashboard if you like — the door keeps working from the stored hash. Keep your own private copy of the word. **Changing or removing the secret does not change the door word**; the word only changes if the family row is reset (see recovery).
 
-## 5. Finish first entry and remove setup secrets
+## How the door works (so nothing surprises you)
 
-Open **https://mdhomebase.com**, tap the cottage door, enter the magic word, and choose your profile. That first setup creates the three profiles and stores protected hashes. After successful entry, return to **home-base → Settings → Variables and Secrets** and delete **FAMILY_ACCESS_PHRASE** and **ADMIN_ACCESS_KEY**, then save/apply. Normal entry and parent verification continue using the stored hashes. Keep your own private copy of the words.
+1. Someone opens `https://mdhomebase.com` and taps the cottage door.
+2. Home Base asks "What's the magic word?" and they type the family word.
+3. On the first entry ever, the app quietly created the family and the three profiles (Mom, Dad, Mia) from the secret above. This has already happened.
+4. The word is checked against the stored hash. If it matches, "Who's coming home?" shows Mom / Dad / Mia.
+5. Choosing a profile signs that person in. There are **no individual PINs**. "Remember me" keeps that device signed in for 30 days; leaving it unchecked lasts 12 hours.
 
-Changing a setup secret later does not overwrite an existing family's credentials. If you forget either word, ask Codex to help recover access without recreating the database or losing memories.
+Sign-in requests are accepted only when they come from `https://mdhomebase.com`. (This same-origin check is what had to be corrected during deployment — see the note at the end.)
 
-The first live check should include a photo or recording, a scheduled note, a Board response and a Mystery Club game with all three devices. On iPad, use Safari's **Share → Add to Home Screen** once the HTTPS site works. Those are family acceptance checks, not infrastructure setup.
+## Keep private media private
 
-## If the dashboard reports a problem
+In **R2 → home-base-private-media → Settings**: the **Public development URL is disabled** and there are **no custom domains** on the bucket. Leave it that way. Photos, drawings, and recordings are served only through the signed-in Home Base app; the bucket is never public.
 
-- **D1 permission denied:** edit the build API token's **Account → D1 → Edit** permission and retry the build.
-- **R2 not enabled:** finish R2 activation/billing and retry; do not enable public access.
-- **Worker name mismatch:** both the dashboard project and the repository name must be **home-base**.
-- **Magic word won't open the door on the first deployment:** confirm the runtime Secret is set, the build/migration succeeded, and you are using the exact HTTPS domain. Do not rerun setup by deleting the database.
+## Bindings to confirm if something ever looks wrong
 
-Send Codex the error wording, without passwords or API tokens. The code is tested locally in Cloudflare's runtime; account-specific provisioning, billing and DNS can only be confirmed during this first real deployment.
+In **home-base → Settings → Bindings**: `DB` → `home-base-db`, and `FAMILY_MEDIA` → `home-base-private-media`. These are set automatically from `wrangler.jsonc`.
 
-Dashboard references checked September 8, 2026: [Workers Builds settings and token permissions](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/), [automatic D1/R2 provisioning](https://developers.cloudflare.com/changelog/post/2025-10-24-automatic-resource-provisioning/), [custom domain steps](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
+## If you ever need to recover
+
+Send these to Codex or Claude rather than doing them blind; they are here so the steps are on record.
+
+- **The door word won't open the door.** Confirm the site is `https://mdhomebase.com` exactly, that the latest build succeeded, and that the `home-base` Worker's `APP_ORIGIN` reads `https://mdhomebase.com` (not a `workers.dev` address). An origin mismatch rejects the word before it is ever checked.
+- **You want to change the family word.** The word lives as a hash in the `families` row, not in the secret. Changing it means resetting that row and letting the app re-create it from a new `FAMILY_ACCESS_PHRASE` — a deliberate, assisted step, not something to do casually. It does not require recreating the database or losing messages.
+- **A build fails on D1 permission.** The Workers Builds API token needs **Account → D1 → Edit** in addition to its Workers and R2 permissions.
+- **R2 problems.** Finish R2 activation if prompted; never enable public access to fix it.
+
+## First-family acceptance checks (not infrastructure)
+
+On each device, open `https://mdhomebase.com`, enter the word, pick your profile, and try: a photo or recording message, a scheduled note (it must stay hidden until its time), a Family Board response (others stay hidden until the evening reveal), and a Mystery Club game with all three profiles. On iPad, use Safari's **Share → Add to Home Screen** for an app-like icon.
+
+---
+
+*Deployment note (September 2026): during the migration the Worker was temporarily pointed at a `workers.dev` address for Free-plan validation, which made the same-origin check reject the real domain and stopped the magic word from working. The configuration now uses `https://mdhomebase.com` and `workers.dev` is disabled, so the door works normally. No paid Cloudflare feature was enabled at any point.*
