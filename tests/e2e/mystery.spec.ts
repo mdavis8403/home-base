@@ -33,7 +33,7 @@ async function login(page: Page, key: "mia" | "mom" | "dad") {
   });
   expect(r.ok()).toBe(true);
   await page.goto(origin + "/mystery-club");
-  await expect(page.locator(".case-file")).toHaveCount(5);
+  await expect(page.locator(".book-spine")).toHaveCount(5);
 }
 async function post(page: Page, action: string, body: unknown) {
   return page.context().request.post(origin + "/api/mystery/" + action, {
@@ -142,11 +142,7 @@ for (let index = 0; index < 5; index++)
       ).data as CaseCard[];
       const card = cards.find((c) => c.slug === cases[index].slug)!;
       await page
-        .locator(".case-file")
-        .filter({
-          has: page.getByRole("heading", { name: card.title, exact: true }),
-        })
-        .getByRole("button", { name: "New Case", exact: true })
+        .getByRole("button", { name: new RegExp("^" + card.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) })
         .click();
       await expect(page.locator(".game-lobby")).toBeVisible();
       const id = new URL(page.url()).searchParams.get("session")!;
@@ -242,7 +238,7 @@ for (let index = 0; index < 5; index++)
       await page
         .getByRole("button", { name: "Solved Cases", exact: true })
         .click();
-      await expect(page.locator(".case-file")).toHaveCount(1);
+      await expect(page.locator(".book-spine")).toHaveCount(1);
       expect(errors).toEqual([]);
       expect(
         await page.evaluate(

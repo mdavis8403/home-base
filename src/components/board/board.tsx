@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import type { Profile } from "@/lib/shared/types";
 import {
   boardLabels,
@@ -24,6 +25,11 @@ export function FamilyBoard({ profile }: { profile: Profile }) {
   const [view, setView] = useState<"today" | "past" | "settings">("today");
   const [selected, setSelected] = useState<string | null>(null);
   const inFlight = useRef(false);
+  // Full-screen board: hide the standard family shell while this room owns the view.
+  useEffect(() => {
+    document.body.classList.add("immersive");
+    return () => document.body.classList.remove("immersive");
+  }, []);
   const refresh = useCallback(async (open = false) => {
     if (inFlight.current) return;
     inFlight.current = true;
@@ -62,19 +68,26 @@ export function FamilyBoard({ profile }: { profile: Profile }) {
       ? data?.boards.find((b) => b.today)
       : data?.boards.find((b) => b.id === selected);
   return (
-    <section className="board-room">
-      <header className="messages-heading">
-        <div>
-          <p className="eyebrow">OUR LITTLE CORNER OF THE DAY</p>
-          <h1>Family Board</h1>
-          <p>Three imaginations. One lovely little surprise.</p>
-        </div>
-        <div className="board-emblem" aria-hidden="true">
-          <span>✦</span>
-          <i>✎</i>
-          <b>▧</b>
-        </div>
+    <div className="board-immersive">
+      {/* eslint-disable-next-line @next/next/no-img-element -- full-bleed board art must not be re-cropped. */}
+      <img
+        className="board-art"
+        src="/images/family-board-bg.png"
+        alt=""
+        aria-hidden="true"
+        fetchPriority="high"
+        draggable={false}
+      />
+      <header className="clubhouse-bar board-bar">
+        <Link className="clubhouse-brand" href="/home">
+          <span aria-hidden="true">←</span> THE CLUBHOUSE
+        </Link>
+        <h1 className="mystery-bar-title">
+          <span aria-hidden="true">✦</span> Family Board
+        </h1>
       </header>
+      <div className="board-center">
+      <section className="board-room">
       <nav className="message-tabs" aria-label="Board views">
         {(
           [
@@ -174,7 +187,9 @@ export function FamilyBoard({ profile }: { profile: Profile }) {
       <p className="messages-footer">
         A little silly. A little sweet. Entirely us.
       </p>
-    </section>
+      </section>
+      </div>
+    </div>
   );
 }
 function BoardActivity({

@@ -2612,3 +2612,227 @@ body.immersive {
 @media (max-width: 640px) {
   .clubhouse-name { display: none; }
 }
+
+/* =====================================================================
+   Full-screen Family Board & Mystery Club on their approved backgrounds
+   ===================================================================== */
+.board-immersive,
+.mystery-immersive {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+.board-immersive { background: #16110c; }
+.mystery-immersive { background: #120d08; }
+/* Shared 16:9 cover box for a 1672×941 background image */
+.board-art {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100vw, calc(100svh * 1672 / 941));
+  height: max(100svh, calc(100vw * 941 / 1672));
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.board-bar,
+.mystery-bar { z-index: 4; }
+.mystery-bar-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--color-cream);
+  text-shadow: 0 2px 8px #000a;
+  pointer-events: auto;
+}
+.mystery-bar-title > span { color: var(--amber); }
+
+/* ---- Family Board: live content over the open corkboard center ---- */
+.board-center {
+  position: absolute;
+  left: 50%;
+  top: 12.5%;
+  transform: translateX(-50%);
+  width: clamp(320px, 44vw, 640px);
+  max-height: 76svh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  z-index: 3;
+  padding: 4px 4px 20px;
+}
+.board-immersive .board-room { padding: 0; max-width: none; }
+.board-immersive .messages-heading { display: none; }
+.board-immersive .message-tabs {
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  border: 1px solid #ffffff22;
+  border-radius: 999px;
+  background: #0b1a1fdd;
+  backdrop-filter: blur(8px);
+  padding: 5px 8px;
+  margin: 0 auto 16px;
+  width: fit-content;
+  max-width: 100%;
+  box-shadow: 0 12px 34px #04101499;
+}
+.board-immersive .message-tabs .text-button {
+  color: #efe4cb;
+  min-height: 40px;
+  padding: 6px 12px;
+}
+.board-immersive .reveal-note h3,
+.board-immersive .reveal-note p,
+.board-immersive .messages-footer,
+.board-immersive .board-loading {
+  text-shadow: 0 2px 8px #000b;
+}
+.board-immersive .message-tabs [aria-pressed="true"] {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+.board-immersive .board-loading,
+.board-immersive .board-history .eyebrow,
+.board-immersive .board-history h2,
+.board-immersive .board-history > p,
+.board-immersive .messages-footer,
+.board-immersive .reveal-note h3,
+.board-immersive .reveal-note p {
+  color: #f2e9d3;
+}
+.board-immersive .messages-footer { text-align: center; }
+
+/* ---- Mystery bookshelf: cover box + spine slots ---- */
+.mystery-shelf {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100vw, calc(100svh * 1672 / 941));
+  height: max(100svh, calc(100vw * 941 / 1672));
+  transform: translate(-50%, -50%);
+}
+.mystery-shelf-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.mystery-shelf-slots { position: absolute; inset: 0; }
+.book-spine {
+  position: absolute;
+  margin: 0;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.25s, background 0.25s;
+}
+.book-spine:hover,
+.book-spine:focus-visible {
+  background: #ffdf9e1f;
+  box-shadow: inset 0 0 0 1.5px #ffdf9e99, 0 0 22px #ffcf7855;
+  outline: none;
+}
+.book-spine:focus-visible { box-shadow: inset 0 0 0 2px var(--amber), 0 0 24px #ffcf7866; }
+.spine-title {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(0.5rem, 0.82vw, 0.9rem);
+  letter-spacing: 0.4px;
+  line-height: 1.05;
+  color: #f1e7d0;
+  text-shadow: 0 1px 3px #000c, 0 0 2px #000a;
+  max-height: 94%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.book-spine.is-solved .spine-title { color: #ddca97; }
+.spine-mark {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  text-shadow: 0 1px 2px #000a;
+}
+.mark-solved { color: var(--amber); }
+.mark-new { color: var(--color-coral); }
+.mystery-shelf-empty {
+  position: absolute;
+  left: 50%;
+  bottom: 16%;
+  transform: translateX(-50%);
+  color: #efe4cb;
+  font-family: var(--font-display);
+  text-shadow: 0 2px 8px #000a;
+}
+
+/* ---- Mystery game / parent panel over dark wood ---- */
+.mystery-panel {
+  position: absolute;
+  left: 50%;
+  top: 84px;
+  transform: translateX(-50%);
+  width: min(960px, 94vw);
+  max-height: calc(100svh - 108px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  z-index: 3;
+  background: radial-gradient(140% 80% at 50% 0%, #23313b 0%, #182831 60%, #101e24 100%);
+  border: 1px solid #ffffff1c;
+  border-radius: 20px;
+  padding: 22px clamp(16px, 3vw, 34px) 30px;
+  box-shadow: 0 30px 90px #030b0eb0;
+}
+.mystery-immersive .mystery-room { padding: 0; }
+.mystery-immersive .mystery-room .messages-footer { display: none; }
+.mystery-tabs { z-index: 4; }
+.mystery-float {
+  position: absolute;
+  left: 50%;
+  top: 74px;
+  transform: translateX(-50%);
+  z-index: 5;
+  background: #12232ad8;
+  padding: 8px 16px;
+  border-radius: 999px;
+  color: #ffd7c6;
+}
+
+@media (max-width: 640px) {
+  .board-center { width: 92vw; top: 74px; max-height: calc(100svh - 150px); }
+  .mystery-panel { top: 74px; width: 96vw; max-height: calc(100svh - 150px); }
+  .spine-title { font-size: 0.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .book-spine { transition: none !important; }
+}
+
+/* On portrait / narrow screens, show the whole bookshelf width so every case
+   spine stays reachable (cover-crop would push edge spines off-screen). */
+@media (max-aspect-ratio: 7 / 5) {
+  .mystery-shelf {
+    left: 0;
+    top: 50%;
+    width: 100vw;
+    height: calc(100vw * 941 / 1672);
+    transform: translateY(-50%);
+  }
+}
