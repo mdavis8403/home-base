@@ -6,9 +6,9 @@ import { authRequest } from "./api";
 
 export function SignIn({ configured }: { configured: boolean }) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [phase, setPhase] = useState<"cottage" | "opening" | "profiles">(
-    "cottage",
-  );
+  const [phase, setPhase] = useState<
+    "cottage" | "opening" | "profiles" | "entering"
+  >("cottage");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [remember, setRemember] = useState(true);
@@ -58,7 +58,16 @@ export function SignIn({ configured }: { configured: boolean }) {
     setError("");
     try {
       await authRequest("profile", { key, remember });
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      try {
+        sessionStorage.setItem("hb-arriving", "1");
+      } catch {
+        /* storage may be unavailable */
+      }
+      setPhase("entering");
+      await new Promise((r) => setTimeout(r, reduce ? 0 : 560));
       window.location.assign("/home");
+      return;
     } catch {
       setError(
         "Let’s try the cottage door once more. Your invitation may have gone to sleep.",
@@ -145,7 +154,10 @@ export function SignIn({ configured }: { configured: boolean }) {
           </p>
         )}
       </dialog>
-      {phase === "profiles" && (
+      {phase === "entering" && (
+        <div className="entering-bloom" aria-hidden="true" />
+      )}
+      {(phase === "profiles" || phase === "entering") && (
         <section className="homecoming-panel">
           <p className="eyebrow">THE LIGHT IS ALWAYS ON FOR YOU</p>
           <h1 ref={heading} tabIndex={-1}>

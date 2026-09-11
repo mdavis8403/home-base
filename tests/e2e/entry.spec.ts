@@ -93,7 +93,7 @@ test("cottage door stays aligned and opens a private magic-word prompt, then one
   await shot(page, info.project.name, "profiles");
   await page.getByRole("button", { name: "Mom", exact: true }).click();
   await expect(page).toHaveURL(origin + "/home");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Mom");
+  await expect(page.locator(".clubhouse-name")).toHaveText("Mom");
   await shot(page, info.project.name, "home");
   expect(
     await page.evaluate(
@@ -115,7 +115,7 @@ test("each profile enters without a credential and profile APIs still require th
     await page.getByLabel("Remember me on this device").uncheck();
     await page.getByRole("button", { name, exact: true }).click();
     await expect(page).toHaveURL(origin + "/home");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(name);
+    await expect(page.locator(".clubhouse-name")).toHaveText(name);
     await page.getByRole("button", { name: "Sign out", exact: true }).click();
     await expect(page).toHaveURL(origin + "/");
     await expect(

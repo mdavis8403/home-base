@@ -19,7 +19,7 @@ test("Mia can navigate placeholders and is protected from parent settings", asyn
     path: testInfo.outputPath("home.png"),
     fullPage: true,
   });
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Mia");
+  await expect(page.locator(".clubhouse-name")).toHaveText("Mia");
   await expect(page.getByRole("link", { name: "Parent Settings" })).toHaveCount(
     0,
   );
@@ -31,23 +31,20 @@ test("Mia can navigate placeholders and is protected from parent settings", asyn
   expect(await page.evaluate(() => document.cookie)).not.toContain(
     "hb-session",
   );
-  for (const label of ["Our Story"]) {
-    await page
-      .getByRole("navigation")
-      .getByRole("link", { name: label, exact: true })
-      .click();
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(label);
-    await expect(
-      page.getByText("This is a placeholder for a future phase.", {
-        exact: false,
-      }),
-    ).toBeVisible();
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    ).toBe(true);
-  }
+  // The clubhouse glides the camera toward the story nook, then opens the route.
+  await page.getByRole("button", { name: "storybook", exact: true }).click();
+  await expect(page).toHaveURL(`${origin}/our-story`);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Our Story");
+  await expect(
+    page.getByText("This is a placeholder for a future phase.", {
+      exact: false,
+    }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
   await page.goto(`${origin}/parent-settings`);
   await expect(page.getByText("This door doesn’t open here.")).toBeVisible();
   const denied = await context.request.post(`${origin}/api/auth/reauth`, {
@@ -93,6 +90,6 @@ test("parent reauthentication and device revocation work end to end", async ({
   await childPage.goto(`${origin}/home`);
   await expect(childPage).toHaveURL(`${origin}/enter`);
   await page.goto(`${origin}/home`);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Mom");
+  await expect(page.locator(".clubhouse-name")).toHaveText("Mom");
   await other.close();
 });
