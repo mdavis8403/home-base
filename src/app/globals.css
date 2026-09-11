@@ -2082,39 +2082,33 @@ body.immersive {
   inset: 0;
   overflow: hidden;
 }
+/* Aspect-locked 16:9 cover box: sized to cover the viewport, centered. The
+   viewport crops the overflow; hotspots (children of .room-frame) stay aligned
+   to the artwork at every breakpoint. */
 .room-scene {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100vw, calc(100svh * 1672 / 941));
+  height: max(100svh, calc(100vw * 941 / 1672));
+  transform: translate(-50%, -50%);
+}
+/* Camera frame: fills the cover box, carries the zoom/pan transition. */
+.room-frame {
   position: absolute;
   inset: 0;
   transition: transform 0.85s var(--ease-cine);
   will-change: transform;
 }
-.room-art {
+.room-photo {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  object-fit: cover;
   display: block;
-}
-.rm-moon.is-spark {
-  animation: rm-moon-spark 1.2s var(--ease-cine);
-}
-@keyframes rm-moon-spark {
-  40% { filter: drop-shadow(0 0 22px #dfe7f5); }
-}
-.rm-pillow.is-spark {
-  animation: rm-pillow-poke 0.9s var(--ease-cine);
-  transform-box: fill-box;
-  transform-origin: center;
-}
-@keyframes rm-pillow-poke {
-  30% { transform: scale(0.92, 0.88) translateY(4px); }
-}
-.rm-indicator.is-on {
-  animation: rm-indicator 3.4s ease-in-out infinite;
-}
-@keyframes rm-indicator {
-  0%, 100% { opacity: 0.75; }
-  50% { opacity: 1; filter: drop-shadow(0 0 8px #ffd98f); }
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* ---- Destination hotspots — environmental affordances ---- */
@@ -2140,6 +2134,12 @@ body.immersive {
 .room-hotspot:hover::after,
 .room-hotspot:focus-visible::after {
   opacity: 1;
+}
+/* Faint warm outline as a second, clearer affordance */
+.room-hotspot:hover,
+.room-hotspot:focus-visible {
+  background: #ffdf9e10;
+  box-shadow: inset 0 0 0 2px #ffdf9e66, 0 0 26px #ffcf7840;
 }
 .room-hotspot:focus-visible {
   outline: 2px solid var(--amber);

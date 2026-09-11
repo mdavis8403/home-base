@@ -89,8 +89,8 @@ export const DESTINATIONS: readonly Destination[] = [
     splineObject: "Hit Messages",
     splineCamera: "Cam Messages",
     splinePrefixes: ["Hit Messages", "Desk", "Lamp", "Slot", "Message Indicator", "Stationery", "Letter Tray"],
-    hotspot: { x: 0.03, y: 0.5, w: 0.22, h: 0.38 },
-    camera: { cx: 0.16, cy: 0.62, zoom: 1.85 },
+    hotspot: { x: 0.015, y: 0.33, w: 0.25, h: 0.52 },
+    camera: { cx: 0.14, cy: 0.55, zoom: 1.9 },
   },
   {
     id: "board",
@@ -102,8 +102,8 @@ export const DESTINATIONS: readonly Destination[] = [
     splineObject: "Hit Board",
     splineCamera: "Cam Board",
     splinePrefixes: ["Hit Board", "Board"],
-    hotspot: { x: 0.62, y: 0.34, w: 0.19, h: 0.26 },
-    camera: { cx: 0.71, cy: 0.44, zoom: 1.8 },
+    hotspot: { x: 0.505, y: 0.14, w: 0.18, h: 0.47 },
+    camera: { cx: 0.60, cy: 0.37, zoom: 2.0 },
   },
   {
     id: "mystery",
@@ -115,8 +115,8 @@ export const DESTINATIONS: readonly Destination[] = [
     splineObject: "Hit Mystery",
     splineCamera: "Cam Mystery",
     splinePrefixes: ["Hit Mystery", "Mystery"],
-    hotspot: { x: 0.82, y: 0.33, w: 0.11, h: 0.5 },
-    camera: { cx: 0.86, cy: 0.5, zoom: 1.9 },
+    hotspot: { x: 0.705, y: 0.19, w: 0.15, h: 0.63 },
+    camera: { cx: 0.785, cy: 0.5, zoom: 1.95 },
   },
   {
     id: "story",
@@ -128,8 +128,8 @@ export const DESTINATIONS: readonly Destination[] = [
     splineObject: "Hit Story",
     splineCamera: "Cam Story",
     splinePrefixes: ["Hit Story", "Story", "Chair"],
-    hotspot: { x: 0.28, y: 0.62, w: 0.16, h: 0.28 },
-    camera: { cx: 0.34, cy: 0.72, zoom: 1.75 },
+    hotspot: { x: 0.815, y: 0.5, w: 0.185, h: 0.48 },
+    camera: { cx: 0.9, cy: 0.72, zoom: 1.9 },
   },
 ] as const;
 
@@ -162,7 +162,7 @@ export interface AmbientSpot {
 }
 
 export const AMBIENT_SPOTS: readonly AmbientSpot[] = [
-  { id: "moon", x: 0.47, y: 0.3, label: "the evening moon", effect: "moon" },
-  { id: "lamp", x: 0.13, y: 0.52, label: "the desk lamp", effect: "lamp" },
-  { id: "pillow", x: 0.55, y: 0.56, label: "a soft cushion", effect: "pillow" },
+  { id: "moon", x: 0.405, y: 0.11, label: "the evening moon", effect: "moon" },
+  { id: "lamp", x: 0.135, y: 0.4, label: "the desk lamp", effect: "lamp" },
+  { id: "dog", x: 0.57, y: 0.59, label: "the little dog bed", effect: "pillow" },
 ] as const;
