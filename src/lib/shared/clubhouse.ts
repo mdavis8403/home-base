@@ -60,16 +60,19 @@ export interface Destination {
   camera: Framing;
 }
 
-/** The visible night-sky area of the arched window (0..1 of the artwork). The
- *  moon easter egg's shooting star is clipped to this region. */
-export const WINDOW_SKY: Rect = { x: 0.28, y: 0.06, w: 0.16, h: 0.27 };
+/** A single clean corridor of open blue sky in the arched window — the band of
+ *  uninterrupted sky above the tree line and to the LEFT of the moon (moon sits
+ *  near x≈0.40, y≈0.13). Deliberately narrow so the shooting star never strays
+ *  over the trees, the mountains, or the moon; the star is clipped to this box. */
+export const WINDOW_SKY: Rect = { x: 0.33, y: 0.065, w: 0.062, h: 0.06 };
 
-/** Hand-picked, safe shooting-star paths in 0..100 of the WINDOW_SKY overlay.
- *  All stay inside the sky and clear of the moon (~78%, 18%). */
+/** Hand-authored safe shooting-star paths in 0..100 of the WINDOW_SKY overlay.
+ *  Both are short diagonals confined to the clean upper-left sky: they stay
+ *  above the pine tops (overlay y ≲ 55%) and well left of the moon, which lies
+ *  off the right edge of this corridor. */
 export const STAR_PATHS: readonly { sx: number; sy: number; ex: number; ey: number }[] = [
-  { sx: 20, sy: 12, ex: 60, ey: 58 },
-  { sx: 48, sy: 8, ex: 14, ey: 50 },
-  { sx: 24, sy: 30, ex: 66, ey: 64 },
+  { sx: 12, sy: 24, ex: 66, ey: 58 },
+  { sx: 22, sy: 14, ex: 74, ey: 46 },
 ];
 
 export const HOME_FRAMING: Framing = { cx: 0.5, cy: 0.5, zoom: 1 };
@@ -105,7 +108,7 @@ export const DESTINATIONS: readonly Destination[] = [
     splineCamera: "Cam Messages",
     splinePrefixes: ["Hit Messages", "Desk", "Lamp", "Slot", "Message Indicator", "Stationery", "Letter Tray"],
     hotspot: { x: 0.015, y: 0.33, w: 0.25, h: 0.52 },
-    highlight: { x: 0.02, y: 0.43, w: 0.2, h: 0.31 },
+    highlight: { x: 0.045, y: 0.41, w: 0.14, h: 0.26 },
     camera: { cx: 0.14, cy: 0.55, zoom: 1.9 },
   },
   {
@@ -119,7 +122,7 @@ export const DESTINATIONS: readonly Destination[] = [
     splineCamera: "Cam Board",
     splinePrefixes: ["Hit Board", "Board"],
     hotspot: { x: 0.505, y: 0.14, w: 0.18, h: 0.47 },
-    highlight: { x: 0.518, y: 0.17, w: 0.168, h: 0.36 },
+    highlight: { x: 0.519, y: 0.171, w: 0.165, h: 0.272 },
     camera: { cx: 0.60, cy: 0.37, zoom: 2.0 },
   },
   {
@@ -133,7 +136,7 @@ export const DESTINATIONS: readonly Destination[] = [
     splineCamera: "Cam Mystery",
     splinePrefixes: ["Hit Mystery", "Mystery"],
     hotspot: { x: 0.705, y: 0.19, w: 0.15, h: 0.63 },
-    highlight: { x: 0.732, y: 0.215, w: 0.115, h: 0.45 },
+    highlight: { x: 0.744, y: 0.155, w: 0.09, h: 0.3 },
     camera: { cx: 0.785, cy: 0.5, zoom: 1.95 },
   },
   {
@@ -147,7 +150,7 @@ export const DESTINATIONS: readonly Destination[] = [
     splineCamera: "Cam Story",
     splinePrefixes: ["Hit Story", "Story", "Chair"],
     hotspot: { x: 0.8, y: 0.5, w: 0.2, h: 0.48 },
-    highlight: { x: 0.79, y: 0.55, w: 0.11, h: 0.38 },
+    highlight: { x: 0.851, y: 0.71, w: 0.084, h: 0.08 },
     camera: { cx: 0.9, cy: 0.72, zoom: 1.9 },
   },
 ] as const;

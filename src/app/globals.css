@@ -2172,6 +2172,20 @@ body.immersive {
   opacity: 1;
   transform: translate(-50%, 0);
 }
+/* The storybook sits against the right edge of the artwork, so anchor its label
+   to the LEFT of the book rather than centered-below — that keeps it fully on
+   screen even at the tightest landscape crop. */
+.hotspot-tag-story {
+  left: auto;
+  right: 96%;
+  bottom: auto;
+  top: 50%;
+  transform: translate(6px, -50%);
+}
+.room-hotspot:hover .hotspot-tag-story,
+.room-hotspot:focus-visible .hotspot-tag-story {
+  transform: translate(0, -50%);
+}
 
 /* ---- Ambient discovery ---- */
 .room-ambient {
@@ -2855,20 +2869,20 @@ body.immersive {
 .star-streak {
   position: absolute;
   right: 0;
-  top: -1px;
-  width: clamp(40px, 5vw, 84px);
-  height: 2px;
+  top: -0.6px;
+  width: clamp(26px, 3vw, 48px);
+  height: 1.2px;
   transform-origin: right center;
   transform: rotate(var(--ang));
   background: linear-gradient(
     to right,
     transparent,
-    rgba(180, 205, 255, 0.26) 42%,
-    rgba(222, 236, 255, 0.9) 86%,
+    rgba(180, 205, 255, 0.22) 48%,
+    rgba(222, 236, 255, 0.8) 88%,
     #ffffff
   );
   border-radius: 2px;
-  filter: drop-shadow(0 0 3px rgba(200, 224, 255, 0.85));
+  filter: drop-shadow(0 0 1.5px rgba(200, 224, 255, 0.7));
   opacity: 0;
   animation: star-fade var(--dur) ease-out forwards;
 }
@@ -2883,12 +2897,12 @@ body.immersive {
   position: absolute;
   right: -1px;
   top: 50%;
-  width: clamp(3px, 0.4vw, 5px);
-  height: clamp(3px, 0.4vw, 5px);
+  width: clamp(2px, 0.22vw, 3px);
+  height: clamp(2px, 0.22vw, 3px);
   transform: translate(50%, -50%);
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 0 6px 1px rgba(210, 228, 255, 0.9);
+  box-shadow: 0 0 3px 0.5px rgba(210, 228, 255, 0.8);
 }
 .star-twinkle {
   position: absolute;

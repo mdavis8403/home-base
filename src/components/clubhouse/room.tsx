@@ -67,7 +67,7 @@ export function Room({
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const p = STAR_PATHS[Math.floor(Math.random() * STAR_PATHS.length)];
     const ang = (Math.atan2(p.ey - p.sy, p.ex - p.sx) * 180) / Math.PI;
-    const dur = 950;
+    const dur = 750;
     setStar({ id: Date.now(), ...p, ang, dur, reduce });
     if (starTimer.current) clearTimeout(starTimer.current);
     starTimer.current = setTimeout(
@@ -120,7 +120,7 @@ export function Room({
                 onClick={() => onSelect(d.id)}
               >
                 <span className="hotspot-ring" style={ringStyle} aria-hidden="true">
-                  <span className="hotspot-tag">{d.label}</span>
+                  <span className={`hotspot-tag hotspot-tag-${d.id}`}>{d.label}</span>
                 </span>
               </button>
             );
