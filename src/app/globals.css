@@ -2110,22 +2110,6 @@ body.immersive {
   user-select: none;
   -webkit-user-drag: none;
 }
-/* The real family board laid into the painted frame on the wall, so the
-   zoomed-out room shows the same personal pictures as the Family Board page.
-   Positioned in fractions of the cover box, like the hotspots. */
-.room-board-inlay {
-  position: absolute;
-  left: 49%;
-  top: 19.3%;
-  width: 21%;
-  height: 21%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-  box-shadow: 0 8px 22px #0a0f14aa;
-  user-select: none;
-  -webkit-user-drag: none;
-}
 
 /* ---- Destination hotspots — environmental affordances ---- */
 .room-hotspot {

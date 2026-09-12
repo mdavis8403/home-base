@@ -94,17 +94,6 @@ export function Room({
             fetchPriority="high"
             draggable={false}
           />
-          {/* The family wall shows our REAL board — the same personal pictures the
-              Family Board page opens into — laid into the painted frame so the
-              zoomed-out room matches the board you zoom in to. */}
-          {/* eslint-disable-next-line @next/next/no-img-element -- full-bleed board art must not be re-cropped by the image optimizer. */}
-          <img
-            className="room-board-inlay"
-            src="/images/family-board-bg.png"
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-          />
           {/* Destination hotspots — generous click target, tight visible highlight */}
           {DESTINATIONS.map((d) => {
             const ringStyle = {
