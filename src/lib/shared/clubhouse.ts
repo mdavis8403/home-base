@@ -121,8 +121,8 @@ export const DESTINATIONS: readonly Destination[] = [
     splineObject: "Hit Board",
     splineCamera: "Cam Board",
     splinePrefixes: ["Hit Board", "Board"],
-    hotspot: { x: 0.505, y: 0.14, w: 0.18, h: 0.47 },
-    highlight: { x: 0.519, y: 0.171, w: 0.165, h: 0.272 },
+    hotspot: { x: 0.485, y: 0.14, w: 0.215, h: 0.47 },
+    highlight: { x: 0.495, y: 0.198, w: 0.2, h: 0.2 },
     camera: { cx: 0.60, cy: 0.37, zoom: 2.0 },
   },
   {
