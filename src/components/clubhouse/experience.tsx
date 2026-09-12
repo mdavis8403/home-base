@@ -173,25 +173,18 @@ export function ClubhouseExperience({
         </div>
       </header>
 
-      {/* Accessible wayfinding — never the only way to reach a place. */}
-      <nav className="clubhouse-ways" aria-label="Places in the clubhouse">
-        <p className="clubhouse-hint" aria-hidden="true">
-          Tap a place — or choose one here.
-        </p>
+      {/* The clubhouse image is the navigation. This list is the screen-reader /
+          keyboard equivalent — present and operable, but not visually shown. */}
+      <nav className="visually-hidden" aria-label="Places in the clubhouse">
         <ul>
           {DESTINATIONS.map((d) => (
             <li key={d.id}>
               <button
-                className={`way way-${d.id} ${d.id === "messages" && unread > 0 ? "way-waiting" : ""}`}
                 onClick={() => select(d.id)}
                 aria-current={view === d.id ? "true" : undefined}
               >
-                <span className="way-label">{d.label.replace(/^The /, "")}</span>
-                {d.id === "messages" && unread > 0 && (
-                  <span className="way-badge" aria-label={`${unread} waiting for you`}>
-                    {unread}
-                  </span>
-                )}
+                {d.label}
+                {d.id === "messages" && unread > 0 ? ` — ${unread} waiting` : ""}
               </button>
             </li>
           ))}

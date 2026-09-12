@@ -2116,67 +2116,61 @@ body.immersive {
   position: absolute;
   border: 0;
   padding: 0;
+  margin: 0;
   background: transparent;
-  border-radius: 22px;
   cursor: pointer;
-  transition: box-shadow 0.4s var(--ease-cine), background 0.4s var(--ease-cine);
+  overflow: visible;
 }
-.room-hotspot::after {
-  content: "";
+.room-hotspot:focus-visible {
+  outline: none; /* the focus indicator is drawn on the tight ring instead */
+}
+/* Tight visible highlight that hugs the actual object */
+.hotspot-ring {
   position: absolute;
-  inset: -4%;
-  border-radius: inherit;
-  background: radial-gradient(closest-side, #ffdf9e33, transparent 72%);
-  opacity: 0;
-  transition: opacity 0.45s var(--ease-cine);
+  border-radius: 16px;
   pointer-events: none;
+  background: transparent;
+  transition: box-shadow 0.35s var(--ease-cine), background 0.35s var(--ease-cine);
 }
-.room-hotspot:hover::after,
-.room-hotspot:focus-visible::after {
-  opacity: 1;
-}
-/* Faint warm outline as a second, clearer affordance */
-.room-hotspot:hover,
-.room-hotspot:focus-visible {
+.room-hotspot:hover .hotspot-ring,
+.room-hotspot:focus-visible .hotspot-ring {
   background: #ffdf9e10;
-  box-shadow: inset 0 0 0 2px #ffdf9e66, 0 0 26px #ffcf7840;
+  box-shadow: inset 0 0 0 1.5px #c39a5ccc, 0 0 22px #ffcf7838;
 }
-.room-hotspot:focus-visible {
-  outline: 2px solid var(--amber);
-  outline-offset: 4px;
+.room-hotspot:focus-visible .hotspot-ring {
+  box-shadow: inset 0 0 0 2px var(--amber), 0 0 22px #ffcf7855;
+}
+.room-hotspot.is-waiting .hotspot-ring {
+  animation: hotspot-breathe 3.6s ease-in-out infinite;
+}
+@keyframes hotspot-breathe {
+  0%, 100% { box-shadow: inset 0 0 0 1.5px #c39a5c55, 0 0 10px #ffcf7822; }
+  50% { box-shadow: inset 0 0 0 1.5px #c39a5ca0, 0 0 20px #ffcf7844; }
 }
 .hotspot-tag {
   position: absolute;
   left: 50%;
-  bottom: -6px;
+  bottom: -12px;
   transform: translate(-50%, 10px);
   white-space: nowrap;
-  padding: 7px 14px;
+  padding: 6px 13px;
   border-radius: 999px;
   background: #12232abf;
   border: 1px solid #ffffff22;
   color: var(--paper);
   font-family: var(--font-display);
-  font-size: clamp(0.72rem, 1.5vw, 0.95rem);
+  font-size: clamp(0.72rem, 1.4vw, 0.92rem);
   letter-spacing: 0.3px;
   backdrop-filter: blur(6px);
   box-shadow: 0 8px 24px #04101488;
   opacity: 0;
-  transition: opacity 0.35s var(--ease-cine), transform 0.35s var(--ease-cine);
+  transition: opacity 0.3s var(--ease-cine), transform 0.3s var(--ease-cine);
   pointer-events: none;
 }
 .room-hotspot:hover .hotspot-tag,
 .room-hotspot:focus-visible .hotspot-tag {
   opacity: 1;
   transform: translate(-50%, 0);
-}
-.room-hotspot.is-waiting::after {
-  opacity: 0.55;
-  animation: hotspot-breathe 3.6s ease-in-out infinite;
-}
-@keyframes hotspot-breathe {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.85; }
 }
 
 /* ---- Ambient discovery ---- */
@@ -2712,8 +2706,10 @@ body.immersive {
   position: absolute;
   left: 50%;
   top: 50%;
+  /* Exact 1672:941 box, sized to cover the viewport (no distortion, centered). */
   width: max(100vw, calc(100svh * 1672 / 941));
-  height: max(100svh, calc(100vw * 941 / 1672));
+  aspect-ratio: 1672 / 941;
+  height: auto;
   transform: translate(-50%, -50%);
 }
 .mystery-shelf-art {
@@ -2835,4 +2831,82 @@ body.immersive {
     height: calc(100vw * 941 / 1672);
     transform: translateY(-50%);
   }
+}
+
+/* ---- Moon easter egg: a single shooting star clipped to the window sky ---- */
+.sky-overlay {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.star-mover {
+  position: absolute;
+  left: var(--sx);
+  top: var(--sy);
+  width: 0;
+  height: 0;
+  animation: star-move var(--dur) cubic-bezier(0.35, 0, 0.5, 1) forwards;
+}
+@keyframes star-move {
+  from { left: var(--sx); top: var(--sy); }
+  to { left: var(--ex); top: var(--ey); }
+}
+.star-streak {
+  position: absolute;
+  right: 0;
+  top: -1px;
+  width: clamp(40px, 5vw, 84px);
+  height: 2px;
+  transform-origin: right center;
+  transform: rotate(var(--ang));
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(180, 205, 255, 0.26) 42%,
+    rgba(222, 236, 255, 0.9) 86%,
+    #ffffff
+  );
+  border-radius: 2px;
+  filter: drop-shadow(0 0 3px rgba(200, 224, 255, 0.85));
+  opacity: 0;
+  animation: star-fade var(--dur) ease-out forwards;
+}
+@keyframes star-fade {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  66% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.star-streak::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  width: clamp(3px, 0.4vw, 5px);
+  height: clamp(3px, 0.4vw, 5px);
+  transform: translate(50%, -50%);
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 6px 1px rgba(210, 228, 255, 0.9);
+}
+.star-twinkle {
+  position: absolute;
+  width: clamp(4px, 0.6vw, 7px);
+  height: clamp(4px, 0.6vw, 7px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #eef4ff;
+  box-shadow: 0 0 8px 2px rgba(210, 228, 255, 0.85);
+  opacity: 0;
+  animation: star-twinkle 300ms ease-out forwards;
+}
+@keyframes star-twinkle {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  40% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.2); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .star-mover,
+  .star-streak { animation: none !important; }
 }

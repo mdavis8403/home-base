@@ -31,8 +31,11 @@ test("Mia can navigate placeholders and is protected from parent settings", asyn
   expect(await page.evaluate(() => document.cookie)).not.toContain(
     "hb-session",
   );
-  // The clubhouse glides the camera toward the story nook, then opens the route.
-  await page.getByRole("button", { name: "storybook", exact: true }).click();
+  // The clubhouse image is the navigation; the screen-reader/keyboard nav list
+  // reaches the same route. Activate it the way assistive tech does.
+  await page
+    .getByRole("button", { name: "The storybook", exact: true })
+    .dispatchEvent("click");
   await expect(page).toHaveURL(`${origin}/our-story`);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Our Story");
   await expect(
