@@ -16,11 +16,11 @@ export default async function ParentSettings() {
       <section className="settings-panel">
         <h2>Family Board</h2>
         <p>
-          Choose prompt categories, add your own prompts, and set the family
-          reveal time.
+          Prompt categories, your own prompts, and the family reveal time are
+          moving into Parent Settings in a later chapter.
         </p>
         <Link className="secondary-button" href="/family-board">
-          Open Family Board → Parent touches
+          Open Family Board
         </Link>
       </section>
       <section className="settings-panel">

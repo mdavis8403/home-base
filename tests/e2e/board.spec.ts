@@ -30,6 +30,26 @@ async function post(page: Page, path: string, data: unknown) {
     data,
   });
 }
+// The board owns a fixed viewport: force the type, reload, and let auto-refresh settle.
+async function forceType(page: Page, type: "question" | "photo" | "drawing") {
+  await db.query(
+    "UPDATE board_prompts SET prompt_type=$1,prompt_text=$2 WHERE id=(SELECT prompt_id FROM board_days LIMIT 1)",
+    [
+      type,
+      type === "question"
+        ? "What is the silliest thing that happened today?"
+        : type === "photo"
+          ? "Find a color you would put in our family theme park."
+          : "Draw a tiny home for a very big dragon.",
+    ],
+  );
+  // Keep the reveal in the future so the board is deterministically composable.
+  await db.query(
+    "UPDATE board_days SET reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','+2 hours')",
+  );
+  await page.reload();
+  await expect(page.locator(".prompt-paper")).toBeVisible();
+}
 async function snapshot(page: Page, name: string, project: string) {
   await page.evaluate(() => {
     (document.activeElement as HTMLElement | null)?.blur();
@@ -42,12 +62,87 @@ async function snapshot(page: Page, name: string, project: string) {
     fullPage: true,
   });
 }
+// The corkboard must never body-scroll; Today's Board must fit the stage on its own.
+async function expectFixedBoard(page: Page) {
+  const m = await page.evaluate(() => {
+    const stage = document.querySelector<HTMLElement>(".board-stage")!;
+    return {
+      docHeight: document.documentElement.scrollHeight,
+      docWidth: document.documentElement.scrollWidth,
+      innerHeight: window.innerHeight,
+      innerWidth: window.innerWidth,
+      stageScroll: stage.scrollHeight,
+      stageClient: stage.clientHeight,
+    };
+  });
+  // No vertical or horizontal body overflow.
+  expect(m.docHeight).toBeLessThanOrEqual(m.innerHeight + 1);
+  expect(m.docWidth).toBeLessThanOrEqual(m.innerWidth + 1);
+  // Today's Board content fits the stage without an internal scroll.
+  expect(m.stageScroll).toBeLessThanOrEqual(m.stageClient + 1);
+}
 test.beforeEach(async () => {
   await db.query(
     'DELETE FROM board_responses;DELETE FROM media_assets WHERE related_entity_type=\'board\';DELETE FROM board_days;DELETE FROM board_prompts;DELETE FROM auth_rate_limits;UPDATE families SET board_reveal_time=\'23:59\',board_categories=\'["silly","imaginative","reflective","family planning"]\';',
   );
 });
 test.afterAll(() => db.end());
+test("the corkboard is fixed: nav, tagline, and each activity fit the viewport", async ({
+  page,
+}, info) => {
+  await login(page, "mia");
+  // Only two board views; the parent and refresh controls are gone.
+  await expect(
+    page.getByRole("button", { name: "Today’s Board", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Past Boards", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Parent touches" })).toHaveCount(
+    0,
+  );
+  await expect(page.getByRole("button", { name: "Refresh board" })).toHaveCount(
+    0,
+  );
+  // The tagline is pinned to the bottom in the exact configured wording.
+  const tagline = page.getByText("A little silly. A little sweet. Entirely Us.");
+  await expect(tagline).toBeVisible();
+  await expect(tagline).toBeInViewport();
+  // iPad landscape (primary), then laptop/desktop.
+  for (const size of [
+    { width: 1194, height: 834 },
+    { width: 1366, height: 768 },
+  ]) {
+    await page.setViewportSize(size);
+    // Question: prompt + answer + submit all visible without scrolling.
+    await forceType(page, "question");
+    await expect(page.locator(".prompt-paper h2")).toBeInViewport();
+    await expect(page.getByLabel("Your answer")).toBeInViewport();
+    await expect(
+      page.getByRole("button", { name: "Tuck mine away" }),
+    ).toBeInViewport();
+    await expect(tagline).toBeInViewport();
+    await expectFixedBoard(page);
+    // Photo: prompt + Choose Photo both visible without scrolling.
+    await forceType(page, "photo");
+    await expect(page.locator(".prompt-paper h2")).toBeInViewport();
+    await expect(page.getByLabel("Choose your photo")).toBeInViewport();
+    await expectFixedBoard(page);
+    // Drawing: Start Drawing visible without scrolling.
+    await forceType(page, "drawing");
+    await expect(page.locator(".prompt-paper h2")).toBeInViewport();
+    await expect(
+      page.getByRole("button", { name: "Start Drawing" }),
+    ).toBeInViewport();
+    await expectFixedBoard(page);
+  }
+  // Capture the primary target (iPad landscape) for visual review.
+  if (info.project.name === "ipad") {
+    await page.setViewportSize({ width: 1194, height: 834 });
+    await forceType(page, "question");
+    await snapshot(page, "landscape-question", info.project.name);
+  }
+});
 test("three private answers reveal together and become a revisitable memory", async ({
   page,
   browser,
@@ -55,10 +150,11 @@ test("three private answers reveal together and become a revisitable memory", as
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await login(page, "mia");
+  await forceType(page, "question");
   await db.query(
     "UPDATE board_days SET reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','+1 hour')",
   );
-  await page.getByRole("button", { name: "Refresh board" }).click();
+  await page.reload();
   await expect(
     page.getByRole("button", { name: "Parent touches" }),
   ).toHaveCount(0);
@@ -77,7 +173,7 @@ test("three private answers reveal together and become a revisitable memory", as
   await expect(
     mom.getByText("Yours is tucked away.", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Refresh board" }).click();
+  await page.reload();
   await expect(page.getByText("Probably Something With Steak")).toHaveCount(0);
   const privateData = await (
     await page.context().request.get(origin + "/api/board")
@@ -105,9 +201,7 @@ test("three private answers reveal together and become a revisitable memory", as
     [board.id],
   );
   await page.reload();
-  await expect(
-    page.getByText("Photo Drop", { exact: false }).first(),
-  ).toBeVisible();
+  await expect(page.locator(".prompt-paper")).toBeVisible();
   await page.getByRole("button", { name: "Past Boards", exact: true }).click();
   await expect(page.locator(".history-board")).toHaveCount(1);
   await snapshot(page, "history", info.project.name);
@@ -116,23 +210,31 @@ test("three private answers reveal together and become a revisitable memory", as
   await expect(
     page.getByRole("button", { name: "Tuck mine away" }),
   ).toHaveCount(0);
+  // Back out to the full history, still inside the fixed board world.
+  await page.getByRole("button", { name: "← All Past Boards" }).click();
+  await expect(page.locator(".history-board")).toHaveCount(1);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+  // The clubhouse return is still one tap away.
+  await expect(
+    page.getByRole("link", { name: "THE CLUBHOUSE" }),
+  ).toHaveAttribute("href", "/home");
   expect(errors).toEqual([]);
   await momContext.close();
   await dadContext.close();
 });
-test("time-based reveal opens automatically with one answer and protects parent controls", async ({
+test("time-based reveal opens automatically, and parent APIs stay protected", async ({
   page,
 }, info) => {
   await login(page, "mom");
+  await forceType(page, "question");
   await db.query(
     "UPDATE board_days SET reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','+1 hour')",
   );
-  await page.getByRole("button", { name: "Refresh board" }).click();
+  await page.reload();
   await page.getByLabel("Your answer").fill("A restaurant for dragons");
   await page.getByRole("button", { name: "Tuck mine away" }).click();
   await expect(
@@ -145,31 +247,47 @@ test("time-based reveal opens automatically with one answer and protects parent 
     page.getByRole("heading", { name: "The surprise is open!" }),
   ).toBeVisible({ timeout: 15000 });
   await expect(page.locator(".board-answer")).toHaveCount(1);
-  await page.getByRole("button", { name: "Parent touches" }).click();
-  await page
-    .getByLabel("Your custom prompt")
-    .fill("What would our sofa name its spaceship?");
-  await page.getByRole("button", { name: "Add custom prompt" }).click();
-  await expect(page.locator("main").getByRole("alert")).toContainText(
-    "confirm the administration key",
+  await snapshot(page, "revealed-single", info.project.name);
+  // Parent touches no longer live on the family-facing board.
+  await expect(page.getByRole("button", { name: "Parent touches" })).toHaveCount(
+    0,
   );
-  await page.getByLabel("Administration key").fill("test-admin-key-only");
-  await page
-    .getByRole("button", { name: "Confirm administration key" })
-    .click();
-  await expect(page.getByRole("status")).toContainText(
-    "Administration key confirmed",
-  );
-  await page.getByRole("button", { name: "Add custom prompt" }).click();
-  await expect(page.locator(".custom-prompts")).toContainText(
-    "What would our sofa name its spaceship?",
-  );
-  await page.getByLabel("Reveal time", { exact: true }).fill("20:00");
-  await page.getByRole("button", { name: "Save board preferences" }).click();
-  await expect(page.getByRole("status")).toContainText(
-    "Saved for the next board",
-  );
-  await snapshot(page, "parent-settings", info.project.name);
+  // Custom prompts still require an unlocked parent session (backend intact).
+  const unverified = await post(page, "prompt", {
+    id: crypto.randomUUID(),
+    type: "question",
+    category: "silly",
+    text: "What would our sofa name its spaceship?",
+  });
+  expect(unverified.status()).toBe(403);
+  const reauth = await page.context().request.post(origin + "/api/auth/reauth", {
+    headers: { Origin: origin },
+    data: { adminKey: "test-admin-key-only" },
+  });
+  expect(reauth.ok()).toBe(true);
+  const promptId = crypto.randomUUID();
+  const added = await post(page, "prompt", {
+    id: promptId,
+    type: "question",
+    category: "silly",
+    text: "What would our sofa name its spaceship?",
+  });
+  expect(added.ok()).toBe(true);
+  const saved = await post(page, "settings", {
+    revealTime: "20:00",
+    categories: ["silly", "imaginative"],
+  });
+  expect(saved.ok()).toBe(true);
+  const data = await (
+    await page.context().request.get(origin + "/api/board")
+  ).json();
+  expect(data.data.revealTime).toBe("20:00");
+  expect(
+    data.data.customPrompts.some(
+      (p: { id: string }) => p.id === promptId,
+    ),
+  ).toBe(true);
+  // Cross-origin writes are still rejected.
   const csrf = await page
     .context()
     .request.post(origin + "/api/board/settings", {
@@ -178,23 +296,11 @@ test("time-based reveal opens automatically with one answer and protects parent 
     });
   expect(csrf.status()).toBe(403);
 });
-test("photo preview and shared drawing canvas, optional gentle timer, private R2 storage", async ({
+test("photo preview and the drawing overlay both keep the board fixed", async ({
   page,
 }, info) => {
   await login(page, "mia");
-  const setType = async (type: string) => {
-    await db.query(
-      "UPDATE board_prompts SET prompt_type=$1,prompt_text=$2 WHERE id=(SELECT prompt_id FROM board_days LIMIT 1)",
-      [
-        type,
-        type === "photo"
-          ? "Take a picture of something that made you smile."
-          : "Draw a tiny home for a very big dragon.",
-      ],
-    );
-    await page.reload();
-  };
-  await setType("photo");
+  await forceType(page, "photo");
   await page
     .getByLabel("Choose your photo")
     .setInputFiles("tests/fixtures/note.png");
@@ -204,11 +310,18 @@ test("photo preview and shared drawing canvas, optional gentle timer, private R2
   await expect(
     page.getByAltText("A little picture to make us smile"),
   ).toBeVisible();
+  // On iPad/laptop, preview + description + submit fit without any scroll;
+  // the narrower phone may use the stage's contained scroll.
+  if (info.project.name !== "phone") {
+    await expect(
+      page.getByRole("button", { name: "Tuck mine away" }),
+    ).toBeInViewport();
+  }
+  await snapshot(page, "photo-preview", info.project.name);
   await page.getByRole("button", { name: "Tuck mine away" }).click();
   await expect(
     page.getByText("Yours is tucked away.", { exact: true }),
   ).toBeVisible();
-  await snapshot(page, "photo-preview", info.project.name);
   const child = await post(page, "settings", {
     revealTime: "19:00",
     categories: ["silly"],
@@ -217,7 +330,11 @@ test("photo preview and shared drawing canvas, optional gentle timer, private R2
   await db.query(
     "DELETE FROM board_responses; DELETE FROM media_assets WHERE related_entity_type='board'",
   );
-  await setType("drawing");
+  await forceType(page, "drawing");
+  // The doodle canvas lives in a focused overlay, not on the board itself.
+  await expect(page.locator("canvas")).toHaveCount(0);
+  await page.getByRole("button", { name: "Start Drawing" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.getByLabel("Play with a 60-second timer")).toBeChecked();
   await page.clock.install();
   await page.getByRole("button", { name: "Start timer", exact: true }).click();
@@ -239,6 +356,8 @@ test("photo preview and shared drawing canvas, optional gentle timer, private R2
   ).toBeEnabled();
   await snapshot(page, "drawing", info.project.name);
   await page.getByRole("button", { name: "Use this drawing" }).click();
+  // Saving the drawing returns to the board (overlay closes) with a preview.
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await page
     .getByLabel("Describe your picture")
     .fill("A very small dragon house");

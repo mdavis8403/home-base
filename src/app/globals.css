@@ -1000,163 +1000,165 @@ input::file-selector-button {
 }
 
 /* Family Board: paper prompts and a shared memory shelf within the clubhouse. */
-.board-room {
-  padding: 44px 0 28px;
-}
-.board-emblem {
-  position: relative;
-  width: 140px;
-  height: 110px;
-  flex-shrink: 0;
-}
-.board-emblem span,
-.board-emblem i,
-.board-emblem b {
-  position: absolute;
-  display: grid;
-  place-items: center;
-  width: 70px;
-  height: 82px;
-  border-radius: 5px;
-  font:
-    42px Georgia,
-    serif;
-  box-shadow: 0 8px 20px #071d2840;
-}
-.board-emblem span {
-  background: var(--color-gold);
-  color: var(--color-navy);
-  left: 0;
-  top: 8px;
-  transform: rotate(-14deg);
-}
-.board-emblem i {
-  background: var(--color-leaf);
-  color: var(--color-navy);
-  left: 38px;
-  top: 0;
-  transform: rotate(4deg);
-}
-.board-emblem b {
-  background: var(--color-coral);
-  color: var(--color-navy);
-  right: 0;
-  top: 26px;
-  transform: rotate(15deg);
-}
 .board-loading {
   padding: 40px 0;
 }
+/* One activity area, centered in the stage; grows to results width when revealed. */
 .board-activity {
-  padding-top: 32px;
+  margin: auto;
+  width: 100%;
+  max-width: clamp(340px, 54vw, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.6vh, 18px);
+}
+.board-activity-revealed {
+  max-width: min(1040px, 96vw);
 }
 .prompt-paper {
   position: relative;
-  padding: 36px 44px 38px;
+  padding: clamp(18px, 2.6vh, 32px) clamp(22px, 3vw, 44px)
+    clamp(20px, 2.8vh, 34px);
   background: var(--color-cream);
   color: var(--color-navy);
   border-radius: 4px 25px 25px 25px;
   border-top: 6px solid var(--color-gold);
-  box-shadow: 0 16px 35px #081b2433;
+  box-shadow: 0 16px 35px #081b2455;
 }
 .board-type {
   color: #536453;
-  font-size: 14px;
-  margin: 20px 0 14px;
+  font-size: 13px;
+  margin: 10px 0 8px;
   font-weight: 700;
 }
 .board-type span {
-  font-size: 24px;
+  font-size: 22px;
   vertical-align: middle;
   margin-right: 6px;
 }
 .prompt-paper h2 {
-  max-width: 730px;
-  font-size: clamp(29px, 4vw, 44px);
-  line-height: 1.22;
-  letter-spacing: -0.6px;
+  font-size: clamp(22px, 3.2vh, 38px);
+  line-height: 1.18;
+  letter-spacing: -0.4px;
 }
-.prompt-paper > p:last-of-type {
-  max-width: 650px;
+.prompt-hint {
+  margin-top: 10px;
   color: #53615b;
   font-size: 14px;
 }
-.paper-rule {
-  margin: 26px 0 18px;
-  width: 80px;
-  border-top: 1px solid #ab9874;
-}
 .paper-star {
   position: absolute;
-  bottom: 24px;
-  right: 26px;
-  font-size: 44px;
-  color: #866b36;
+  top: 18px;
+  right: 22px;
+  font-size: 32px;
+  color: #866b3688;
 }
-.reveal-note {
+/* Submitted / revealed status woven into the prompt paper. */
+.board-state {
+  margin-top: clamp(10px, 1.8vh, 18px);
+}
+.board-state-line {
   display: flex;
   align-items: center;
-  gap: 22px;
-  padding: 28px 6px;
+  gap: 10px;
 }
-.reveal-note > span {
+.board-state-mark {
   color: var(--color-gold);
-  font-size: 36px;
+  font-size: clamp(20px, 2.6vh, 28px);
 }
-.reveal-note h3 {
-  font-size: 24px;
-  margin-bottom: 6px;
+.board-state h3 {
+  font-size: clamp(19px, 2.6vh, 25px);
+  outline: none;
 }
-.reveal-note p {
-  color: var(--muted);
+.board-state-sub {
+  margin-top: 4px;
+  color: #53615b;
   font-size: 14px;
-  max-width: 680px;
 }
+/* Response composer, integrated onto the cream paper (not a separate dark card). */
 .board-response {
-  max-width: 780px;
-  padding: 26px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: #213944;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.6vh, 16px);
+  margin-top: clamp(12px, 1.8vh, 18px);
 }
 .board-response fieldset {
   min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
 }
-.board-response legend {
-  font:
-    26px Georgia,
-    serif;
-  margin-bottom: 18px;
+.board-field {
+  display: block;
 }
-.board-response textarea,
-.board-settings textarea,
-.board-settings select {
+.board-field .field-label {
+  display: block;
+  font-weight: 700;
+  color: #4a5a4a;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+.board-response textarea {
   display: block;
   width: 100%;
-  border: 1px solid #849398;
+  border: 1px solid #c3b088;
   border-radius: 10px;
-  padding: 14px;
-  background: #192f3a;
-  color: var(--color-cream);
+  padding: 12px;
+  background: #fffdf6;
+  color: var(--color-navy);
   resize: vertical;
-  margin-top: 8px;
+  font:
+    16px/1.5 Georgia,
+    serif;
 }
-.board-response textarea::placeholder,
-.board-settings textarea::placeholder {
-  color: #bdc8c8;
+.board-response textarea::placeholder {
+  color: #8a8574;
 }
-.board-response .button {
-  justify-self: start;
+.board-response-note {
+  color: #53615b;
+  font-size: 13px;
+}
+.board-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+}
+.board-pick .button {
+  min-width: 210px;
+  justify-content: center;
 }
 .board-response .file-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--color-navy);
+  font-weight: 700;
+  font-size: 14px;
+}
+.board-response .file-picker .muted {
+  font-weight: 400;
+  color: #6a7169;
+}
+.board-response .media-preview {
   display: grid;
-  gap: 18px;
+  gap: 12px;
+}
+.board-response .media-preview img {
+  width: 100%;
+  max-height: clamp(120px, 20vh, 240px);
+  object-fit: contain;
+  border-radius: 12px;
+  background: #fffdf6;
 }
 .timer-choice {
   display: flex;
   align-items: center;
   gap: 12px;
   min-height: 48px;
+}
+/* Prompt-category checkboxes read as lowercase tags. */
+.board-settings .timer-choice {
   text-transform: capitalize;
 }
 .timer-choice input {
@@ -1171,40 +1173,121 @@ input::file-selector-button {
     serif;
   color: var(--color-gold);
 }
+/* Result notes: three at reveal, or a single centered private preview. */
 .board-answers {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-  margin-bottom: 28px;
+  gap: clamp(10px, 1.4vw, 18px);
+  width: 100%;
+}
+.board-answers[data-count="1"] {
+  grid-template-columns: minmax(0, 440px);
+  justify-content: center;
+}
+.board-answers-empty {
+  color: #f2e9d3;
+  text-shadow: 0 2px 8px #000b;
 }
 .board-answer {
-  padding-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  max-height: 48vh;
+  padding-bottom: 16px;
 }
 .board-answer .note-top {
-  padding: 20px 18px 12px;
+  padding: 16px 18px 10px;
   gap: 10px;
 }
 .board-answer .note-content {
-  padding: 8px 18px 0;
+  padding: 6px 18px 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .board-answer .note-label {
   font-size: 9px;
   letter-spacing: 1px;
 }
 .board-answer .note-body {
-  font-size: 21px;
+  font-size: 18px;
   margin-bottom: 0;
 }
+/* Drawing takes over the viewport as a focused overlay, then returns to board. */
+.drawing-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(10px, 2vw, 24px);
+  background: #0a1418ee;
+}
+.drawing-overlay-inner {
+  width: min(920px, 96vw);
+  max-height: 94svh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  display: grid;
+  gap: 12px;
+  padding: clamp(14px, 3vw, 28px);
+  border: 1px solid #ffffff1c;
+  border-radius: 20px;
+  background: radial-gradient(
+    140% 90% at 50% 0%,
+    #23313b 0%,
+    #182831 60%,
+    #101e24 100%
+  );
+  box-shadow: 0 30px 90px #030b0eb0;
+  color: var(--color-cream);
+}
+.drawing-overlay-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.drawing-overlay-head h2 {
+  font-size: clamp(20px, 3vw, 30px);
+  outline: none;
+}
+.drawing-overlay .text-button {
+  color: #efe4cb;
+}
+/* Cap the canvas so the whole workspace (tools + save) fits short viewports. */
+.drawing-overlay .doodle-box canvas {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: clamp(200px, 39vh, 440px);
+  aspect-ratio: 8 / 5;
+  margin: 0 auto;
+}
+.drawing-overlay .message-controls {
+  margin: 0;
+}
+.drawing-overlay .doodle-box {
+  display: grid;
+  gap: 10px;
+}
 .board-history {
-  padding-top: 36px;
+  width: 100%;
+  max-width: min(760px, 94vw);
+  /* Centered in the open middle so the header never sits over perimeter photos. */
+  margin: auto;
+  padding: clamp(8px, 2vh, 20px) 0;
 }
 .board-history h2 {
-  font-size: 36px;
-  margin: 12px 0;
+  font-size: 32px;
+  margin: 10px 0;
 }
 .board-history > p:not(.eyebrow) {
-  color: var(--muted);
-  margin-bottom: 28px;
+  color: #f2e9d3;
+  margin-bottom: 22px;
+}
+.board-immersive .board-history .eyebrow {
+  text-shadow: 0 2px 10px #000c;
 }
 .history-list {
   display: grid;
@@ -1275,37 +1358,29 @@ input::file-selector-button {
 .custom-prompts li {
   padding: 12px 0;
 }
-@media (max-width: 850px) {
-  .board-answers {
+@media (max-width: 900px) {
+  /* Phone / narrow: one column of result notes, each free to scroll internally. */
+  .board-answers,
+  .board-answers[data-count="1"] {
     grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+  .board-answer {
+    max-height: none;
   }
   .board-answer .note-body {
-    font-size: 23px;
+    font-size: 19px;
   }
 }
 @media (max-width: 700px) {
-  .board-room {
-    padding-top: 32px;
-  }
-  .board-emblem {
-    display: none;
-  }
-  .board-room h1 {
-    font-size: 42px;
-  }
-  .prompt-paper {
-    padding: 25px 24px 32px;
+  .board-nav .text-button {
+    padding: 6px 12px;
+    font-size: 14px;
   }
   .paper-star {
     display: none;
   }
-  .reveal-note {
-    gap: 14px;
-    align-items: flex-start;
-  }
-  .board-response {
-    padding: 18px;
-  }
+  .board-pick .button,
   .board-response .button {
     width: 100%;
   }
@@ -2659,23 +2734,27 @@ body.immersive {
 }
 .mystery-bar-title > span { color: var(--amber); }
 
-/* ---- Family Board: live content over the open corkboard center ---- */
-.board-center {
+/* ---- Family Board: a fixed corkboard shell that never body-scrolls ----
+   nav sits just under the header, the tagline is pinned to the bottom, and
+   the stage between them is the one contained scroll region (Past Boards only;
+   Today's Board is composed to fit the viewport on its own). */
+.board-shell {
   position: absolute;
-  left: 50%;
-  top: 12.5%;
-  transform: translateX(-50%);
-  width: clamp(320px, 44vw, 640px);
-  max-height: 76svh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  inset: 0;
   z-index: 3;
-  padding: 4px 4px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(env(safe-area-inset-top) + 56px) clamp(12px, 3vw, 28px)
+    calc(env(safe-area-inset-bottom) + 8px);
+  pointer-events: none;
 }
-.board-immersive .board-room { padding: 0; max-width: none; }
-.board-immersive .messages-heading { display: none; }
-.board-immersive .message-tabs {
+.board-shell > * {
+  pointer-events: auto;
+}
+.board-nav {
+  flex: none;
+  display: flex;
   justify-content: center;
   gap: 4px;
   flex-wrap: wrap;
@@ -2683,37 +2762,64 @@ body.immersive {
   border-radius: 999px;
   background: #0b1a1fdd;
   backdrop-filter: blur(8px);
-  padding: 5px 8px;
-  margin: 0 auto 16px;
-  width: fit-content;
-  max-width: 100%;
+  padding: 4px 8px;
+  margin-bottom: clamp(8px, 1.6vh, 18px);
   box-shadow: 0 12px 34px #04101499;
 }
-.board-immersive .message-tabs .text-button {
+.board-nav .text-button {
   color: #efe4cb;
   min-height: 40px;
-  padding: 6px 12px;
+  padding: 6px 16px;
+  text-decoration: none;
+  border: 0;
+  border-radius: 999px;
 }
-.board-immersive .reveal-note h3,
-.board-immersive .reveal-note p,
-.board-immersive .messages-footer,
-.board-immersive .board-loading {
-  text-shadow: 0 2px 8px #000b;
-}
-.board-immersive .message-tabs [aria-pressed="true"] {
+.board-nav [aria-pressed="true"] {
   color: var(--amber);
-  border-color: var(--amber);
+}
+.board-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.board-tagline {
+  flex: none;
+  text-align: center;
+  color: #f2e9d3;
+  font:
+    16px Georgia,
+    serif;
+  text-shadow: 0 2px 8px #000b;
+  margin-top: clamp(6px, 1.4vh, 14px);
+}
+.board-back {
+  align-self: flex-start;
+  color: #f2e9d3;
+  text-shadow: 0 2px 8px #000b;
+  margin-bottom: 8px;
 }
 .board-immersive .board-loading,
+.board-stage > .form-error,
 .board-immersive .board-history .eyebrow,
 .board-immersive .board-history h2,
-.board-immersive .board-history > p,
-.board-immersive .messages-footer,
-.board-immersive .reveal-note h3,
-.board-immersive .reveal-note p {
+.board-immersive .board-history > p {
   color: #f2e9d3;
+  text-shadow: 0 2px 8px #000b;
 }
-.board-immersive .messages-footer { text-align: center; }
+.board-loading,
+.board-stage > .form-error {
+  margin: auto;
+}
+/* Errors on the cream paper stay dark and legible. */
+.board-response .form-error {
+  color: #9c2f24;
+}
 
 /* ---- Mystery bookshelf: cover box + spine slots ---- */
 .mystery-shelf {
@@ -2827,7 +2933,6 @@ body.immersive {
 }
 
 @media (max-width: 640px) {
-  .board-center { width: 92vw; top: 74px; max-height: calc(100svh - 150px); }
   .mystery-panel { top: 74px; width: 96vw; max-height: calc(100svh - 150px); }
   .spine-title { font-size: 0.5rem; }
 }

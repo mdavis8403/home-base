@@ -1,7 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import type { Profile } from "@/lib/shared/types";
 import {
   boardLabels,
   type BoardData,
@@ -9,7 +8,6 @@ import {
 } from "@/lib/shared/board";
 import { boardRequest } from "./api";
 import { BoardPicture, ResponseForm } from "./response";
-import { BoardSettings } from "./settings";
 const symbols = { question: "✦", photo: "▧", drawing: "✎" };
 function dateLabel(date: string) {
   return new Date(date + "T12:00:00Z").toLocaleDateString("en-US", {
@@ -19,10 +17,10 @@ function dateLabel(date: string) {
     year: "numeric",
   });
 }
-export function FamilyBoard({ profile }: { profile: Profile }) {
+export function FamilyBoard() {
   const [data, setData] = useState<BoardData | null>(null),
     [error, setError] = useState("");
-  const [view, setView] = useState<"today" | "past" | "settings">("today");
+  const [view, setView] = useState<"today" | "past">("today");
   const [selected, setSelected] = useState<string | null>(null);
   const inFlight = useRef(false);
   // Full-screen board: hide the standard family shell while this room owns the view.
@@ -86,108 +84,92 @@ export function FamilyBoard({ profile }: { profile: Profile }) {
           <span aria-hidden="true">✦</span> Family Board
         </h1>
       </header>
-      <div className="board-center">
-      <section className="board-room">
-      <nav className="message-tabs" aria-label="Board views">
-        {(
-          [
-            "today",
-            "past",
-            ...(profile.role === "child" ? [] : ["settings"]),
-          ] as const
-        ).map((v) => (
-          <button
-            key={v}
-            className="text-button"
-            aria-pressed={view === v}
-            onClick={() => {
-              setView(v as typeof view);
-              setSelected(null);
-            }}
-          >
-            {v === "today"
-              ? "Today’s board"
-              : v === "past"
-                ? "Past Boards"
-                : "Parent touches"}
-          </button>
-        ))}
-        <button
-          className="text-button refresh-messages"
-          onClick={() => void refresh(true)}
-        >
-          Refresh board
-        </button>
-      </nav>
-      {error && (
-        <p role="alert" className="form-error">
-          {error}
-        </p>
-      )}
-      {!data && !error && (
-        <p role="status" className="board-loading">
-          Getting our board ready…
-        </p>
-      )}
-      {data && view === "settings" && (
-        <BoardSettings data={data} onSaved={() => refresh()} />
-      )}
-      {data && view === "past" && !board && (
-        <div className="board-history">
-          <p className="eyebrow">LITTLE MOMENTS, KEPT FOREVER</p>
-          <h2>Remember when…</h2>
-          <p>A collection of our wonderfully ordinary days.</p>
-          {data.boards.filter((b) => !b.today).length === 0 ? (
-            <div className="empty-post">
-              <span aria-hidden="true">▧</span>
-              <h3>Our first page is still unfolding.</h3>
-              <p>Today’s board will find its home here tomorrow.</p>
-            </div>
-          ) : (
-            <div className="history-list">
-              {data.boards
-                .filter((b) => !b.today)
-                .map((b) => (
-                  <button
-                    className="history-board"
-                    key={b.id}
-                    onClick={() => setSelected(b.id)}
-                  >
-                    <span className="history-symbol" aria-hidden="true">
-                      {symbols[b.type]}
-                    </span>
-                    <span>
-                      <span className="note-label">
-                        {dateLabel(b.date)} · {boardLabels[b.type]}
-                      </span>
-                      <strong>{b.prompt}</strong>
-                    </span>
-                    <span aria-hidden="true">↗</span>
-                  </button>
-                ))}
-            </div>
-          )}
-        </div>
-      )}
-      {data && board && (
-        <>
-          {view === "past" && (
-            <button className="text-button" onClick={() => setSelected(null)}>
-              ← All past boards
+      <div className="board-shell">
+        <nav className="board-nav" aria-label="Board views">
+          {(["today", "past"] as const).map((v) => (
+            <button
+              key={v}
+              className="text-button"
+              aria-pressed={view === v}
+              onClick={() => {
+                setView(v);
+                setSelected(null);
+              }}
+            >
+              {v === "today" ? "Today’s Board" : "Past Boards"}
             </button>
+          ))}
+        </nav>
+        <main className="board-stage">
+          {error && (
+            <p role="alert" className="form-error">
+              {error}
+            </p>
           )}
-          <BoardActivity
-            key={board.id}
-            board={board}
-            timezone={data.timezone}
-            onSaved={() => refresh()}
-          />
-        </>
-      )}
-      <p className="messages-footer">
-        A little silly. A little sweet. Entirely us.
-      </p>
-      </section>
+          {!data && !error && (
+            <p role="status" className="board-loading">
+              Getting our board ready…
+            </p>
+          )}
+          {data && view === "past" && !board && (
+            <div className="board-history">
+              <p className="eyebrow">LITTLE MOMENTS, KEPT FOREVER</p>
+              <h2>Remember when…</h2>
+              <p>A collection of our wonderfully ordinary days.</p>
+              {data.boards.filter((b) => !b.today).length === 0 ? (
+                <div className="empty-post">
+                  <span aria-hidden="true">▧</span>
+                  <h3>Our first page is still unfolding.</h3>
+                  <p>Today’s board will find its home here tomorrow.</p>
+                </div>
+              ) : (
+                <div className="history-list">
+                  {data.boards
+                    .filter((b) => !b.today)
+                    .map((b) => (
+                      <button
+                        className="history-board"
+                        key={b.id}
+                        onClick={() => setSelected(b.id)}
+                      >
+                        <span className="history-symbol" aria-hidden="true">
+                          {symbols[b.type]}
+                        </span>
+                        <span>
+                          <span className="note-label">
+                            {dateLabel(b.date)} · {boardLabels[b.type]}
+                          </span>
+                          <strong>{b.prompt}</strong>
+                        </span>
+                        <span aria-hidden="true">↗</span>
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+          {data && board && (
+            <>
+              {view === "past" && (
+                <button
+                  className="text-button board-back"
+                  onClick={() => setSelected(null)}
+                >
+                  ← All Past Boards
+                </button>
+              )}
+              <BoardActivity
+                key={board.id}
+                board={board}
+                timezone={data.timezone}
+                onSaved={() => refresh()}
+              />
+            </>
+          )}
+        </main>
+        <p className="board-tagline">
+          A little silly. A little sweet. Entirely Us.
+        </p>
       </div>
     </div>
   );
@@ -203,10 +185,10 @@ function BoardActivity({
 }) {
   const own = board.responses.some((r) => r.own);
   const previouslyOwn = useRef(own);
-  const revealHeading = useRef<HTMLHeadingElement>(null);
+  const statusHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (own && !previouslyOwn.current)
-      revealHeading.current?.focus({ preventScroll: true });
+      statusHeading.current?.focus({ preventScroll: true });
     previouslyOwn.current = own;
   }, [own]);
   const time = new Date(board.revealAt).toLocaleTimeString("en-US", {
@@ -214,9 +196,15 @@ function BoardActivity({
     hour: "numeric",
     minute: "2-digit",
   });
+  const canRespond = board.today && !own;
+  const showAnswers = board.revealed || own;
   return (
-    <div className="board-activity">
-      <div className="prompt-paper">
+    <div
+      className={`board-activity board-activity-${
+        board.revealed ? "revealed" : own ? "tucked" : "open"
+      }`}
+    >
+      <article className="prompt-paper">
         <p className="note-label">
           {dateLabel(board.date)} · {board.category}
         </p>
@@ -225,44 +213,49 @@ function BoardActivity({
           {boardLabels[board.type]}
         </p>
         <h2>{board.prompt}</h2>
-        <div className="paper-rule" />
-        <p>
-          {board.type === "question"
-            ? "There are no wrong answers. Especially the wonderfully odd ones."
-            : board.type === "photo"
-              ? "A tiny glimpse of your day is a lovely thing to share."
-              : "A masterpiece? A scribble? We would love either."}
-        </p>
+        {canRespond && !board.revealed && (
+          <>
+            <p className="prompt-hint">
+              {board.type === "question"
+                ? "There are no wrong answers. Especially the wonderfully odd ones."
+                : board.type === "photo"
+                  ? "A tiny glimpse of your day is a lovely thing to share."
+                  : "A masterpiece? A scribble? We would love either."}
+            </p>
+            <ResponseForm board={board} onSaved={onSaved} />
+          </>
+        )}
+        {!canRespond && (
+          <div className="board-state" aria-live="polite">
+            <p className="board-state-line">
+              <span className="board-state-mark" aria-hidden="true">
+                {board.revealed ? "✦" : "✉"}
+              </span>
+              <h3 ref={statusHeading} tabIndex={-1}>
+                {board.revealed
+                  ? "The surprise is open!"
+                  : "Yours is tucked away."}
+              </h3>
+            </p>
+            <p className="board-state-sub">
+              {board.revealed
+                ? "Here are our little pieces of the day, together."
+                : `Everyone’s opens together when all three are in, or at ${time} (${timezone}). Until then, only you can see yours.`}
+            </p>
+          </div>
+        )}
         <span className="paper-star" aria-hidden="true">
           ✧
         </span>
-      </div>
-      <div className="reveal-note" aria-live="polite">
-        <span aria-hidden="true">{board.revealed ? "✦" : "✉"}</span>
-        <div>
-          <h3 ref={revealHeading} tabIndex={-1}>
-            {board.revealed
-              ? "The surprise is open!"
-              : own
-                ? "Yours is tucked away."
-                : "A surprise, just between us."}
-          </h3>
-          <p>
-            {board.revealed
-              ? "Here are our little pieces of the day, together."
-              : `Everyone’s responses open together when all three are in, or at ${time} (${timezone}). Until then, only you can see yours.`}
-          </p>
-        </div>
-      </div>
-      {(board.revealed || own) && (
+      </article>
+      {showAnswers && (
         <section
-          aria-label={
-            board.revealed ? "Our responses" : "Your private response"
-          }
+          aria-label={board.revealed ? "Our responses" : "Your private response"}
           className="board-answers"
+          data-count={board.responses.length}
         >
           {board.responses.length === 0 ? (
-            <p>
+            <p className="board-answers-empty">
               Nothing tucked away this time. There’s always another little
               adventure.
             </p>
@@ -294,7 +287,9 @@ function BoardActivity({
           )}
         </section>
       )}
-      {board.today && !own && <ResponseForm board={board} onSaved={onSaved} />}
+      {board.revealed && canRespond && (
+        <ResponseForm board={board} onSaved={onSaved} />
+      )}
     </div>
   );
 }
