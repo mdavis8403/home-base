@@ -36,6 +36,23 @@ export class BoardService {
     const f = await this.preferences(s);
     const today = familyDate(f.timezone);
     await this.seedLibrary(s.profile.familyId);
+    // Self-heal: if today's board still points at a retired or ineligible prompt
+    // (e.g. a legacy Drawing created before the removal reached this family) and
+    // nobody has answered yet, re-point it to a freshly chosen question/photo.
+    // Answered boards and archived days are never touched.
+    await this.db.query(
+      `UPDATE board_days SET prompt_id=(
+        SELECT p.id FROM board_prompts p LEFT JOIN board_days b ON b.prompt_id=p.id
+        WHERE p.family_id=$1 AND p.active AND p.prompt_type IN ('question','photo')
+        AND p.category IN (SELECT value FROM json_each($3))
+        GROUP BY p.id
+        ORDER BY (p.prompt_type<>$4),max(b.date) ASC NULLS FIRST,(p.builtin_key IS NOT NULL),p.builtin_key,p.created_at,p.id
+        LIMIT 1)
+      WHERE family_id=$1 AND date=$2
+      AND NOT EXISTS(SELECT 1 FROM board_responses r WHERE r.board_day_id=board_days.id)
+      AND prompt_id IN (SELECT id FROM board_prompts WHERE family_id=$1 AND (active=0 OR prompt_type NOT IN ('question','photo')))`,
+      [s.profile.familyId, today, f.categories, boardActivityForDate(today)],
+    );
     // Pick today's least-recently-used prompt of the cadence's activity type
     // (question ~80% of days, photo ~20%), falling back to the other type only
     // if the target type has none in the enabled categories. Drawing is excluded.

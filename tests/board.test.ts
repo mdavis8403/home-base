@@ -494,3 +494,38 @@ it("retires old built-in prompts so they are never selected again", async () => 
   }
   expect(seen.has("A retired old prompt")).toBe(false);
 });
+it("re-points a stuck legacy drawing board to question/photo when unanswered", async () => {
+  await service.open(mia); // seed the library and create today's board
+  // Simulate a leftover day pinned to a retired Drawing prompt (as in production).
+  const drawId = randomUUID();
+  await db.query(
+    "INSERT INTO board_prompts(id,family_id,prompt_type,prompt_text,category,builtin_key,active) VALUES($1,$2,'drawing','Draw a leftover dessert.','silly','06',0)",
+    [drawId, FAMILY_ID],
+  );
+  await db.query("UPDATE board_days SET prompt_id=$1 WHERE family_id=$2", [
+    drawId,
+    FAMILY_ID,
+  ]);
+  expect((await service.list(mia)).boards[0].type).toBe("drawing");
+  await service.open(mia); // heals today's board
+  const board = (await service.list(mia)).boards[0];
+  expect(["question", "photo"]).toContain(board.type);
+  expect(board.prompt).not.toBe("Draw a leftover dessert.");
+});
+it("never re-points a stuck board that already has a response", async () => {
+  const id = await current("question");
+  await service.respond(mia, answer(id, "My real answer"));
+  const drawId = randomUUID();
+  await db.query(
+    "INSERT INTO board_prompts(id,family_id,prompt_type,prompt_text,category,builtin_key,active) VALUES($1,$2,'drawing','Draw a stuck thing.','silly','09',0)",
+    [drawId, FAMILY_ID],
+  );
+  await db.query("UPDATE board_days SET prompt_id=$1 WHERE id=$2", [
+    drawId,
+    id,
+  ]);
+  await service.open(mia);
+  const board = (await service.list(mia)).boards.find((b) => b.id === id)!;
+  expect(board.type).toBe("drawing");
+  expect(board.responses).toHaveLength(1);
+});
