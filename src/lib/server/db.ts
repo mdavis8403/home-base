@@ -29,6 +29,9 @@ const jsonFields = new Set([
   "content_snapshot",
   "board_categories",
   "event_data",
+  "cast",
+  "choices",
+  "continuity",
 ]);
 const boolFields = new Set([
   "scheduled",
