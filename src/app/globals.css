@@ -1166,13 +1166,6 @@ input::file-selector-button {
   height: 22px;
   accent-color: var(--color-gold);
 }
-.drawing-time {
-  padding: 10px;
-  font:
-    28px Georgia,
-    serif;
-  color: var(--color-gold);
-}
 /* Result notes: three at reveal, or a single centered private preview. */
 .board-answers {
   display: grid;
@@ -1210,66 +1203,6 @@ input::file-selector-button {
 .board-answer .note-body {
   font-size: 18px;
   margin-bottom: 0;
-}
-/* Drawing takes over the viewport as a focused overlay, then returns to board. */
-.drawing-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(10px, 2vw, 24px);
-  background: #0a1418ee;
-}
-.drawing-overlay-inner {
-  width: min(920px, 96vw);
-  max-height: 94svh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  display: grid;
-  gap: 12px;
-  padding: clamp(14px, 3vw, 28px);
-  border: 1px solid #ffffff1c;
-  border-radius: 20px;
-  background: radial-gradient(
-    140% 90% at 50% 0%,
-    #23313b 0%,
-    #182831 60%,
-    #101e24 100%
-  );
-  box-shadow: 0 30px 90px #030b0eb0;
-  color: var(--color-cream);
-}
-.drawing-overlay-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.drawing-overlay-head h2 {
-  font-size: clamp(20px, 3vw, 30px);
-  outline: none;
-}
-.drawing-overlay .text-button {
-  color: #efe4cb;
-}
-/* Cap the canvas so the whole workspace (tools + save) fits short viewports. */
-.drawing-overlay .doodle-box canvas {
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: clamp(200px, 39vh, 440px);
-  aspect-ratio: 8 / 5;
-  margin: 0 auto;
-}
-.drawing-overlay .message-controls {
-  margin: 0;
-}
-.drawing-overlay .doodle-box {
-  display: grid;
-  gap: 10px;
 }
 .board-history {
   width: 100%;

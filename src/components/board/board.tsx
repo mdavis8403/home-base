@@ -8,6 +8,7 @@ import {
 } from "@/lib/shared/board";
 import { boardRequest } from "./api";
 import { BoardPicture, ResponseForm } from "./response";
+// "drawing" is retired for new boards; kept only to render legacy Past Boards.
 const symbols = { question: "✦", photo: "▧", drawing: "✎" };
 function dateLabel(date: string) {
   return new Date(date + "T12:00:00Z").toLocaleDateString("en-US", {
@@ -218,9 +219,7 @@ function BoardActivity({
             <p className="prompt-hint">
               {board.type === "question"
                 ? "There are no wrong answers. Especially the wonderfully odd ones."
-                : board.type === "photo"
-                  ? "A tiny glimpse of your day is a lovely thing to share."
-                  : "A masterpiece? A scribble? We would love either."}
+                : "A tiny glimpse of your day is a lovely thing to share."}
             </p>
             <ResponseForm board={board} onSaved={onSaved} />
           </>

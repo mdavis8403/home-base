@@ -7,8 +7,14 @@ export const categories = [
   "reflective",
   "family planning",
 ] as const;
-export const boardTypes = ["question", "photo", "drawing"] as const;
-export const boardLabels = {
+// Creatable Family Board activities. Drawing was retired: only these two can be
+// selected for new daily boards or created as custom prompts.
+export const boardTypes = ["question", "photo"] as const;
+export type BoardType = (typeof boardTypes)[number];
+// Boards created before Drawing was retired may still carry "drawing". It is
+// read-only legacy data — never creatable — kept so Past Boards can render it.
+export type StoredBoardType = BoardType | "drawing";
+export const boardLabels: Record<StoredBoardType, string> = {
   question: "Question of the Day",
   photo: "Photo Drop",
   drawing: "Drawing Challenge",
@@ -41,7 +47,7 @@ export const settingsInput = z
 export interface BoardItem {
   id: string;
   date: string;
-  type: (typeof boardTypes)[number];
+  type: StoredBoardType;
   prompt: string;
   category: string;
   revealAt: string;
@@ -62,7 +68,7 @@ export interface BoardData {
   customPrompts: {
     id: string;
     text: string;
-    type: (typeof boardTypes)[number];
+    type: StoredBoardType;
     category: string;
   }[];
 }

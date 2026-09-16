@@ -12,7 +12,6 @@ export const boardPrompts = [
     "reflective",
     "02",
   ],
-  ["drawing", "Draw a tiny home for a very big dragon.", "imaginative", "03"],
   ["question", "If Max had a job, what would it be?", "silly", "04"],
   [
     "photo",
@@ -21,24 +20,12 @@ export const boardPrompts = [
     "05",
   ],
   [
-    "drawing",
-    "Draw a dessert we could make together. Extra sprinkles welcome!",
-    "family planning",
-    "06",
-  ],
-  [
     "question",
     "What made you laugh today? A tiny giggle counts.",
     "reflective",
     "07",
   ],
   ["photo", "Show us something that would make a funny hat.", "silly", "08"],
-  [
-    "drawing",
-    "Draw one little thing you are looking forward to.",
-    "reflective",
-    "09",
-  ],
   [
     "question",
     "What should we do together this weekend?",
@@ -50,12 +37,6 @@ export const boardPrompts = [
     "Find something we could bring on a family picnic.",
     "family planning",
     "11",
-  ],
-  [
-    "drawing",
-    "Draw what Max does when everyone leaves the house.",
-    "silly",
-    "12",
   ],
   [
     "question",

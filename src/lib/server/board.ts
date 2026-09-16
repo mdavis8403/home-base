@@ -45,7 +45,8 @@ export class BoardService {
     await this.db.query(
       `INSERT INTO board_days(id,family_id,date,prompt_id,reveal_at)
       SELECT $1,$2,$3,p.id,$4 FROM board_prompts p LEFT JOIN board_days b ON b.prompt_id=p.id
-      WHERE p.family_id=$2 AND p.active AND p.category IN (SELECT value FROM json_each($5))
+      WHERE p.family_id=$2 AND p.active AND p.prompt_type IN ('question','photo')
+      AND p.category IN (SELECT value FROM json_each($5))
       GROUP BY p.id ORDER BY max(b.date) ASC NULLS FIRST,(p.builtin_key IS NOT NULL),p.builtin_key,p.created_at,p.id LIMIT 1
       ON CONFLICT(family_id,date) DO NOTHING`,
       [
@@ -124,20 +125,18 @@ export class BoardService {
     if (
       board.type === "question"
         ? !input.text || attachment
-        : input.text ||
-          !attachment ||
-          attachment.kind !== (board.type === "photo" ? "photo" : "doodle")
+        : input.text || !attachment || attachment.kind !== "photo"
     )
       throw new AppError(
         "INVALID_RESPONSE",
-        "Add your answer, photo, or drawing for this prompt.",
+        "Add your answer or photo for this prompt.",
       );
     let asset: MediaAsset | undefined;
     if (attachment) {
       if (!this.storage)
         throw new AppError(
           "MEDIA_UNAVAILABLE",
-          "Private photo and drawing storage needs to be connected before we can save this.",
+          "Private photo storage needs to be connected before we can save this.",
           503,
         );
       const inspected = await inspectAttachment(attachment);

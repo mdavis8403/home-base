@@ -31,16 +31,14 @@ async function post(page: Page, path: string, data: unknown) {
   });
 }
 // The board owns a fixed viewport: force the type, reload, and let auto-refresh settle.
-async function forceType(page: Page, type: "question" | "photo" | "drawing") {
+async function forceType(page: Page, type: "question" | "photo") {
   await db.query(
     "UPDATE board_prompts SET prompt_type=$1,prompt_text=$2 WHERE id=(SELECT prompt_id FROM board_days LIMIT 1)",
     [
       type,
       type === "question"
         ? "What is the silliest thing that happened today?"
-        : type === "photo"
-          ? "Find a color you would put in our family theme park."
-          : "Draw a tiny home for a very big dragon.",
+        : "Find a color you would put in our family theme park.",
     ],
   );
   // Keep the reveal in the future so the board is deterministically composable.
@@ -128,14 +126,11 @@ test("the corkboard is fixed: nav, tagline, and each activity fit the viewport",
     await expect(page.locator(".prompt-paper h2")).toBeInViewport();
     await expect(page.getByLabel("Choose your photo")).toBeInViewport();
     await expectFixedBoard(page);
-    // Drawing: Start Drawing visible without scrolling.
-    await forceType(page, "drawing");
-    await expect(page.locator(".prompt-paper h2")).toBeInViewport();
-    await expect(
-      page.getByRole("button", { name: "Start Drawing" }),
-    ).toBeInViewport();
-    await expectFixedBoard(page);
   }
+  // Drawing is retired: it is never offered as an activity.
+  await expect(page.getByRole("button", { name: "Start Drawing" })).toHaveCount(
+    0,
+  );
   // Capture the primary target (iPad landscape) for visual review.
   if (info.project.name === "ipad") {
     await page.setViewportSize({ width: 1194, height: 834 });
@@ -265,6 +260,14 @@ test("time-based reveal opens automatically, and parent APIs stay protected", as
     data: { adminKey: "test-admin-key-only" },
   });
   expect(reauth.ok()).toBe(true);
+  // Drawing is no longer a creatable prompt type, even for a verified parent.
+  const drawingPrompt = await post(page, "prompt", {
+    id: crypto.randomUUID(),
+    type: "drawing",
+    category: "silly",
+    text: "Draw a home for a very big dragon.",
+  });
+  expect(drawingPrompt.status()).toBe(400);
   const promptId = crypto.randomUUID();
   const added = await post(page, "prompt", {
     id: promptId,
@@ -296,7 +299,7 @@ test("time-based reveal opens automatically, and parent APIs stay protected", as
     });
   expect(csrf.status()).toBe(403);
 });
-test("photo preview and the drawing overlay both keep the board fixed", async ({
+test("photo preview keeps the board fixed and drawing is gone", async ({
   page,
 }, info) => {
   await login(page, "mia");
@@ -327,46 +330,12 @@ test("photo preview and the drawing overlay both keep the board fixed", async ({
     categories: ["silly"],
   });
   expect(child.status()).toBe(403);
-  await db.query(
-    "DELETE FROM board_responses; DELETE FROM media_assets WHERE related_entity_type='board'",
+  // Drawing is retired: no Start Drawing control, no doodle canvas, anywhere.
+  await forceType(page, "photo");
+  await expect(page.getByRole("button", { name: "Start Drawing" })).toHaveCount(
+    0,
   );
-  await forceType(page, "drawing");
-  // The doodle canvas lives in a focused overlay, not on the board itself.
   await expect(page.locator("canvas")).toHaveCount(0);
-  await page.getByRole("button", { name: "Start Drawing" }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page.getByLabel("Play with a 60-second timer")).toBeChecked();
-  await page.clock.install();
-  await page.getByRole("button", { name: "Start timer", exact: true }).click();
-  await page.clock.fastForward(60_100);
-  await expect(
-    page.getByText("Ding! Keep drawing if you like. This is just for fun."),
-  ).toBeVisible();
-  await page.getByLabel("Play with a 60-second timer").uncheck();
-  await expect(page.getByRole("timer")).toHaveCount(0);
-  const canvas = page.locator("canvas");
-  await canvas.scrollIntoViewIfNeeded();
-  const box = (await canvas.boundingBox())!;
-  await page.mouse.move(box.x + 40, box.y + 40);
-  await page.mouse.down();
-  await page.mouse.move(box.x + 90, box.y + 70, { steps: 5 });
-  await page.mouse.up();
-  await expect(
-    page.getByRole("button", { name: "Undo", exact: true }),
-  ).toBeEnabled();
-  await snapshot(page, "drawing", info.project.name);
-  await page.getByRole("button", { name: "Use this drawing" }).click();
-  // Saving the drawing returns to the board (overlay closes) with a preview.
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page
-    .getByLabel("Describe your picture")
-    .fill("A very small dragon house");
-  await expect(page.getByAltText("A very small dragon house")).toBeVisible();
-  await page.getByRole("button", { name: "Choose again" }).click();
-  await page
-    .getByLabel("Or choose a drawing file")
-    .setInputFiles("tests/fixtures/note.png");
-  await expect(page.getByAltText("A very small dragon house")).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

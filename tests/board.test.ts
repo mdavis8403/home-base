@@ -85,7 +85,11 @@ it("creates one board on simultaneous opens with default family-local 8 PM and b
   ).toBe("20:00:00");
   expect(
     (await db.query("SELECT DISTINCT prompt_type FROM board_prompts")).rows,
-  ).toHaveLength(3);
+  ).toHaveLength(2);
+  expect(
+    (await db.query("SELECT prompt_type FROM board_prompts WHERE prompt_type='drawing'"))
+      .rows,
+  ).toEqual([]);
   expect(
     (await db.query("SELECT DISTINCT category FROM board_prompts")).rows,
   ).toHaveLength(4);
@@ -143,43 +147,69 @@ it("cannot replace a response, double-submit a photo, or miss reveal on concurre
     (await service.list(mom)).boards[0].responses.find((r) => r.own)?.text,
   ).toBe(original);
 });
-it("authorizes photo and drawing bytes independently of lists; parents have no early media bypass", async () => {
-  for (const type of ["photo", "drawing"]) {
-    await db.exec(
-      "DELETE FROM board_responses;DELETE FROM media_assets;DELETE FROM board_days;",
-    );
-    const id = await current(type),
-      attachment = await picture(type === "photo" ? "photo" : "doodle");
-    await Promise.all([
-      service.respond(mia, { boardId: id, text: "", attachment }),
-      service.respond(mia, { boardId: id, text: "", attachment }),
-    ]);
-    const b = (await service.list(mia)).boards[0],
-      asset = b.responses[0].media!;
-    expect(b.responses).toHaveLength(1);
-    expect(asset).not.toHaveProperty("storagePath");
-    expect((await service.list(mom)).boards[0].responses).toEqual([]);
-    await expect(service.mediaUrl(parent, asset.id)).rejects.toMatchObject({
-      status: 403,
-    });
-    expect(storage.signRead).not.toHaveBeenCalled();
-    await expect(service.mediaUrl(mia, asset.id)).resolves.toHaveProperty(
-      "expiresIn",
-      60,
-    );
+it("authorizes photo bytes independently of lists; parents have no early media bypass", async () => {
+  const id = await current("photo"),
+    attachment = await picture("photo");
+  await Promise.all([
+    service.respond(mia, { boardId: id, text: "", attachment }),
+    service.respond(mia, { boardId: id, text: "", attachment }),
+  ]);
+  const b = (await service.list(mia)).boards[0],
+    asset = b.responses[0].media!;
+  expect(b.responses).toHaveLength(1);
+  expect(asset).not.toHaveProperty("storagePath");
+  expect((await service.list(mom)).boards[0].responses).toEqual([]);
+  await expect(service.mediaUrl(parent, asset.id)).rejects.toMatchObject({
+    status: 403,
+  });
+  expect(storage.signRead).not.toHaveBeenCalled();
+  await expect(service.mediaUrl(mia, asset.id)).resolves.toHaveProperty(
+    "expiresIn",
+    60,
+  );
+  await db.query(
+    "UPDATE board_days SET reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 second') WHERE id=$1",
+    [id],
+  );
+  await expect(service.mediaUrl(mom, asset.id)).resolves.toHaveProperty(
+    "expiresIn",
+    60,
+  );
+  expect((await db.query("SELECT id FROM media_assets")).rows).toHaveLength(1);
+});
+it("creates only question and photo boards, rejects drawing prompts, and never selects legacy drawing", async () => {
+  // Custom prompts can no longer be drawing (schema/validation rejects it).
+  await expect(
+    service.addPrompt(parent, {
+      id: randomUUID(),
+      type: "drawing",
+      text: "Draw a dragon",
+      category: "silly",
+    }),
+  ).rejects.toThrow();
+  // Built-in seeding no longer contains any drawing prompt.
+  await service.open(mia);
+  expect(
+    (await db.query("SELECT id FROM board_prompts WHERE prompt_type='drawing'"))
+      .rows,
+  ).toEqual([]);
+  // A legacy drawing prompt already stored is eligible by category but never chosen.
+  await db.query(
+    "INSERT INTO board_prompts(id,family_id,prompt_type,prompt_text,category) VALUES($1,$2,'drawing','Legacy drawing','silly')",
+    [randomUUID(), FAMILY_ID],
+  );
+  const seen = new Set<string>();
+  for (let i = 0; i < 6; i++) {
+    const id = (await service.open(mia)).boards[0].id;
+    seen.add((await service.list(mia)).boards[0].type);
+    // Retire each sampled board to its own past date so the next open picks anew.
     await db.query(
-      "UPDATE board_days SET reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 second') WHERE id=$1",
+      `UPDATE board_days SET date=date(date,'-${i + 1} days') WHERE id=$1`,
       [id],
     );
-    await expect(service.mediaUrl(mom, asset.id)).resolves.toHaveProperty(
-      "expiresIn",
-      60,
-    );
-    expect((await db.query("SELECT id FROM media_assets")).rows).toHaveLength(
-      1,
-    );
-    vi.clearAllMocks();
   }
+  expect(seen.has("drawing")).toBe(false);
+  expect([...seen].every((t) => t === "question" || t === "photo")).toBe(true);
 });
 it("rejects expired sessions, forged fields, cross-family boards and unknown media", async () => {
   const id = await current();
@@ -301,7 +331,7 @@ it("rejects wrong response types and fails honestly without storage, preserving 
   expect((await service.list(mia)).boards[0].responses).toEqual([]);
   expect((await db.query("SELECT id FROM media_assets")).rows).toEqual([]);
 });
-it("keeps photo and drawing memories readable after rollover while denying another actual family", async () => {
+it("keeps photo memories readable after rollover and still renders legacy drawing boards", async () => {
   const otherFamily = randomUUID();
   await db.query(
     "INSERT INTO families(id,name,timezone,access_phrase_hash) VALUES($1,'Other','UTC','test')",
@@ -311,34 +341,61 @@ it("keeps photo and drawing memories readable after rollover while denying anoth
     ...dad,
     profile: { ...dad.profile, familyId: otherFamily },
   };
-  for (const type of ["photo", "drawing"]) {
-    const id = await current(type);
-    await service.respond(mia, {
-      boardId: id,
-      text: "",
-      attachment: await picture(type === "photo" ? "photo" : "doodle"),
-    });
-    await db.query(
-      "UPDATE board_days SET date=date(date,'-1 day'),reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 day') WHERE id=$1",
-      [id],
-    );
-    const archived = (await service.list(dad)).boards.find((b) => b.id === id)!;
-    expect(archived.today).toBe(false);
-    expect(archived.revealed).toBe(true);
-    const media = archived.responses[0].media!;
-    await expect(service.mediaUrl(dad, media.id)).resolves.toHaveProperty(
-      "expiresIn",
-      60,
-    );
-    expect((await service.list(stranger)).boards).toEqual([]);
-    await expect(service.mediaUrl(stranger, media.id)).rejects.toMatchObject({
-      status: 404,
-    });
-    if (type === "photo")
-      await db.query(
-        "UPDATE board_days SET date=date(date,'-1 day') WHERE id=$1",
-        [id],
-      );
-  }
+  // A photo memory made through the normal flow stays readable after rollover.
+  const photoId = await current("photo");
+  await service.respond(mia, {
+    boardId: photoId,
+    text: "",
+    attachment: await picture("photo"),
+  });
+  await db.query(
+    "UPDATE board_days SET date=date(date,'-2 day'),reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 day') WHERE id=$1",
+    [photoId],
+  );
+  // A legacy drawing memory (created before Drawing was retired) inserted directly,
+  // since new responses can no longer store a doodle.
+  const drawId = await current("drawing");
+  const mediaId = randomUUID();
+  await db.query(
+    `INSERT INTO media_assets(id,family_id,owner_profile_id,related_entity_type,related_entity_id,storage_path,media_type,metadata)
+     VALUES($1,$2,$3,'board',$4,$5,'doodle',$6)`,
+    [
+      mediaId,
+      FAMILY_ID,
+      mia.profile.id,
+      drawId,
+      `family/${FAMILY_ID}/board/${drawId}/${mediaId}`,
+      JSON.stringify({ altText: "A crayon dragon", contentType: "image/png" }),
+    ],
+  );
+  await db.query(
+    "INSERT INTO board_responses(id,family_id,board_day_id,profile_id,text_response,media_asset_id) VALUES($1,$2,$3,$4,'',$5)",
+    [randomUUID(), FAMILY_ID, drawId, mia.profile.id, mediaId],
+  );
+  await db.query(
+    "UPDATE board_days SET date=date(date,'-1 day'),reveal_at=strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 day') WHERE id=$1",
+    [drawId],
+  );
+  const boards = (await service.list(dad)).boards;
+  const legacy = boards.find((b) => b.id === drawId)!;
+  expect(legacy.type).toBe("drawing");
+  expect(legacy.today).toBe(false);
+  expect(legacy.revealed).toBe(true);
+  const drawMedia = legacy.responses[0].media!;
+  expect(drawMedia.mediaType).toBe("doodle");
+  await expect(service.mediaUrl(dad, drawMedia.id)).resolves.toHaveProperty(
+    "expiresIn",
+    60,
+  );
+  const photo = boards.find((b) => b.id === photoId)!;
+  expect(photo.type).toBe("photo");
+  await expect(
+    service.mediaUrl(dad, photo.responses[0].media!.id),
+  ).resolves.toHaveProperty("expiresIn", 60);
+  // Another family can neither list nor fetch these memories.
+  expect((await service.list(stranger)).boards).toEqual([]);
+  await expect(service.mediaUrl(stranger, drawMedia.id)).rejects.toMatchObject({
+    status: 404,
+  });
   await db.query("DELETE FROM families WHERE id=$1", [otherFamily]);
 });
