@@ -1,6 +1,6 @@
 import "server-only";
 import { boardPrompts } from "./board-prompts";
-import { familyDate, revealInstant } from "./board-time";
+import { boardActivityForDate, familyDate, revealInstant } from "./board-time";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { Database } from "./db";
@@ -35,19 +35,18 @@ export class BoardService {
     this.check(s);
     const f = await this.preferences(s);
     const today = familyDate(f.timezone);
-    await this.db.batch(
-      boardPrompts.map(([type, text, category, key]) => ({
-        sql: `INSERT INTO board_prompts(id,family_id,prompt_type,prompt_text,category,builtin_key)
-      VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(family_id,builtin_key) DO NOTHING`,
-        values: [randomUUID(), s.profile.familyId, type, text, category, key],
-      })),
-    );
+    await this.seedLibrary(s.profile.familyId);
+    // Pick today's least-recently-used prompt of the cadence's activity type
+    // (question ~80% of days, photo ~20%), falling back to the other type only
+    // if the target type has none in the enabled categories. Drawing is excluded.
     await this.db.query(
       `INSERT INTO board_days(id,family_id,date,prompt_id,reveal_at)
       SELECT $1,$2,$3,p.id,$4 FROM board_prompts p LEFT JOIN board_days b ON b.prompt_id=p.id
       WHERE p.family_id=$2 AND p.active AND p.prompt_type IN ('question','photo')
       AND p.category IN (SELECT value FROM json_each($5))
-      GROUP BY p.id ORDER BY max(b.date) ASC NULLS FIRST,(p.builtin_key IS NOT NULL),p.builtin_key,p.created_at,p.id LIMIT 1
+      GROUP BY p.id
+      ORDER BY (p.prompt_type<>$6),max(b.date) ASC NULLS FIRST,(p.builtin_key IS NOT NULL),p.builtin_key,p.created_at,p.id
+      LIMIT 1
       ON CONFLICT(family_id,date) DO NOTHING`,
       [
         randomUUID(),
@@ -55,9 +54,31 @@ export class BoardService {
         today,
         revealInstant(today, f.revealTime, f.timezone),
         f.categories,
+        boardActivityForDate(today),
       ],
     );
     return this.list(s);
+  }
+  // Seed the built-in library once per family, then keep only current built-ins
+  // active. Retired built-ins (older keys not in the library) go inactive so they
+  // are never selected again, while their historical boards still resolve.
+  private async seedLibrary(familyId: string) {
+    const { rows } = await this.db.query<{ n: number }>(
+      "SELECT COUNT(*) AS n FROM board_prompts WHERE family_id=$1 AND active AND substr(builtin_key,1,1) IN ('q','p')",
+      [familyId],
+    );
+    if (rows[0].n >= boardPrompts.length) return;
+    await this.db.batch(
+      boardPrompts.map(([type, text, category, key]) => ({
+        sql: `INSERT INTO board_prompts(id,family_id,prompt_type,prompt_text,category,builtin_key)
+      VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(family_id,builtin_key) DO NOTHING`,
+        values: [randomUUID(), familyId, type, text, category, key],
+      })),
+    );
+    await this.db.query(
+      "UPDATE board_prompts SET active=(substr(builtin_key,1,1) IN ('q','p')) WHERE family_id=$1 AND builtin_key IS NOT NULL",
+      [familyId],
+    );
   }
   async list(s: Session): Promise<BoardData> {
     this.check(s);

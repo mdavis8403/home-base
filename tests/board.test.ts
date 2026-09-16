@@ -1,4 +1,8 @@
-import { revealInstant } from "../src/lib/server/board-time";
+import {
+  boardActivityForDate,
+  revealInstant,
+} from "../src/lib/server/board-time";
+import { boardPrompts } from "../src/lib/server/board-prompts";
 import { beforeAll, afterAll, beforeEach, expect, it, vi } from "vitest";
 import { TestDatabase } from "./d1";
 import { readFile } from "node:fs/promises";
@@ -87,8 +91,11 @@ it("creates one board on simultaneous opens with default family-local 8 PM and b
     (await db.query("SELECT DISTINCT prompt_type FROM board_prompts")).rows,
   ).toHaveLength(2);
   expect(
-    (await db.query("SELECT prompt_type FROM board_prompts WHERE prompt_type='drawing'"))
-      .rows,
+    (
+      await db.query(
+        "SELECT prompt_type FROM board_prompts WHERE prompt_type='drawing'",
+      )
+    ).rows,
   ).toEqual([]);
   expect(
     (await db.query("SELECT DISTINCT category FROM board_prompts")).rows,
@@ -253,11 +260,23 @@ it("requires fresh parent verification for custom prompts and settings; validate
     revealTime: "19:30",
     categories: ["imaginative"],
   });
+  // A custom Question and a custom Photo, both in the only enabled category.
+  const pPhoto = {
+    id: randomUUID(),
+    text: "Snap the goofiest thing you can see right now.",
+    category: "imaginative",
+    type: "photo",
+  };
+  await service.addPrompt(parent, pPhoto);
   const data = await service.open(mia);
-  expect(data.boards[0].prompt).toBe(p.text);
+  // Whatever today's cadence, an unused custom prompt of that type is preferred.
+  expect([p.text, pPhoto.text]).toContain(data.boards[0].prompt);
   expect(data.customPrompts).toEqual([]);
   expect(data.revealTime).toBe("19:30");
-  expect((await service.list(parent)).customPrompts).toHaveLength(1);
+  const parentCustom = (await service.list(parent)).customPrompts;
+  expect(parentCustom.map((c) => c.text).sort()).toEqual(
+    [p.text, pPhoto.text].sort(),
+  );
   const reveal = data.boards[0].revealAt;
   await service.settings(parent, {
     revealTime: "21:00",
@@ -277,7 +296,9 @@ it("retains archives, refuses archived submissions, rotates unused prompts and r
   });
   const data = await service.open(mia);
   expect(data.boards).toHaveLength(2);
-  expect(data.boards[0].type).toBe("photo");
+  // A fresh, different prompt rotates in; the archived board keeps its response.
+  expect(["question", "photo"]).toContain(data.boards[0].type);
+  expect(data.boards[0].prompt).not.toBe(data.boards[1].prompt);
   expect(data.boards[1].responses).toHaveLength(1);
 });
 it("uses family-local dates around UTC midnight and explicit timezone rules across DST", async () => {
@@ -398,4 +419,78 @@ it("keeps photo memories readable after rollover and still renders legacy drawin
     status: 404,
   });
   await db.query("DELETE FROM families WHERE id=$1", [otherFamily]);
+});
+it("ships a question-heavy library: ~250 prompts, no drawing, unique keys, valid tags", () => {
+  const q = boardPrompts.filter((p) => p[0] === "question").length;
+  const photo = boardPrompts.filter((p) => p[0] === "photo").length;
+  const total = boardPrompts.length;
+  // Only Question and Photo exist; no Drawing survives.
+  expect(
+    boardPrompts.every((p) => p[0] === "question" || p[0] === "photo"),
+  ).toBe(true);
+  expect(q + photo).toBe(total);
+  expect(total).toBeGreaterThanOrEqual(225);
+  expect(total).toBeLessThanOrEqual(300);
+  // Close to 80/20.
+  const share = q / total;
+  expect(share).toBeGreaterThan(0.76);
+  expect(share).toBeLessThan(0.84);
+  // Stable, unique built-in keys and only valid category tags.
+  const keys = boardPrompts.map((p) => p[3]);
+  expect(new Set(keys).size).toBe(keys.length);
+  const valid = new Set([
+    "silly",
+    "imaginative",
+    "reflective",
+    "family planning",
+  ]);
+  expect(boardPrompts.every((p) => valid.has(p[2]))).toBe(true);
+});
+it("cadence averages 80/20 question/photo with no photo streaks", () => {
+  const start = Date.UTC(2026, 0, 1);
+  const seq = Array.from({ length: 100 }, (_, i) =>
+    boardActivityForDate(
+      new Date(start + i * 86_400_000).toISOString().slice(0, 10),
+    ),
+  );
+  // Exactly 20% photos over 100 days.
+  expect(seq.filter((t) => t === "photo").length).toBe(20);
+  // Every rolling 5-day window holds exactly one photo — predictable, not streaky.
+  for (let i = 0; i + 5 <= seq.length; i++)
+    expect(seq.slice(i, i + 5).filter((t) => t === "photo").length).toBe(1);
+});
+it("never repeats a prompt on back-to-back boards", async () => {
+  const seen: string[] = [];
+  for (let i = 0; i < 12; i++) {
+    const b = (await service.open(mia)).boards[0];
+    seen.push(b.prompt);
+    await db.query(
+      `UPDATE board_days SET date=date(date,'-${i + 1} days') WHERE id=$1`,
+      [b.id],
+    );
+  }
+  expect(new Set(seen).size).toBe(seen.length);
+});
+it("retires old built-in prompts so they are never selected again", async () => {
+  // A family that already seeded an old numeric-key built-in.
+  await db.query(
+    "INSERT INTO board_prompts(id,family_id,prompt_type,prompt_text,category,builtin_key,active) VALUES($1,$2,'question','A retired old prompt','silly','01',1)",
+    [randomUUID(), FAMILY_ID],
+  );
+  await service.open(mia); // seeds the new library and retires stale built-ins
+  const stale = await db.query<{ active: number }>(
+    "SELECT active FROM board_prompts WHERE family_id=$1 AND builtin_key=$2",
+    [FAMILY_ID, "01"],
+  );
+  expect(stale.rows[0].active).toBeFalsy();
+  const seen = new Set<string>();
+  for (let i = 0; i < 12; i++) {
+    const id = (await service.open(mia)).boards[0].id;
+    seen.add((await service.list(mia)).boards[0].prompt);
+    await db.query(
+      `UPDATE board_days SET date=date(date,'-${i + 1} days') WHERE id=$1`,
+      [id],
+    );
+  }
+  expect(seen.has("A retired old prompt")).toBe(false);
 });

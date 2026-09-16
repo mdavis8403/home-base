@@ -96,16 +96,29 @@ test("the corkboard is fixed: nav, tagline, and each activity fit the viewport",
   await expect(
     page.getByRole("button", { name: "Past Boards", exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Parent touches" })).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByRole("button", { name: "Parent touches" }),
+  ).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Refresh board" })).toHaveCount(
     0,
   );
   // The tagline is pinned to the bottom in the exact configured wording.
-  const tagline = page.getByText("A little silly. A little sweet. Entirely Us.");
+  const tagline = page.getByText(
+    "A little silly. A little sweet. Entirely Us.",
+  );
   await expect(tagline).toBeVisible();
   await expect(tagline).toBeInViewport();
+  // Internal category tags never appear on the family-facing card; only the
+  // activity label (Question of the Day / Photo Drop) and the date show.
+  await forceType(page, "question");
+  await expect(page.locator(".prompt-paper")).toContainText(
+    "Question of the Day",
+  );
+  await expect(page.locator(".prompt-paper .note-label")).not.toContainText(
+    "·",
+  );
+  for (const word of ["imaginative", "reflective", "family planning"])
+    await expect(page.locator(".prompt-paper")).not.toContainText(word);
   // iPad landscape (primary), then laptop/desktop.
   for (const size of [
     { width: 1194, height: 834 },
@@ -244,9 +257,9 @@ test("time-based reveal opens automatically, and parent APIs stay protected", as
   await expect(page.locator(".board-answer")).toHaveCount(1);
   await snapshot(page, "revealed-single", info.project.name);
   // Parent touches no longer live on the family-facing board.
-  await expect(page.getByRole("button", { name: "Parent touches" })).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByRole("button", { name: "Parent touches" }),
+  ).toHaveCount(0);
   // Custom prompts still require an unlocked parent session (backend intact).
   const unverified = await post(page, "prompt", {
     id: crypto.randomUUID(),
@@ -255,10 +268,12 @@ test("time-based reveal opens automatically, and parent APIs stay protected", as
     text: "What would our sofa name its spaceship?",
   });
   expect(unverified.status()).toBe(403);
-  const reauth = await page.context().request.post(origin + "/api/auth/reauth", {
-    headers: { Origin: origin },
-    data: { adminKey: "test-admin-key-only" },
-  });
+  const reauth = await page
+    .context()
+    .request.post(origin + "/api/auth/reauth", {
+      headers: { Origin: origin },
+      data: { adminKey: "test-admin-key-only" },
+    });
   expect(reauth.ok()).toBe(true);
   // Drawing is no longer a creatable prompt type, even for a verified parent.
   const drawingPrompt = await post(page, "prompt", {
@@ -286,9 +301,7 @@ test("time-based reveal opens automatically, and parent APIs stay protected", as
   ).json();
   expect(data.data.revealTime).toBe("20:00");
   expect(
-    data.data.customPrompts.some(
-      (p: { id: string }) => p.id === promptId,
-    ),
+    data.data.customPrompts.some((p: { id: string }) => p.id === promptId),
   ).toBe(true);
   // Cross-origin writes are still rejected.
   const csrf = await page

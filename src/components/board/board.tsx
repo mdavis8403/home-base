@@ -206,9 +206,7 @@ function BoardActivity({
       }`}
     >
       <article className="prompt-paper">
-        <p className="note-label">
-          {dateLabel(board.date)} · {board.category}
-        </p>
+        <p className="note-label">{dateLabel(board.date)}</p>
         <p className="board-type">
           <span aria-hidden="true">{symbols[board.type]}</span>{" "}
           {boardLabels[board.type]}
@@ -249,7 +247,9 @@ function BoardActivity({
       </article>
       {showAnswers && (
         <section
-          aria-label={board.revealed ? "Our responses" : "Your private response"}
+          aria-label={
+            board.revealed ? "Our responses" : "Your private response"
+          }
           className="board-answers"
           data-count={board.responses.length}
         >
