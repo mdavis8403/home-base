@@ -42,7 +42,7 @@ export function StorySetup({
     });
   }
   return (
-    <div className="story-book setup-book">
+    <div className="story-book book-frame reading setup-book">
       <div className="book-spread is-setup">
         <div className="book-leaf leaf-left setup-intro">
           <p className="chapter-eyebrow">A NEW STORY</p>

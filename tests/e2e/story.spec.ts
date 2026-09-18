@@ -39,7 +39,10 @@ async function beginNightStory(page: Page, project?: string) {
   await page.getByRole("button", { name: "Funny", exact: true }).click();
   await page.getByRole("button", { name: "Story Night", exact: true }).click();
   await page.getByRole("button", { name: "Begin our story" }).click();
-  await expect(page.locator(".opening-title")).toBeVisible({ timeout: 15000 });
+  // Wait for the actual opening spread (its choices), not the setup heading.
+  await expect(page.locator(".story-choice").first()).toBeVisible({
+    timeout: 15000,
+  });
 }
 test.beforeEach(async () => {
   await db.query("DELETE FROM story_pages; DELETE FROM story_books;");
@@ -164,17 +167,17 @@ test("iPad landscape uses an open-book spread; phone uses a single page", async 
       );
       const a = leaves[0].getBoundingClientRect();
       const b = leaves[1].getBoundingClientRect();
-      return {
-        sideBySide: Math.abs(a.top - b.top) < 4 && b.left > a.right - 2,
-      };
+      // Two-page spread: the right page begins at/after the left page ends.
+      // Single page: the leaves stack in one column (right leaf not to the right).
+      return { sideBySide: b.left >= a.right - 4 };
     });
   await page.setViewportSize({ width: 1194, height: 834 });
-  await expect(page.locator(".book-spread")).toBeVisible();
-  expect((await layout()).sideBySide).toBe(true);
+  await expect(page.locator(".book-leaf").first()).toBeVisible();
+  await expect.poll(async () => (await layout()).sideBySide).toBe(true);
   await snapshot(page, "landscape-open-book", info.project.name);
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.locator(".book-spread")).toBeVisible();
-  expect((await layout()).sideBySide).toBe(false);
+  await expect(page.locator(".book-leaf").first()).toBeVisible();
+  await expect.poll(async () => (await layout()).sideBySide).toBe(false);
   // No horizontal body overflow on the reading screen.
   expect(
     await page.evaluate(

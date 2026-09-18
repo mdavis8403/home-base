@@ -146,10 +146,8 @@ const ENDING_ENTRY: Record<string, string> = {
     "You escape through the very window you crashed through earlier, tripping over the exact same suit of armor on the way. Consistency matters.",
   wait: "Max leads you out through a door none of you had noticed, having clearly understood the plan the whole time. Max gets extra snacks. Max has earned them.",
 };
-const ENDING_CLOSER = [
-  "On the walk home nobody mentions {backpackItem} again. It is simply part of the family now.",
-  "The {setting} at the end of the lane goes dark, and stays that way — until next time.",
-].join("\n\n");
+const ENDING_CLOSER =
+  "On the walk home nobody mentions {backpackItem} again — it is simply part of the family now, and the {setting} at the end of the lane goes dark behind you, until next time.";
 function openingBlueprint(): PageBlueprint {
   return {
     node: "opening",

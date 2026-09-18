@@ -131,16 +131,6 @@ export function OurStory({ profile }: { profile: Profile }) {
   const hasBooks = (landing?.books.length ?? 0) > 0;
   return (
     <div className="story-immersive">
-      {/* eslint-disable-next-line @next/next/no-img-element -- reused full-bleed atmosphere art must not be re-cropped. */}
-      <img
-        className="story-art"
-        src="/images/family-board-bg.png"
-        alt=""
-        aria-hidden="true"
-        fetchPriority="high"
-        draggable={false}
-      />
-      <div className="story-scrim" aria-hidden="true" />
       <header className="clubhouse-bar story-bar">
         <Link className="clubhouse-brand" href="/home">
           <span aria-hidden="true">←</span> THE CLUBHOUSE
@@ -156,12 +146,7 @@ export function OurStory({ profile }: { profile: Profile }) {
           </p>
         )}
         {screen === "landing" && (
-          <section className="story-nook" aria-label="Our Story">
-            <div className="nook-book" aria-hidden="true">
-              <span className="nook-spine" />
-              <span className="nook-title">Our Story</span>
-              <span className="nook-flourish">✦</span>
-            </div>
+          <section className="book-frame landing" aria-label="Our Story">
             <div className="nook-panel">
               <p className="eyebrow">THE READING NOOK</p>
               <h2>A story only we could tell.</h2>
@@ -231,20 +216,22 @@ export function OurStory({ profile }: { profile: Profile }) {
           />
         )}
         {screen === "books" && (
-          <div className="story-library">
-            <button
-              className="story-btn ghost lib-back"
-              onClick={() => setScreen("landing")}
-            >
-              ‹ Back to the reading nook
-            </button>
-            <Bookshelf
-              inProgress={landing?.inProgress ?? []}
-              books={landing?.books ?? []}
-              onOpen={(b: StorySummary) =>
-                void openReading(b.id, b.status === "completed")
-              }
-            />
+          <div className="book-frame library">
+            <div className="story-library">
+              <button
+                className="story-btn ghost lib-back"
+                onClick={() => setScreen("landing")}
+              >
+                ‹ Back to the reading nook
+              </button>
+              <Bookshelf
+                inProgress={landing?.inProgress ?? []}
+                books={landing?.books ?? []}
+                onOpen={(b: StorySummary) =>
+                  void openReading(b.id, b.status === "completed")
+                }
+              />
+            </div>
           </div>
         )}
       </main>

@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- local approved story artwork, not remote/optimizable */
 import { useEffect, useRef, useState } from "react";
 import {
   castLabels,
@@ -39,12 +40,16 @@ function Narration({ text }: { text: string }) {
     </div>
   );
 }
-function ArtPlate({ book }: { book: StorySummary }) {
-  // Decorative placeholder standing in for future opening artwork.
+function ArtPlate() {
+  // The approved illustration frame reserves the spot for future opening
+  // artwork; its interior stays quiet paper for now (no placeholder gradient).
   return (
     <div className="story-plate" aria-hidden="true">
-      <span className="story-plate-mark">✦</span>
-      <span className="story-plate-cap">{book.title}</span>
+      <img
+        className="story-plate-frame"
+        src="/images/our-story-illustration-frame.png"
+        alt=""
+      />
     </div>
   );
 }
@@ -56,18 +61,14 @@ export function BookCover({
   onOpen?: () => void;
 }) {
   const inner = (
-    <>
-      <span className="cover-spine" aria-hidden="true" />
+    <span className="cover-plate">
       <span className="cover-eyebrow">
         {book.status === "completed" ? "OUR BOOK" : "STILL BEING WRITTEN"}
       </span>
       <span className="cover-title">{book.title}</span>
       {book.subtitle && <span className="cover-subtitle">{book.subtitle}</span>}
       <span className="cover-foot">{starring(book.cast)}</span>
-      <span className="cover-mark" aria-hidden="true">
-        ✦
-      </span>
-    </>
+    </span>
   );
   if (!onOpen)
     return <div className={`book-cover ${book.status}`}>{inner}</div>;
@@ -119,7 +120,12 @@ export function Bookshelf({
 export function PageTurn() {
   return (
     <div className="page-turn" role="status" aria-live="polite">
-      <div className="page-turn-leaf" aria-hidden="true" />
+      <img
+        className="page-turn-flourish"
+        src="/images/our-story-ink-flourish.png"
+        alt=""
+        aria-hidden="true"
+      />
       <p>Turning the page…</p>
     </div>
   );
@@ -154,7 +160,7 @@ export function BookReader(props: ReaderProps) {
   const live = !reread && book.status === "active" && atLatest && !turning;
   if (!page) return null;
   return (
-    <div className="story-book" aria-label={book.title}>
+    <div className="story-book book-frame reading" aria-label={book.title}>
       {turning && <PageTurn />}
       <PageBody {...props} page={page} live={live} />
       <StoryDetails book={book} isParent={props.isParent && live} />
@@ -218,7 +224,12 @@ function PageBody({
       <div className="chapter-divider">
         <p className="chapter-eyebrow">CHAPTER {page.chapter}</p>
         <h2 className="chapter-title">{page.chapterTitle}</h2>
-        <Narration text={page.narration} />
+        <img
+          className="chapter-ornament"
+          src="/images/our-story-chapter-divider.png"
+          alt=""
+          aria-hidden="true"
+        />
         {live && (
           <button
             className="story-continue"
@@ -236,8 +247,13 @@ function PageBody({
           <Narration text={page.narration} />
         </div>
         <div className="book-leaf leaf-right ending-leaf">
-          <p className="ending-mark">✦</p>
           <h2 className="ending-title">The End</h2>
+          <img
+            className="ending-ornament"
+            src="/images/our-story-ending-ornament.png"
+            alt=""
+            aria-hidden="true"
+          />
           <p className="ending-meta">
             Finished {longDate(book.completedAt) || "today"}
           </p>
@@ -264,7 +280,13 @@ function PageBody({
         <p className="chapter-eyebrow">CHAPTER ONE</p>
         <h2 className="opening-title">{book.title}</h2>
         {book.subtitle && <p className="opening-subtitle">{book.subtitle}</p>}
-        <ArtPlate book={book} />
+        <img
+          className="opening-ornament"
+          src="/images/our-story-title-ornament.png"
+          alt=""
+          aria-hidden="true"
+        />
+        <ArtPlate />
       </div>
     ) : (
       <div className="book-leaf leaf-left">
