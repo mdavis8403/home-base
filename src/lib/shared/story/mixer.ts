@@ -377,12 +377,21 @@ export interface MixerView {
   reveal: MixerReveal | null;
   storyId: string | null;
 }
+// Per-envelope completion (a check only — never answers) for the landing.
+export interface MixerEnvelope {
+  key: ProfileKey;
+  name: string;
+  sealed: boolean;
+  mine: boolean;
+}
 // Compact mixer state surfaced on the Our Story landing.
 export interface MixerLanding {
   sessionId: string;
   status: MixerStatus;
   mineSealed: boolean;
+  mineAnswered: number;
   sealedCount: number;
+  envelopes: MixerEnvelope[];
 }
 
 // Resolve raw assignment + answer rows into typed ingredients for the engine.

@@ -37,11 +37,11 @@ test("Mia can navigate placeholders and is protected from parent settings", asyn
     .getByRole("button", { name: "The storybook", exact: true })
     .dispatchEvent("click");
   await expect(page).toHaveURL(`${origin}/our-story`);
-  // Our Story is a real reading nook now, reachable by the child too.
+  // Our Story is a real reading desk now, reachable by the child too.
   await expect(
     page.getByRole("heading", { name: "Our Story", exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("A story only we could tell.")).toBeVisible();
+  await expect(page.locator(".landing-scene")).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

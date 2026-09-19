@@ -3273,86 +3273,155 @@ body.immersive {
   outline: 3px solid var(--amber);
   outline-offset: 3px;
 }
-/* ---- Landing: the closed book is the primary object you tap ---- */
-.book-frame.landing .book-hotspot {
-  position: absolute;
-  left: 32%;
-  top: 15%;
-  width: 33.5%;
-  height: 69%;
+/* ---- Landing: the approved desk scene — the artwork is the hero ---- */
+.landing-scene {
+  position: relative;
+  container-type: inline-size;
+  width: min(96vw, calc((100dvh - 116px) * 1672 / 941));
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(3px, 0.9cqh, 9px);
-  padding: 0 4%;
+}
+.scene-art {
+  position: relative;
+  container-type: size;
+  width: 100%;
+  aspect-ratio: 1672 / 941;
+  background: url(/images/our-story-landing.webp) center / cover no-repeat;
+  border-radius: 4px;
+}
+/* The book is a quiet, semantic tap target — no glow, just a warm lift. */
+.book-hit {
+  position: absolute;
+  left: 21%;
+  top: 14%;
+  width: 30%;
+  height: 76%;
   border: 0;
   background: transparent;
+  border-radius: 8px 10px 10px 8px;
   cursor: pointer;
-  color: #2b2114;
-  text-align: center;
-  border-radius: 6px;
-  transition: transform 0.2s var(--ease-cine);
+  transition:
+    box-shadow 0.2s var(--ease-cine),
+    background 0.2s;
 }
-.book-hotspot:hover:not(:disabled) {
-  transform: translateY(-4px) scale(1.01);
+.book-hit:hover:not(:disabled),
+.book-hit:focus-visible {
+  background: #ffdd9614;
+  box-shadow:
+    inset 0 0 0 1px #d9b97733,
+    0 12px 34px #00000033;
 }
-.book-hotspot:disabled {
+.book-hit:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+.book-hit:disabled {
   cursor: default;
 }
-.hotspot-eyebrow {
-  font-family: var(--font-sans);
-  font-size: clamp(8px, 1.05cqw, 12px);
-  letter-spacing: 4px;
-  color: #4c3a1e;
-  text-shadow: 0 1px 0 #e9dcbf99;
-}
-.hotspot-label {
-  font-family: var(--font-display);
-  font-size: clamp(0.95rem, 2.3cqw, 1.7rem);
-  line-height: 1.1;
-  max-width: 15ch;
-  color: #2a2014;
-  text-shadow: 0 1px 0 #ecdfc2aa;
-}
-.hotspot-hint {
-  font-family: var(--font-sans);
-  font-size: clamp(7px, 0.95cqw, 11px);
-  letter-spacing: 1px;
-  color: #5a4527;
-  font-style: italic;
-  text-shadow: 0 1px 0 #e9dcbf88;
-}
-.book-frame.landing .landing-caption {
+/* Envelope status written lightly on each sealed envelope (a check, not a badge). */
+.env-tags {
   position: absolute;
-  left: 68.5%;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28%;
+  inset: 0;
+  pointer-events: none;
+}
+.env-tag {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-size: clamp(9px, 1.45cqw, 17px);
+  white-space: nowrap;
+  color: #294a4d;
+  text-shadow: 0 1px 0 #f4ead0aa;
+}
+.env-tag .env-name {
+  font-weight: 600;
+}
+.env-check {
+  color: #1f5a5c;
+  font-weight: 700;
+}
+.env-progress {
+  color: #6a5330;
+  font-size: 0.82em;
+}
+/* ---- Right-side interface copy, on the open desk ---- */
+.landing-copy {
+  position: absolute;
+  left: 69.5%;
+  right: 3%;
+  top: 30%;
+  bottom: 7%;
   display: flex;
   flex-direction: column;
-  gap: clamp(10px, 2cqh, 20px);
-  color: #f2e6ce;
+  justify-content: center;
+  gap: clamp(8px, 1.7cqh, 16px);
   text-align: left;
+  color: #f2e6ce;
   text-shadow: 0 2px 14px #000c;
 }
-.nook-tagline {
+.copy-eyebrow {
+  font-family: var(--font-sans);
+  font-size: clamp(9px, 1.05cqw, 13px);
+  letter-spacing: 4px;
+  color: #e7c88f;
+}
+.copy-headline {
   font-family: var(--font-display);
-  font-size: clamp(1.1rem, 2.9cqw, 2.1rem);
-  line-height: 1.14;
-  color: #f4e8ce;
+  font-size: clamp(1.2rem, 2.9cqw, 2.4rem);
+  line-height: 1.1;
+  color: #f6ecd4;
 }
-.landing-actions {
+.copy-support {
+  font-size: clamp(0.82rem, 1.45cqw, 1.05rem);
+  line-height: 1.4;
+  color: #e6d6b6;
+  max-width: 30ch;
+}
+.copy-meta {
+  font-family: var(--font-display);
+  font-size: clamp(0.8rem, 1.35cqw, 1rem);
+  color: #d8b877;
+  letter-spacing: 0.5px;
+}
+.copy-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 18px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(8px, 1.3cqh, 14px);
+  margin-top: clamp(4px, 1cqh, 10px);
 }
-.landing-actions .ink-link {
+.story-paper-btn {
+  font-family: var(--font-display);
+  font-size: clamp(14px, 1.7cqw, 18px);
+  padding: 11px 22px;
+  border-radius: 4px 12px 12px 12px;
+  border: 1px solid #b79a5f;
+  background: linear-gradient(#f3e5c4, #e4d0a0);
+  color: #2a1f10;
+  box-shadow: 0 10px 24px #04070a66;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-cine);
+}
+.story-paper-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.story-paper-btn:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 2px;
+}
+.story-paper-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.copy-actions .ink-link {
   color: #e7cf9f;
   text-decoration-color: #9a7f4d;
 }
-.landing-actions .ink-link:hover:not(:disabled) {
+.copy-actions .ink-link:hover:not(:disabled) {
   color: #fff3d9;
+}
+.env-row {
+  display: none;
 }
 /* ---- Reading pages: HTML set into the two cream leaves ---- */
 .book-frame.reading .leaf-left {
@@ -4087,23 +4156,56 @@ body.immersive {
   .story-details {
     top: 2%;
   }
-  /* Landing + library: content stacks below the environment strip. */
-  .book-frame.landing,
+  /* Landing scene: full artwork on top, interface copy below on the desk. */
+  .landing-scene {
+    width: 100%;
+    align-self: start;
+    margin-top: calc(env(safe-area-inset-top) + 58px);
+    gap: 14px;
+  }
+  .env-tags {
+    display: none;
+  }
+  .landing-copy {
+    position: static;
+    inset: auto;
+    width: 100%;
+    padding: 0 18px 22px;
+    text-align: center;
+    align-items: center;
+    gap: 12px;
+  }
+  .copy-headline {
+    font-size: clamp(1.4rem, 6.5vw, 2rem);
+  }
+  .copy-support {
+    font-size: clamp(0.9rem, 4vw, 1.05rem);
+    max-width: 40ch;
+  }
+  .copy-meta {
+    font-size: clamp(0.85rem, 3.6vw, 1rem);
+  }
+  .copy-actions {
+    align-items: center;
+  }
+  .env-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+  }
+  .env-chip {
+    font-family: var(--font-display);
+    font-size: 15px;
+    color: #e6d6b6;
+  }
+  .env-chip.sealed {
+    color: #d8b877;
+  }
+  /* Library still stacks below the environment strip. */
   .book-frame.library {
-    height: min(calc(100dvh - 96px), calc(94vw * 941 / 1672));
     align-self: start;
     margin-top: calc(env(safe-area-inset-top) + 60px);
-  }
-  .hotspot-label {
-    font-size: clamp(0.95rem, 3.8cqw, 1.4rem);
-  }
-  .book-frame.landing .landing-caption {
-    left: 67%;
-    width: 30%;
-    gap: 8px;
-  }
-  .nook-tagline {
-    font-size: clamp(0.95rem, 4.4cqw, 1.3rem);
   }
   .book-frame.library {
     aspect-ratio: auto;
@@ -4139,7 +4241,8 @@ body.immersive {
   .story-choice,
   .story-btn,
   .book-cover,
-  .book-hotspot {
+  .book-hit,
+  .story-paper-btn {
     transition: none !important;
   }
 }

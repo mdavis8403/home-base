@@ -121,7 +121,9 @@ test("the Clubhouse enters Our Story, and the desk invites a new story", async (
   await expect(
     page.getByRole("link", { name: "THE CLUBHOUSE" }),
   ).toHaveAttribute("href", "/home");
-  await expect(page.getByText("A story only we could tell.")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /mix up a story/i }),
+  ).toBeVisible();
   await page.goto(origin + "/home");
   const entry = page.getByRole("button", { name: /storybook/i }).first();
   await expect(entry).toBeVisible();
@@ -264,12 +266,87 @@ test("a person cannot see another's ingredients before the reveal", async ({
   expect(reveal.ok()).toBe(false);
 });
 
+test("the landing reflects each Story Mixer state", async ({ page }, info) => {
+  const request = page.context().request;
+  const project = info.project.name;
+  await login(page, "mia");
+  // State 1: no mixer.
+  await expect(
+    page.getByRole("heading", { name: /mix up a story/i }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Start a new story" }),
+  ).toBeVisible();
+  await expect(page.locator("button.book-hit")).toHaveAttribute(
+    "aria-label",
+    /.+/,
+  );
+  await snapshot(page, "landing-none", project);
+
+  // State 2: my ingredients in progress.
+  const sessionId = (await storyPost(request, "/mixer-start", { id: randomUUID() }))
+    .sessionId;
+  await page.reload();
+  await expect(page.getByText("The Story Mixer is open")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Continue your ingredients" }),
+  ).toBeVisible();
+  await expect(page.getByText(/0 of 10 tucked away/)).toBeVisible();
+  // Answer six, reload, see progress.
+  for (let i = 0; i < 6; i++) {
+    const v = await storyGet(request, "?mixer=" + sessionId);
+    await storyPost(request, "/mixer-answer", {
+      sessionId,
+      questionId: v.me.current.id,
+      optionId: v.me.current.options[0].id,
+    });
+  }
+  await page.reload();
+  await expect(page.getByText(/6 of 10 tucked away/)).toBeVisible();
+  await snapshot(page, "landing-progress", project);
+
+  // State 3: my envelope sealed, others not (1 of 3).
+  await answerAllApi(request, sessionId);
+  await page.reload();
+  await expect(page.getByText("Your envelope is sealed")).toBeVisible();
+  await expect(page.getByText(/1 of 3 envelopes sealed/)).toBeVisible();
+  await expect(page.locator(".env-tag.sealed")).toHaveCount(1);
+  await snapshot(page, "landing-sealed-one", project);
+
+  // Seed Dad → 2 of 3 (viewed as Dad, whose envelope is now sealed).
+  await auth(request, "dad");
+  await answerAllApi(request, sessionId);
+  await page.reload();
+  await expect(page.getByText(/2 of 3 envelopes sealed/)).toBeVisible();
+  await snapshot(page, "landing-sealed-two", project);
+
+  // State 4: all three sealed.
+  await auth(request, "mom");
+  await answerAllApi(request, sessionId);
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: /All three envelopes are sealed/i }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Open Our Story" }),
+  ).toBeVisible();
+  await expect(page.locator(".env-tag.sealed")).toHaveCount(3);
+  await snapshot(page, "landing-all-sealed", project);
+});
+
 test("iPad landscape uses an open-book spread; phone uses a single page", async ({
   page,
 }, info) => {
   await buildStory(page.context().request);
   await page.goto(origin + "/our-story");
-  await page.getByRole("button", { name: /Open Our Story|Continue our story/i }).click();
+  // State 5: the generated story is bound and waiting on the desk.
+  await expect(
+    page.getByRole("heading", { name: /story is waiting/i }),
+  ).toBeVisible();
+  await snapshot(page, "landing-story-ready", info.project.name);
+  await page
+    .getByRole("button", { name: /Open the book|Continue our story/i })
+    .click();
   await expect(page.locator(".book-leaf").first()).toBeVisible({
     timeout: 15000,
   });

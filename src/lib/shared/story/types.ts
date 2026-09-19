@@ -94,6 +94,8 @@ export interface StoryBookView extends StorySummary {
 }
 export interface StoryLanding {
   active: StorySummary | null;
+  // Whether the active generated story has been read past its opening page.
+  activeStarted: boolean;
   books: StorySummary[];
   inProgress: StorySummary[];
   mixer: MixerLanding | null;

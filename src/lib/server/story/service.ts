@@ -135,12 +135,25 @@ export class StoryService {
         sessionId: sess[0].id,
         status: sess[0].status,
         mineSealed: counts[this.me(s)] >= QUESTIONS_PER_PERSON,
+        mineAnswered: counts[this.me(s)],
         sealedCount: MIXER_PROFILES.filter(
           (p) => counts[p] >= QUESTIONS_PER_PERSON,
         ).length,
+        envelopes: MIXER_PROFILES.map((p) => ({
+          key: p,
+          name: castLabels[p],
+          sealed: counts[p] >= QUESTIONS_PER_PERSON,
+          mine: p === this.me(s),
+        })),
       };
     }
-    return { active: inProgress[0] ?? null, inProgress, books: done.rows.map(summaryOf), mixer };
+    return {
+      active: inProgress[0] ?? null,
+      activeStarted: (active.rows[0]?.currentSequence ?? 0) > 0,
+      inProgress,
+      books: done.rows.map(summaryOf),
+      mixer,
+    };
   }
 
   // ---- Story Mixer -------------------------------------------------------
