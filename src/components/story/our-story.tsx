@@ -3,23 +3,20 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Profile } from "@/lib/shared/types";
 import type {
-  AdventureType,
-  CastMember,
-  LengthMode,
-  Mood,
   StoryBookView,
   StoryLanding,
   StorySummary,
 } from "@/lib/shared/story/types";
 import { storyRequest } from "./api";
 import { BookReader, Bookshelf } from "./book";
-import { StorySetup } from "./setup";
-type Screen = "landing" | "setup" | "reading" | "books";
+import { StoryMixer } from "./mixer";
+type Screen = "landing" | "mixer" | "reading" | "books";
 const TURN_MS = 900;
 export function OurStory({ profile }: { profile: Profile }) {
   const [landing, setLanding] = useState<StoryLanding | null>(null);
   const [screen, setScreen] = useState<Screen>("landing");
   const [book, setBook] = useState<StoryBookView | null>(null);
+  const [mixerSession, setMixerSession] = useState<string | null>(null);
   const [reread, setReread] = useState(false);
   const [busy, setBusy] = useState(false);
   const [turning, setTurning] = useState(false);
@@ -39,7 +36,6 @@ export function OurStory({ profile }: { profile: Profile }) {
     }
   }, []);
   useEffect(() => {
-    // Initial authenticated fetch synchronizes this room with the server.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadLanding();
   }, [loadLanding]);
@@ -62,28 +58,27 @@ export function OurStory({ profile }: { profile: Profile }) {
       setBusy(false);
     }
   }
-  async function begin(payload: {
-    adventureType: AdventureType;
-    mood: Mood;
-    lengthMode: LengthMode;
-    cast: (CastMember | "everyone")[];
-  }) {
+  async function startMixer() {
     if (lock.current) return;
     lock.current = true;
     setBusy(true);
     setError("");
     try {
-      const r = await storyRequest<{ id: string }>("/new", {
-        id: crypto.randomUUID(),
-        ...payload,
-      });
-      lock.current = false;
-      await openReading(r.id, false);
+      const id = crypto.randomUUID();
+      await storyRequest<{ sessionId: string }>("/mixer-start", { id });
+      setMixerSession(id);
+      setScreen("mixer");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Please try again.");
-      lock.current = false;
     } finally {
+      lock.current = false;
       setBusy(false);
+    }
+  }
+  function continueMixer() {
+    if (landing?.mixer) {
+      setMixerSession(landing.mixer.sessionId);
+      setScreen("mixer");
     }
   }
   async function advance(path: string, body: Record<string, unknown>) {
@@ -104,31 +99,58 @@ export function OurStory({ profile }: { profile: Profile }) {
       setTurning(false);
     }
   }
-  async function revisit() {
-    if (lock.current || !book) return;
-    lock.current = true;
-    setBusy(true);
-    try {
-      const r = await storyRequest<{ id: string }>("/revisit", {
-        id: crypto.randomUUID(),
-        fromStoryId: book.id,
-      });
-      lock.current = false;
-      await openReading(r.id, false);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Please try again.");
-      lock.current = false;
-    } finally {
-      setBusy(false);
-    }
-  }
   async function toShelf() {
     setScreen("books");
     setBook(null);
     await loadLanding();
   }
   const active = landing?.active ?? null;
+  const mixer = landing?.mixer ?? null;
   const hasBooks = (landing?.books.length ?? 0) > 0;
+
+  // The closed book's primary action depends on where the family is. The Story
+  // Mixer (finishing what the family started) takes priority over an older story.
+  let mode: "open" | "mixer" | "continue" | "start";
+  let label: string;
+  let eyebrow: string;
+  let hint: string;
+  if (mixer?.status === "complete") {
+    mode = "open";
+    label = "Open Our Story";
+    eyebrow = "READY";
+    hint = "all three envelopes are sealed";
+  } else if (mixer) {
+    mode = "mixer";
+    if (mixer.mineSealed) {
+      label = "Our story is brewing";
+      eyebrow = "SEALED";
+      hint = `${mixer.sealedCount} of 3 sealed`;
+    } else {
+      label = "Continue the Story Mixer";
+      eyebrow = "YOUR TURN";
+      hint = "add your secret ingredients";
+    }
+  } else if (active) {
+    mode = "continue";
+    label = active.title;
+    eyebrow = "CONTINUE";
+    hint = "waiting to be continued";
+  } else {
+    mode = "start";
+    label = "Start a new story";
+    eyebrow = "OPEN THE BOOK";
+    hint = "tap to begin";
+  }
+  function runPrimary() {
+    if (mode === "continue" && active) void openReading(active.id, false);
+    else if (mode === "start") void startMixer();
+    else continueMixer();
+  }
+  const hotspotAria =
+    mode === "continue"
+      ? `Continue our story: ${active?.title ?? ""}`
+      : label;
+
   return (
     <div className="story-immersive">
       <header className="clubhouse-bar story-bar">
@@ -140,40 +162,37 @@ export function OurStory({ profile }: { profile: Profile }) {
         </h1>
       </header>
       <main className="story-stage">
-        {error && (
+        {error && screen !== "mixer" && (
           <p className="form-error story-float" role="alert">
             {error}
           </p>
         )}
         {screen === "landing" && (
           <section className="book-frame landing" aria-label="Our Story">
-            <div className="nook-panel">
-              <p className="eyebrow">THE READING NOOK</p>
-              <h2>A story only we could tell.</h2>
-              <p className="nook-lede">
-                Open the book together, make a few choices, and see where the
-                evening takes us.
-              </p>
-              <div className="nook-actions">
-                {active && (
+            <button
+              className="book-hotspot"
+              disabled={busy}
+              aria-label={hotspotAria}
+              onClick={runPrimary}
+            >
+              <span className="hotspot-eyebrow">{eyebrow}</span>
+              <span className="hotspot-label">{label}</span>
+              <span className="hotspot-hint">{hint}</span>
+            </button>
+            <div className="landing-caption">
+              <p className="nook-tagline">A story only we could tell.</p>
+              <div className="landing-actions">
+                {(active || mixer) && (
                   <button
-                    className="story-btn primary nook-continue"
+                    className="ink-link"
                     disabled={busy}
-                    onClick={() => void openReading(active.id, false)}
+                    onClick={() => void startMixer()}
                   >
-                    <span>Continue our story</span>
-                    <span className="nook-continue-title">{active.title}</span>
+                    Start a new story
                   </button>
                 )}
                 <button
-                  className={`story-btn ${active ? "" : "primary"}`}
-                  disabled={busy}
-                  onClick={() => setScreen("setup")}
-                >
-                  Start a new story
-                </button>
-                <button
-                  className="story-btn ghost"
+                  className="ink-link"
                   disabled={busy}
                   onClick={() => setScreen("books")}
                 >
@@ -183,11 +202,19 @@ export function OurStory({ profile }: { profile: Profile }) {
             </div>
           </section>
         )}
-        {screen === "setup" && (
-          <StorySetup
-            busy={busy}
-            onBegin={begin}
-            onBack={() => setScreen("landing")}
+        {screen === "mixer" && mixerSession && (
+          <StoryMixer
+            sessionId={mixerSession}
+            onOpenStory={(id) => {
+              setMixerSession(null);
+              void openReading(id, false);
+              void loadLanding();
+            }}
+            onExit={() => {
+              setMixerSession(null);
+              setScreen("landing");
+              void loadLanding();
+            }}
           />
         )}
         {screen === "reading" && book && (
@@ -200,14 +227,10 @@ export function OurStory({ profile }: { profile: Profile }) {
             onChoose={(sequence, choiceId) =>
               void advance("/choose", { sequence, choiceId })
             }
-            onInput={(sequence, text) =>
-              void advance("/input", { sequence, text })
-            }
             onShelf={() => void toShelf()}
             onAgain={() => {
               setReread(true);
             }}
-            onRevisit={() => void revisit()}
             onClose={() => {
               setBook(null);
               setScreen("landing");

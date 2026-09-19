@@ -8,7 +8,10 @@ export async function GET(request: Request) {
     const guard: AuthService = auth();
     guard.require(s, "family:use");
     const service = storyService();
-    const id = new URL(request.url).searchParams.get("id");
+    const url = new URL(request.url);
+    const id = url.searchParams.get("id");
+    const mixer = url.searchParams.get("mixer");
+    if (mixer) return success(await service.mixerView(s!, mixer));
     return success(id ? await service.book(s!, id) : await service.landing(s!));
   } catch (e) {
     return failure(e);

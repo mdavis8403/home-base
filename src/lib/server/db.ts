@@ -32,6 +32,8 @@ const jsonFields = new Set([
   "cast",
   "choices",
   "continuity",
+  "reveal",
+  "ingredients",
 ]);
 const boolFields = new Set([
   "scheduled",

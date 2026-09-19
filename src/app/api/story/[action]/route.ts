@@ -18,14 +18,17 @@ export async function POST(
     const guard: AuthService = auth();
     guard.require(s, "family:use");
     const action = z
-      .enum(["new", "choose", "input", "revisit"])
+      .enum(["mixer-start", "mixer-answer", "mixer-reveal", "choose"])
       .parse((await params).action);
     const raw = await readJson(request);
     const service = storyService();
-    if (action === "new") return success(await service.create(s!, raw));
-    if (action === "choose") return success(await service.choose(s!, raw));
-    if (action === "input") return success(await service.input(s!, raw));
-    return success(await service.revisit(s!, raw));
+    if (action === "mixer-start")
+      return success(await service.startMixer(s!, raw));
+    if (action === "mixer-answer")
+      return success(await service.mixerAnswer(s!, raw));
+    if (action === "mixer-reveal")
+      return success(await service.mixerReveal(s!, raw));
+    return success(await service.choose(s!, raw));
   } catch (e) {
     return failure(e);
   }
